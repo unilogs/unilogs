@@ -2,7 +2,6 @@
   "name": "backend",
   "version": "1.0.0",
   "main": "index.js",
-  "type": "module",
   "scripts": {
     "dev": "nodemon src/index.ts",
     "build": "tsc",
@@ -16,8 +15,10 @@
   "dependencies": {
     "@types/express": "^5.0.0",
     "@types/node": "^22.13.10",
+    "@types/pg": "^8.11.11",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
+    "pg": "^8.14.0",
     "typescript": "^5.8.2"
   },
   "devDependencies": {
