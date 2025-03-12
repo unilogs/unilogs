@@ -4,12 +4,10 @@ const fs = require('fs');
 
 const logFilePath = process.env.LOG_FILE_PATH; // Ensure Fluent Bit has read
 
-// Ensure the log file exists
 if (!fs.existsSync(logFilePath)) {
   fs.writeFileSync(logFilePath, '', { flag: 'a' });
 }
 
-// Create a Winston logger that logs to both file and console
 const logger = winston.createLogger({
   level: 'info',
   transports: [
@@ -18,7 +16,6 @@ const logger = winston.createLogger({
       format: winston.format.printf(({ message }) => message),
     }),
     new winston.transports.Console({
-      // Add console transport
       format: winston.format.combine(
         winston.format.colorize(),
         winston.format.simple()
@@ -27,7 +24,6 @@ const logger = winston.createLogger({
   ],
 });
 
-// Function to log in various formats with random log levels
 function logRandomEvents(message) {
   const logLevels = ['info', 'warn', 'error', 'debug'];
   const randomLevel = logLevels[Math.floor(Math.random() * logLevels.length)];
@@ -38,7 +34,6 @@ function logRandomEvents(message) {
   const timestamp = new Date().toISOString();
   const randomLogMessage = `${message} at ${timestamp}`;
 
-  // Randomly select log level and format
   switch (randomLevel) {
     case 'info':
       switch (randomFormat) {
@@ -126,7 +121,6 @@ function logRandomEvents(message) {
   }
 }
 
-// Function to log continuously with random log levels and formats
 setInterval(() => {
   logRandomEvents('Random event logged');
 }, 2000);

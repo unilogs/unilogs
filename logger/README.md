@@ -1,7 +1,6 @@
-install fluent bit first
-
-how to run fluent-bit: fluent-bit -c /PATH/TO/FLUENT-BIT.CONF
-
-logs are in /logs/app.log
-
-run loggerApp.js first and then fluent-bit
+1. `npm install`
+2. Create a `.env` file to specify the location of the logs, e.g.:
+   ```
+   LOG_FILE_PATH="./app.log"
+   ```
+3. `npm start`
