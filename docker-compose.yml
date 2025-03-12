@@ -8,7 +8,7 @@ services:
     ports:
       - 5469:5432 # Exposing 5469 for development. Should remove in production.
     volumes:
-    - timescale_data:/var/lib/postgresql/data
+      - timescale_data:/var/lib/postgresql/data
 
 volumes:
   timescale_data:
