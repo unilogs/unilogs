@@ -1,6 +1,6 @@
-# TypeScript x Express x Node.js
+# Ingestion Backend Server
 
-This is a boilerplate for the TypeScript + Express app.
+This is the backend server for our Ingestion App, that will receive http requests from fluent-bit.
 
 ## Prerequisites
 
@@ -12,14 +12,10 @@ Before you begin, ensure you have the following installed on your machine:
 ## Installation
 
 ```
-git clone https://github.com/SrdjanCoric/ts-express-boilerplate
+cd ingestionApp
 ```
 
-```
-cd ts-express-boilerplate/
-```
-
-Install the project dependencies including TypeScript and Nodemon:
+Install the project dependencies:
 
 ```
 npm i
@@ -33,7 +29,7 @@ For development purposes, you can run the application using Nodemon to automatic
 npm run dev
 ```
 
-This will start the server at `http://localhost:5001` by default. You can change the port in the `src/index.ts` file or create an `.env` file to manage the environment-specific variables separately.
+This will start the server at `http://localhost:8080` by default. You can change the port in the `src/index.ts` file or create an `.env` file to manage the environment-specific variables separately.
 
 For production, you can build the TypeScript files and then start the server. Run the following commands:
 
@@ -47,7 +43,7 @@ npm start
 The project structure is organized as follows:
 
 - `src`: Contains TypeScript source files
-  - `index.ts`: Configures and starts the Express application
+  - `index.ts`: Configures and starts the Ingestion application
 - `dist`: Output directory created during build for compiled TypeScript files
 - `package.json`: Project configuration and dependencies
 - `tsconfig.json`: TypeScript configuration
