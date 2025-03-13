@@ -1,0 +1,17 @@
+POST http://localhost:3000/api/dashboards/db HTTP/1.1
+Accept: application/json
+Content-Type: application/json
+
+{
+  "dashboard": {
+    "id": null,
+    "uid": null,
+    "title": "Production Overview",
+    "tags": [ "templated" ],
+    "timezone": "browser",
+    "schemaVersion": 16,
+    "refresh": "25s"
+  },
+  "message": "Made changes to xyz",
+  "overwrite": false
+}
