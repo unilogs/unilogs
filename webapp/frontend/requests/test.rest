@@ -12,7 +12,6 @@ Content-Type: application/json
     "schemaVersion": 16,
     "refresh": "25s"
   },
-  "folderUid": "l3KqBxCMz",
   "message": "Made changes to xyz",
   "overwrite": false
 }
