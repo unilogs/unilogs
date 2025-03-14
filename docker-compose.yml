@@ -16,10 +16,14 @@ services:
       - 6379:6379
     volumes:
       - redis_cache:/data
-  # grafana:
-  #   build: ./webapp/grafana/
-  #   ports:
-  #     - 3000:3000
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - 3000:3000
+    volumes:
+      - ./webapp/grafana/datasources.yaml:/etc/grafana/provisioning/datasources/datasources.yaml
+      - ./webapp/grafana/dashboards:/var/lib/grafana/dashboards
 volumes:
   timescale_data:
   redis_cache:
+  grafana_data:
