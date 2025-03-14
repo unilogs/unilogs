@@ -16,10 +16,12 @@
   "dependencies": {
     "bullmq": "^5.42.0",
     "dotenv": "^16.4.7",
-    "ioredis": "^5.6.0"
+    "ioredis": "^5.6.0",
+    "pg": "^8.14.0"
   },
   "devDependencies": {
     "@types/node": "^22.13.10",
+    "@types/pg": "^8.11.11",
     "ts-node": "^10.9.2",
     "tsx": "^4.19.3",
     "typescript": "^5.8.2"
