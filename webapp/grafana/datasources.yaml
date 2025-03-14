@@ -34,7 +34,8 @@ datasources:
     url: timescaledb:5432
     # <string> Sets the database user, if necessary.
     user: postgres
-    password: secret
+    secureJsonData:
+      password: secret
     # <string> Sets the database name, if necessary.
     database: unilogs_preprod
     # <bool> Enables basic authorization.
