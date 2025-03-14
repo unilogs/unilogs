@@ -1,30 +1,26 @@
 require('dotenv').config();
 const winston = require('winston');
-const fs = require('fs');
 
 const logFilePath = process.env.LOG_FILE_PATH; // Ensure Fluent Bit has read
 
-if (!fs.existsSync(logFilePath)) {
-  fs.writeFileSync(logFilePath, '', { flag: 'a' });
-}
-
-const logger = winston.createLogger({
-  level: 'info',
-  transports: [
-    new winston.transports.File({
-      filename: logFilePath,
-      format: winston.format.printf(({ message }) => message),
-    }),
-    new winston.transports.Console({
-      format: winston.format.combine(
-        winston.format.colorize(),
-        winston.format.simple()
-      ),
-    }),
-  ],
-});
-
 function logRandomEvents(message) {
+  const logger = winston.createLogger({
+    level: 'info',
+    transports: [
+      new winston.transports.File({
+        filename: logFilePath,
+        format: winston.format.printf(({ message }) => message),
+        options: { flags: 'a', highWaterMark: 1 },
+      }),
+      new winston.transports.Console({
+        format: winston.format.combine(
+          winston.format.colorize(),
+          winston.format.simple()
+        ),
+      }),
+    ],
+  });
+
   const logLevels = ['info', 'warn', 'error', 'debug'];
   const randomLevel = logLevels[Math.floor(Math.random() * logLevels.length)];
 
@@ -119,6 +115,7 @@ function logRandomEvents(message) {
       }
       break;
   }
+  logger.end();
 }
 
 setInterval(() => {
