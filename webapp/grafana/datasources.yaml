@@ -44,3 +44,6 @@ datasources:
     # <bool> Allows users to edit data sources from the
     # Grafana UI.
     editable: true
+    jsonData:
+      sslmode: disable
+      timescaledb: true
