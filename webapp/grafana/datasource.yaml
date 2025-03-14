@@ -60,7 +60,7 @@ datasources:
     uid: postgres
     # <string> Sets the data source's URL, including the
     # port.
-    url: http://localhost:5469
+    url: http://localhost:5462
     # <string> Sets the database user, if necessary.
     user: postgres
     password: secret
