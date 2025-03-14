@@ -1,0 +1,27 @@
+{
+  "name": "unilogs",
+  "version": "1.0.0",
+  "description": "",
+  "main": "log-worker.ts",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "npx tsc",
+    "start": "node dist/log-worker.js",
+    "dev": "tsx src/log-worker.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "bullmq": "^5.42.0",
+    "dotenv": "^16.4.7",
+    "ioredis": "^5.6.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.10",
+    "ts-node": "^10.9.2",
+    "tsx": "^4.19.3",
+    "typescript": "^5.8.2"
+  }
+}
