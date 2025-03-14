@@ -31,10 +31,10 @@ datasources:
     uid: postgres
     # <string> Sets the data source's URL, including the
     # port.
-    url: 192.168.99.1:5432
+    url: timescaledb:5432
     # <string> Sets the database user, if necessary.
-    user: jitte
-    password: a
+    user: postgres
+    password: secret
     # <string> Sets the database name, if necessary.
     database: unilogs_preprod
     # <bool> Enables basic authorization.
