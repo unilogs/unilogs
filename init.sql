@@ -1,9 +1,8 @@
-DROP DATABASE unilogs_preprod;
 CREATE DATABASE unilogs_preprod;
 
 \c unilogs_preprod;
 CREATE EXTENSION IF NOT EXISTS timescaledb;
-CREATE TABLE logs (
+CREATE TABLE IF NOT EXISTS logs (
   time TIMESTAMPTZ NOT NULL,
   body jsonb NOT NULL,
   original_log text NOT NULL,

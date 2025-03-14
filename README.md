@@ -15,3 +15,16 @@
   database at `localhost` but once everything is running in a container you
   will find it by its "service name" (`timescaledb`). Using environment
   variables makes it so you don't have to worry about that.
+
+### Note:
+
+- If you `docker compose`, and get the following notificitation:
+
+> PostgreSQL Database directory appears to contain a database; Skipping initialization
+> you need to proactively remove the volumes which were set up to store the database.
+
+The command `docker-compose` down doesn't do this automatically.
+
+You can request removal of volumes like this:
+
+`docker-compose down --volumes`

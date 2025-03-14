@@ -1,6 +1,6 @@
 services:
   timescaledb:
-    image: timescale/timescaledb:2.18.1-pg17 # This is the lightweight version using Alpine
+    image: timescale/timescaledb:latest-pg17 # This is the lightweight version using Alpine
     environment:
       POSTGRES_DB: postgres # This is the default, but being explicit here.
       POSTGRES_USER: postgres # Also default, also being explicit.
@@ -18,9 +18,11 @@ services:
       - redis_cache:/data
   grafana:
     image: grafana/grafana-oss
+    depends_on:
+        - timescaledb
     environment:
       GF_SECURITY_ADMIN_USER: admin
-      GF_SECURITY_ADMIN_PASSWORD: secret
+      GF_SECURITY_ADMIN_PASSWORD: secret  
     ports:
       - 3000:3000
     volumes:
