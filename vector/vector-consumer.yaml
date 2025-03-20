@@ -1,0 +1,29 @@
+api:
+  enabled: true
+  address: 0.0.0.0:8686
+
+sources:
+  kafka:
+    type: kafka
+    bootstrap_servers: broker:29092
+    group_id: vector-consumer
+    topics:
+      - app_logs_topic
+    encoding:
+      codec: json
+
+sinks:
+  loki:
+    inputs:
+      - kafka
+    endpoint: http://loki:3100
+    labels:
+      agent: vector
+    encoding:
+      codec: json
+
+service:
+  api:
+    enabled: true
+    address: 0.0.0.0:8686
+  shutdown_grace_period_secs: 30

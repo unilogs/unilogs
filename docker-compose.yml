@@ -36,15 +36,17 @@ services:
       - ./logger/logs:/logs
     command: ["/fluent-bit/bin/fluent-bit", "-c", "/fluent-bit/etc/fluent-bit.conf"]
 
-  fluent-bit-consumer:
-    image: fluent/fluent-bit:latest
-    container_name: fluent-bit-consumer
+  vector-consumer:
+    image: timberio/vector:0.45.0-debian
+    container_name: vector-consumer
     depends_on:
       - broker
       - loki
     volumes:
-      - ./fluent-bit/fluent-bit-consumer.conf:/fluent-bit/etc/fluent-bit.conf
-    command: ["/fluent-bit/bin/fluent-bit", "-c", "/fluent-bit/etc/fluent-bit.conf"]
+      - ./vector/vector-consumer.yaml:/etc/vector/vector.yaml:ro
+    ports:
+      - "8686:8686"  # Expose Vector's API for metrics
+    command: ["vector", "--config", "/etc/vector/vector.yaml"]
 
   loki:
     image: grafana/loki:latest
