@@ -1,0 +1,16 @@
+{
+  "name": "logs",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "node loggerApp.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "dotenv": "^16.4.7",
+    "winston": "^3.17.0"
+  }
+}
