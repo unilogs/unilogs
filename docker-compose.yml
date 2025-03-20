@@ -26,15 +26,15 @@ services:
       KAFKA_LOG_DIRS: /tmp/kraft-combined-logs
       CLUSTER_ID: MkU3OEVBNTcwNTJENDM2Qk
 
-  fluent-bit-producer:
-    image: fluent/fluent-bit:latest
-    container_name: fluent-bit-producer
+  vector-shipper:
+    image: timberio/vector:0.45.0-debian
+    container_name: vector-shipper
     depends_on:
       - broker
     volumes:
-      - ./fluent-bit/fluent-bit-producer.conf:/fluent-bit/etc/fluent-bit.conf
       - ./logger/logs:/logs
-    command: ["/fluent-bit/bin/fluent-bit", "-c", "/fluent-bit/etc/fluent-bit.conf"]
+      - ./vector/vector-shipper.yaml:/etc/vector/vector.yaml:ro
+    command: ["-c", "/etc/vector/vector.yaml"]
 
   vector-consumer:
     image: timberio/vector:0.45.0-debian
@@ -44,9 +44,7 @@ services:
       - loki
     volumes:
       - ./vector/vector-consumer.yaml:/etc/vector/vector.yaml:ro
-    ports:
-      - "8686:8686"  # Expose Vector's API for metrics
-    command: ["vector", "--config", "/etc/vector/vector.yaml"]
+    command: ["-c", "/etc/vector/vector.yaml"]
 
   loki:
     image: grafana/loki:latest
