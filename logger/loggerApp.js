@@ -1,7 +1,7 @@
 require('dotenv').config();
 const winston = require('winston');
 
-const logFilePath = "/Users/davidpark/Desktop/unilogs/logger/logs/app.log"; // Ensure Fluent Bit has read
+const logFilePath = process.env.LOG_FILE_PATH;
 
 function logRandomEvents(message) {
   const logger = winston.createLogger({
