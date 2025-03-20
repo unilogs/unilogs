@@ -67,7 +67,10 @@ services:
       - GF_AUTH_ANONYMOUS_ENABLED=true
     volumes:
       - grafana-data:/var/lib/grafana
-
+      - ./provision/datasources.yaml:/etc/grafana/provisioning/datasources/datasources.yaml
+      - ./provision/dashboards:/var/lib/grafana/provisioning/dashboards
+      - ./provision/grafana.ini:/etc/grafana/grafana.ini
+    
 volumes:
   grafana-data:
   # kafka-data:
