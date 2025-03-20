@@ -1,0 +1,21 @@
+sources:
+  app_logs:
+    type: file
+    include:
+      - /logs/app.log
+    ignore_older_secs: 86400  # Optional: Ignore files older than 1 day
+    multiline:
+      start_pattern: '^\['  # Optional: If logs span multiple lines (like JSON)
+      mode: continue_through  # Use a valid mode value here
+      condition_pattern: '^\['  # Optional: Condition pattern for multiline aggregation
+      timeout_ms: 1000  # Optional: Timeout for multiline aggregation
+
+sinks:
+  kafka:
+    type: kafka
+    inputs:
+      - app_logs
+    bootstrap_servers: broker:29092
+    topic: app_logs_topic
+    encoding:
+      codec: json

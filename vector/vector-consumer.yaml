@@ -1,0 +1,18 @@
+sources:
+  kafka:
+    type: kafka
+    bootstrap_servers: broker:29092
+    group_id: vector-consumer
+    topics:
+      - app_logs_topic
+
+sinks:
+  loki:
+    type: loki
+    inputs:
+      - kafka
+    endpoint: http://loki:3100
+    labels:
+      agent: vector
+    encoding:
+      codec: json
