@@ -1,0 +1,11 @@
+services:
+  fluent-bit:
+    image: fluent/fluent-bit:3.2
+    volumes:
+      - ./logs:/logs
+      - ./fluent-bit.conf:/fluent-bit.conf
+      - fluentbit-db:/tmp
+    command: ["/fluent-bit/bin/fluent-bit", "-c", "/fluent-bit.conf"]
+
+volumes:
+  fluentbit-db:
