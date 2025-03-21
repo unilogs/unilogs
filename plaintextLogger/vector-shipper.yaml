@@ -10,8 +10,11 @@ transforms:
     inputs:
       - app_logs
     source: |
+      # Store the original log message before parsing
+      .original_message = .message
+
       # Parse the log line using the Grok pattern
-      parsed, err = parse_grok(.message, "%{IP:client} - - \\[%{TIMESTAMP_ISO8601:timestamp}\\] \\\"%{WORD:method} %{PATH:path} HTTP/%{NUMBER:http_version}\\\" %{NUMBER:status} %{NUMBER:bytes} \\\"%{URI:referrer}\\\" \\\"%{DATA:user_agent}\\\"")
+      parsed, err = parse_grok(.message, "\\[%{LOGLEVEL:level}\\] %{GREEDYDATA:message} at %{TIMESTAMP_ISO8601:timestamp}")
       
       # Handle errors (e.g., if the log line doesn't match the pattern)
       if err != null {
@@ -20,16 +23,12 @@ transforms:
         # Merge the parsed fields into the event
         . = merge(., parsed)
 
-        # Extract the "level" from the "path" field
-        if .path == "/" {
-          .level = "info"
-        } else {
-          .level = split(.path, "/")[1] ?? "unknown"
-        }
-
-        # Remove the "path" field
-        del(.path)
+        # You can also process further if needed, e.g., extracting specific data
+        # Log level is already captured as `level`
+        # Original message is captured as `original_message`
+        # Timestamp is captured as `timestamp`
       }
+
 
 sinks:
   kafka:

@@ -3,12 +3,6 @@ sources:
     type: file
     include:
       - /logs/app.log
-    ignore_older_secs: 86400  # Optional: Ignore files older than 1 day
-    multiline:
-      start_pattern: '^\['  # Optional: If logs span multiple lines (like JSON)
-      mode: continue_through  # Use a valid mode value here
-      condition_pattern: '^\['  # Optional: Condition pattern for multiline aggregation
-      timeout_ms: 1000  # Optional: Timeout for multiline aggregation
 
 transforms:
   parse_logs:

@@ -1,7 +1,7 @@
 services:
   vector-shipper:
     image: timberio/vector:0.45.0-debian
-    container_name: vector-shipper
+    container_name: vector-shipper-${DOCKER_CONTAINER_NAME}
     volumes:
       - ./logs:/logs
       - ./vector-shipper.yaml:/etc/vector/vector.yaml:ro

@@ -12,3 +12,4 @@
 3. For now, it expects both docker compose files to connect to the same network `unilogs-network`
 4. Then simply `docker compose up -d` and Vector will start streaming to
    kafka running on broker:29092 
+5. Make sure each logger app has a .env file with field referring to DOCKER_CONTAINER_NAME
