@@ -34,85 +34,85 @@ function logRandomEvents(message) {
   switch (randomLevel) {
     case "info":
       switch (randomFormat) {
-        // case 'plainText':
-        //   logger.info(`[INFO] ${randomLogMessage}`);
-        //   break;
-        // case 'commonLog':
-        //   logger.info(
-        //     `${'127.0.0.1'} - - [${timestamp}] "GET / HTTP/1.1" 200 2326`
-        //   );
-        //   break;
+        case 'plainText':
+          logger.info(`[INFO] ${randomLogMessage}`);
+          break;
+        case 'commonLog':
+          logger.info(
+            `${'127.0.0.1'} - - [${timestamp}] "GET / HTTP/1.1" 200 2326`
+          );
+          break;
         case "apacheCombined":
           logger.info(
             `127.0.0.1 - - [${timestamp}] "GET / HTTP/1.1" 200 2326 "http://example.com" "Mozilla/5.0"`
           );
           break;
-        // case 'syslog':
-        //   logger.info(`${timestamp} myapp[12345]: INFO: ${randomLogMessage}`);
-        //   break;
+        case 'syslog':
+          logger.info(`${timestamp} myapp[12345]: INFO: ${randomLogMessage}`);
+          break;
       }
       break;
 
     case "warn":
       switch (randomFormat) {
-        // case 'plainText':
-        //   logger.warn(`[WARN] ${randomLogMessage}`);
-        //   break;
-        // case 'commonLog':
-        //   logger.warn(
-        //     `${'127.0.0.1'} - - [${timestamp}] "GET /warn HTTP/1.1" 404 2326`
-        //   );
-        //   break;
+        case 'plainText':
+          logger.warn(`[WARN] ${randomLogMessage}`);
+          break;
+        case 'commonLog':
+          logger.warn(
+            `${'127.0.0.1'} - - [${timestamp}] "GET /warn HTTP/1.1" 404 2326`
+          );
+          break;
         case "apacheCombined":
           logger.warn(
             `127.0.0.1 - - [${timestamp}] "GET /warn HTTP/1.1" 404 2326 "http://example.com" "Mozilla/5.0"`
           );
           break;
-        // case 'syslog':
-        //   logger.warn(`${timestamp} myapp[12345]: WARN: ${randomLogMessage}`);
-        //   break;
+        case 'syslog':
+          logger.warn(`${timestamp} myapp[12345]: WARN: ${randomLogMessage}`);
+          break;
       }
       break;
 
     case "error":
       switch (randomFormat) {
-        // case 'plainText':
-        //   logger.error(`[ERROR] ${randomLogMessage}`);
-        //   break;
-        // case 'commonLog':
-        //   logger.error(
-        //     `${'127.0.0.1'} - - [${timestamp}] "GET /error HTTP/1.1" 500 2326`
-        //   );
-        //   break;
+        case 'plainText':
+          logger.error(`[ERROR] ${randomLogMessage}`);
+          break;
+        case 'commonLog':
+          logger.error(
+            `${'127.0.0.1'} - - [${timestamp}] "GET /error HTTP/1.1" 500 2326`
+          );
+          break;
         case "apacheCombined":
           logger.error(
             `127.0.0.1 - - [${timestamp}] "GET /error HTTP/1.1" 500 2326 "http://example.com" "Mozilla/5.0"`
           );
           break;
-        // case 'syslog':
-        //   logger.error(`${timestamp} myapp[12345]: ERROR: ${randomLogMessage}`);
-        //   break;
+        case 'syslog':
+          logger.error(`${timestamp} myapp[12345]: ERROR: ${randomLogMessage}`);
+          break;
       }
       break;
 
     case "debug":
       switch (randomFormat) {
-        // case 'plainText':
-        //   logger.debug(`[DEBUG] ${randomLogMessage}`);
-        //   break;
-        // case 'commonLog':
-        // logger.debug(
-        //     `${'127.0.0.1'} - - [${timestamp}] "GET /debug HTTP/1.1" 200 2326`
-        //   );
-        //   break;
+        case 'plainText':
+          logger.debug(`[DEBUG] ${randomLogMessage}`);
+          break;
+        case 'commonLog':
+        logger.debug(
+            `${'127.0.0.1'} - - [${timestamp}] "GET /debug HTTP/1.1" 200 2326`
+          );
+          break;
         case "apacheCombined":
           logger.debug(
             `127.0.0.1 - - [${timestamp}] "GET /debug HTTP/1.1" 200 2326 "http://example.com" "Mozilla/5.0"`
           );
           break;
-        // case 'syslog':
-        //   logger.debug(`${timestamp} myapp[12345]: DEBUG: ${randomLogMessage}`);
-        //   break;
+        case 'syslog':
+          logger.debug(`${timestamp} myapp[12345]: DEBUG: ${randomLogMessage}`);
+          break;
       }
       break;
   }

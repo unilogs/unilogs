@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "start": "node loggerApp.js"
+    "start": "node apacheLogger.js"
   },
   "keywords": [],
   "author": "",

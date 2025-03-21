@@ -25,16 +25,8 @@ services:
       KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
       KAFKA_LOG_DIRS: /tmp/kraft-combined-logs
       CLUSTER_ID: MkU3OEVBNTcwNTJENDM2Qk
-
-  vector-shipper:
-    image: timberio/vector:0.45.0-debian
-    container_name: vector-shipper
-    depends_on:
-      - broker
-    volumes:
-      - ./logger/logs:/logs
-      - ./vector/vector-shipper.yaml:/etc/vector/vector.yaml:ro
-    command: ["-c", "/etc/vector/vector.yaml"]
+    networks:
+      - unilogs-network
 
   vector-consumer:
     image: timberio/vector:0.45.0-debian
@@ -77,3 +69,6 @@ volumes:
   # kafka-data:
   loki-data:
 
+networks:
+  unilogs-network:
+    external: true

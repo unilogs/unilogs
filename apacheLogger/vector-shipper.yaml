@@ -46,3 +46,10 @@ sinks:
     topic: app_logs_topic
     encoding:
       codec: json
+  
+  console:
+    type: console
+    inputs:
+      - parse_logs
+    encoding:
+      codec: json
