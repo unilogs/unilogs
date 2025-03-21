@@ -25,16 +25,8 @@ services:
       KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
       KAFKA_LOG_DIRS: /tmp/kraft-combined-logs
       CLUSTER_ID: MkU3OEVBNTcwNTJENDM2Qk
-
-  vector-shipper:
-    image: timberio/vector:0.45.0-debian
-    container_name: vector-shipper
-    depends_on:
-      - broker
-    volumes:
-      - ./logger/logs:/logs
-      - ./vector/vector-shipper.yaml:/etc/vector/vector.yaml:ro
-    command: ["-c", "/etc/vector/vector.yaml"]
+    networks:
+      - unilogs-network
 
   vector-consumer:
     image: timberio/vector:0.45.0-debian
@@ -45,6 +37,8 @@ services:
     volumes:
       - ./vector/vector-consumer.yaml:/etc/vector/vector.yaml:ro
     command: ["-c", "/etc/vector/vector.yaml"]
+    networks:
+      - unilogs-network
 
   loki:
     image: grafana/loki:latest
@@ -54,6 +48,8 @@ services:
     volumes:
       - loki-data:/loki
     command: -config.file=/etc/loki/local-config.yaml
+    networks:
+      - unilogs-network
 
   grafana:
     image: grafana/grafana:latest
@@ -71,9 +67,14 @@ services:
       - ./provision/datasources.yaml:/etc/grafana/provisioning/datasources/datasources.yaml
       - ./provision/dashboards:/var/lib/grafana/provisioning/dashboards
       - ./provision/grafana.ini:/etc/grafana/grafana.ini
+    networks:
+      - unilogs-network
     
 volumes:
   grafana-data:
   # kafka-data:
   loki-data:
 
+networks:
+  unilogs-network:
+    external: true
