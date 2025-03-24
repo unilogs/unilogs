@@ -23,8 +23,7 @@ export async function main() {
     if (
       process.env.REGION === undefined ||
       process.env.AWS_ACCESS_KEY_ID === undefined ||
-      process.env.AWS_SECRET_ACCESS_KEY === undefined ||
-      process.env.AWS_SESSION_TOKEN === undefined
+      process.env.AWS_SECRET_ACCESS_KEY === undefined
     )
       throw new Error();
     const s3Client = new S3Client({
@@ -32,7 +31,7 @@ export async function main() {
       credentials: {
         accessKeyId: process.env.AWS_ACCESS_KEY_ID,
         secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-        sessionToken: process.env.AWS_SESSION_TOKEN,
+        sessionToken: process.env.AWS_SESSION_TOKEN ?? '',
       },
     });
 

@@ -7,7 +7,9 @@
    AWS_SESSION_TOKEN="put_session_token_here"
    REGION="us-east-2"
    ```
-2. npm run build
+2. `npm install`
+
+2. `npm run build`
 
 3. Choose which version you want to test:
 

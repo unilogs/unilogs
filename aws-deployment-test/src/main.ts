@@ -35,7 +35,7 @@ class UnilogsStorageStack extends cdk.Stack {
   constructor(scope: cdk.Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
     new s3.Bucket(this, 'unilogs-bucket', {
-      bucketName: 'unilogs-s3-bucket',
+      bucketName: `unilogs-s3-bucket-${Date.now()}`,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
       publicReadAccess: false,
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
