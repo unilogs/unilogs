@@ -77,4 +77,5 @@ volumes:
 
 networks:
   unilogs-network:
-    external: true
+    name: unilogs-network
+    driver: bridge
