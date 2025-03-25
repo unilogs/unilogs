@@ -6,11 +6,19 @@ sources:
     topics:
       - app_logs_topic
 
+transforms:
+  parse_json:
+    type: remap
+    inputs:
+      - kafka
+    source: |
+      . = parse_json!(.message)
+
 sinks:
   loki:
     type: loki
     inputs:
-      - kafka
+      - parse_json  # Use the transformed logs
     endpoint: http://loki:3100
     labels:
       agent: vector
