@@ -24,6 +24,7 @@
     "@aws-cdk/lambda-layer-kubectl-v31": "^2.0.0",
     "aws-cdk-lib": "2.185.0",
     "constructs": "^10.0.0",
+    "dotenv": "^16.4.7",
     "source-map-support": "^0.5.21"
   }
 }
