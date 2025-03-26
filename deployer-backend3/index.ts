@@ -56,5 +56,10 @@ class EKSCluster extends cdk.Stack {
 }
 
 const app = new cdk.App();
-new EKSCluster(app, "MyEKSCluster");
+new EKSCluster(app, "MyEKSCluster", {
+  env: {
+    account: process.env.CDK_DEFAULT_ACCOUNT,
+    region: process.env.CDK_DEFAULT_REGION,
+  },
+});
 app.synth();
