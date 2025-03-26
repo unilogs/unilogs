@@ -5,8 +5,9 @@ import { KubectlV31Layer as KubectlLayer } from "@aws-cdk/lambda-layer-kubectl-v
 import * as cdk from "aws-cdk-lib";
 import * as ec2 from "aws-cdk-lib/aws-ec2";
 import * as eks from "aws-cdk-lib/aws-eks";
-import * as iam from "aws-cdk-lib/aws-iam";
+// import * as iam from "aws-cdk-lib/aws-iam";
 
+// not the latest version I think, should update
 const kubernetesVersion = eks.KubernetesVersion.V1_31;
 
 // including all logging types for now just to see what they look like...
@@ -67,4 +68,7 @@ new EKSCluster(app, "MyEKSCluster", {
     region: process.env.CDK_DEFAULT_REGION,
   },
 });
+
+// creates the CloudFormation template based on stack and environment,
+// needed for bootstrapping
 app.synth();
