@@ -35,11 +35,12 @@ class EKSCluster extends cdk.Stack {
       clusterLogging: clusterLogging,
     });
 
-    // Fargate
-    new eks.FargateProfile(this, "myProfile", {
-      cluster: eksCluster,
-      selectors: [{ namespace: "default" }],
-    });
+    // // this was in the sample code, I forgot to remove before deploying
+    // // but I think I don't need it with a FargateCluster construct
+    // new eks.FargateProfile(this, "myProfile", {
+    //   cluster: eksCluster,
+    //   selectors: [{ namespace: "default" }],
+    // });
 
     // Managed Addons: install common EKS add-ons (kube-proxy, CoreDNS, etc.)
     const addManagedAddon = (id: string, addonName: string) => {
@@ -50,6 +51,7 @@ class EKSCluster extends cdk.Stack {
     };
 
     // not sure how many of these are needed, but keeping them all for now
+    // should review to understand function and remove unnecessary ones
     addManagedAddon("addonKubeProxy", "kube-proxy");
     addManagedAddon("addonCoreDns", "coredns");
     addManagedAddon("addonVpcCni", "vpc-cni");
