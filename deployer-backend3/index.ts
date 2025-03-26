@@ -5,10 +5,9 @@ import { KubectlV31Layer as KubectlLayer } from "@aws-cdk/lambda-layer-kubectl-v
 import * as cdk from "aws-cdk-lib";
 import * as ec2 from "aws-cdk-lib/aws-ec2";
 import * as eks from "aws-cdk-lib/aws-eks";
-// import * as iam from "aws-cdk-lib/aws-iam";
 
 // not the latest version I think, should update
-const kubernetesVersion = eks.KubernetesVersion.V1_31;
+const kubernetesVersion = eks.KubernetesVersion.V1_32;
 
 // including all logging types for now just to see what they look like...
 const clusterLogging = [
@@ -36,13 +35,6 @@ class EKSCluster extends cdk.Stack {
       clusterLogging: clusterLogging,
     });
 
-    // // this was in the sample code, I forgot to remove before deploying
-    // // but I think I don't need it with a FargateCluster construct
-    // new eks.FargateProfile(this, "myProfile", {
-    //   cluster: eksCluster,
-    //   selectors: [{ namespace: "default" }],
-    // });
-
     // Managed Addons: install common EKS add-ons (kube-proxy, CoreDNS, etc.)
     const addManagedAddon = (id: string, addonName: string) => {
       new eks.CfnAddon(this, id, {
@@ -53,9 +45,15 @@ class EKSCluster extends cdk.Stack {
 
     // not sure how many of these are needed, but keeping them all for now
     // should review to understand function and remove unnecessary ones
+
+    // AWS EKS console said these 3 were versions incompatible with the next
+    // Kubernetes version, V1_32. should test if the add-on version is updated
+    // when added if added to a stack initialized with V1_32
     addManagedAddon("addonKubeProxy", "kube-proxy");
     addManagedAddon("addonCoreDns", "coredns");
     addManagedAddon("addonVpcCni", "vpc-cni");
+
+    // these 2 were fine
     addManagedAddon("addonEksPodIdentityAgent", "eks-pod-identity-agent");
     addManagedAddon("addonMetricsServer", "metrics-server"); // critical for HPA
   }
@@ -65,7 +63,7 @@ const app = new cdk.App();
 new EKSCluster(app, "MyEKSCluster", {
   env: {
     account: process.env.CDK_DEFAULT_ACCOUNT,
-    region: process.env.CDK_DEFAULT_REGION,
+    region: process.env.CDK_DEFAULT_REGION || 'us-west-1', // added alt default
   },
 });
 
