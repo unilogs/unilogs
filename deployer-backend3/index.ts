@@ -6,17 +6,13 @@ import * as iam from "aws-cdk-lib/aws-iam";
 
 const kubernetesVersion = eks.KubernetesVersion.V1_31;
 
+// including all logging types for now just to see what they look like...
 const clusterLogging = [
-  // eks.ClusterLoggingTypes.API,
-  // eks.ClusterLoggingTypes.AUTHENTICATOR,
-  // eks.ClusterLoggingTypes.SCHEDULER,
+  eks.ClusterLoggingTypes.API,
+  eks.ClusterLoggingTypes.AUTHENTICATOR,
+  eks.ClusterLoggingTypes.SCHEDULER,
   eks.ClusterLoggingTypes.AUDIT,
-  // eks.ClusterLoggingTypes.CONTROLLER_MANAGER,
-];
-
-const instanceTypes = [
-  new ec2.InstanceType("m5.large"),
-  new ec2.InstanceType("m5a.large"),
+  eks.ClusterLoggingTypes.CONTROLLER_MANAGER,
 ];
 
 class EKSCluster extends cdk.Stack {
@@ -26,35 +22,14 @@ class EKSCluster extends cdk.Stack {
     // Create a new VPC for our cluster
     const vpc = new ec2.Vpc(this, "EKSVpc");
 
-    // Create Cluster with no default capacity (node group will be added later)
-    const eksCluster = new eks.Cluster(this, "EKSCluster", {
-      vpc: vpc,
-      defaultCapacity: 0,
+    // Create a Fargate-based EKS Cluster.
+    // The FargateCluster construct automatically creates a default Fargate
+    // profile that targets the "default" namespace.
+    const eksCluster = new eks.FargateCluster(this, "FargateCluster", {
+      vpc,
       version: kubernetesVersion,
       kubectlLayer: new KubectlLayer(this, "kubectl"),
-      ipFamily: eks.IpFamily.IP_V4,
       clusterLogging: clusterLogging,
-    });
-
-    // HINT: required cdk v2.135.0 or higher version to support instanceTypes assignment when working with AL2023
-    // - https://github.com/aws/aws-cdk/pull/29505
-    // - https://github.com/aws/aws-cdk/releases/tag/v2.135.0
-    eksCluster.addNodegroupCapacity("custom-node-group", {
-      amiType: eks.NodegroupAmiType.AL2023_X86_64_STANDARD,
-      instanceTypes: instanceTypes,
-      desiredSize: 2,
-      minSize: 2,
-      maxSize: 5,
-      diskSize: 20,
-      nodeRole: new iam.Role(this, "eksClusterNodeGroupRole", {
-        roleName: "eksClusterNodeGroupRole",
-        assumedBy: new iam.ServicePrincipal("ec2.amazonaws.com"),
-        managedPolicies: [
-          "AmazonEKSWorkerNodePolicy",
-          "AmazonEC2ContainerRegistryReadOnly",
-          "AmazonEKS_CNI_Policy",
-        ].map((policy) => iam.ManagedPolicy.fromAwsManagedPolicyName(policy)),
-      }),
     });
 
     // Fargate
@@ -63,7 +38,7 @@ class EKSCluster extends cdk.Stack {
       selectors: [{ namespace: "default" }],
     });
 
-    // Managed Addons
+    // Managed Addons: install common EKS add-ons (kube-proxy, CoreDNS, etc.)
     const addManagedAddon = (id: string, addonName: string) => {
       new eks.CfnAddon(this, id, {
         addonName,
@@ -71,11 +46,12 @@ class EKSCluster extends cdk.Stack {
       });
     };
 
+    // not sure how many of these are needed, but keeping them all for now
     addManagedAddon("addonKubeProxy", "kube-proxy");
     addManagedAddon("addonCoreDns", "coredns");
     addManagedAddon("addonVpcCni", "vpc-cni");
     addManagedAddon("addonEksPodIdentityAgent", "eks-pod-identity-agent");
-    addManagedAddon("addonMetricsServer", "metrics-server");
+    addManagedAddon("addonMetricsServer", "metrics-server"); // critical for HPA
   }
 }
 
