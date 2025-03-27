@@ -6,7 +6,7 @@ import * as cdk from "aws-cdk-lib";
 import * as ec2 from "aws-cdk-lib/aws-ec2";
 import * as eks from "aws-cdk-lib/aws-eks";
 
-// not the latest version I think, should update
+// the latest version as of March 2025
 const kubernetesVersion = eks.KubernetesVersion.V1_32;
 
 // including all logging types for now just to see what they look like...
@@ -35,27 +35,22 @@ class EKSCluster extends cdk.Stack {
       clusterLogging: clusterLogging,
     });
 
-    // Managed Addons: install common EKS add-ons (kube-proxy, CoreDNS, etc.)
-    const addManagedAddon = (id: string, addonName: string) => {
-      new eks.CfnAddon(this, id, {
-        addonName,
-        clusterName: eksCluster.clusterName,
-      });
-    };
+    // // seems like these add-ons are incorporated into the cluster by default for V1_32
+    // // they are not visible in the "add-ons" section of the cluster, unlike with V1_31
+    // // I have not yet tested deployment without this code, however
 
-    // not sure how many of these are needed, but keeping them all for now
-    // should review to understand function and remove unnecessary ones
+    // const addManagedAddon = (id: string, addonName: string) => {
+    //   new eks.CfnAddon(this, id, {
+    //     addonName,
+    //     clusterName: eksCluster.clusterName,
+    //   });
+    // };
 
-    // AWS EKS console said these 3 were versions incompatible with the next
-    // Kubernetes version, V1_32. should test if the add-on version is updated
-    // when added if added to a stack initialized with V1_32
-    addManagedAddon("addonKubeProxy", "kube-proxy");
-    addManagedAddon("addonCoreDns", "coredns");
-    addManagedAddon("addonVpcCni", "vpc-cni");
-
-    // these 2 were fine
-    addManagedAddon("addonEksPodIdentityAgent", "eks-pod-identity-agent");
-    addManagedAddon("addonMetricsServer", "metrics-server"); // critical for HPA
+    // addManagedAddon("addonKubeProxy", "kube-proxy");
+    // addManagedAddon("addonCoreDns", "coredns");
+    // addManagedAddon("addonVpcCni", "vpc-cni");
+    // addManagedAddon("addonEksPodIdentityAgent", "eks-pod-identity-agent");
+    // addManagedAddon("addonMetricsServer", "metrics-server"); // critical for HPA
   }
 }
 
