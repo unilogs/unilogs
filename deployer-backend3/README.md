@@ -30,7 +30,9 @@ This temporarily provides the environment of the shell with the variables/values
 
 # General Notes / Concerns
 
-See various notes for other concerns in index.ts (outdated addon versions, etc.)
+1. Warning: If bootstrapping or deployment fails and rolls back automatically, you may still need to manually empty and delete the s3 bucket created by the bootstrap from the AWS console before trying again.
+
+2. See other various notes for other concerns in index.ts (outdated addon versions, etc.)
 
 # Known Bugs
 
