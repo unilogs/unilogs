@@ -46,7 +46,7 @@ services:
     ports:
       - "3100:3100"
     volumes:
-      - loki-data:/loki
+      - ./local-config.yaml:/etc/loki/local-config.yaml
     command: -config.file=/etc/loki/local-config.yaml
     networks:
       - unilogs-network
