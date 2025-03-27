@@ -31,6 +31,11 @@ function logRandomEvents(message) {
   // uncomment to test 25-year old logs
   // const time = Date.now() - 7.889 * 10 ** 11;
   // const timestamp = new Date(time).toISOString();
+
+  // uncomment to test test 30 minute old logs
+  // const time = Date.now() - 1.8 * 10 ** 6;
+  // const timestamp = new Date(time).toISOString();
+
   const timestamp = new Date().toISOString();
   const randomLogMessage = `${message} at ${timestamp}`;
 
