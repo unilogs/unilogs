@@ -43,13 +43,12 @@ services:
   loki:
     image: grafana/loki:latest
     container_name: loki
-    environment:
     ports:
       - "3100:3100"
     volumes:
       - loki-data:/loki
       - ./loki-config.yaml:/etc/loki/config.yaml
-    command: -config.file=/etc/loki/local-config.yaml -config.expand-env=true 
+    command: "-config.file=/etc/loki/config.yaml"
     networks:
       - unilogs-network
 
