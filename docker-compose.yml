@@ -43,11 +43,11 @@ services:
   loki:
     image: grafana/loki:latest
     container_name: loki
+    environment:
+      - LOKI_SERVER_HTTP_LISTEN_PORT=3100
+      - LOKI_AUTH_ENABLED=false
     ports:
       - "3100:3100"
-    volumes:
-      - ./local-config.yaml:/etc/loki/local-config.yaml
-    command: -config.file=/etc/loki/local-config.yaml
     networks:
       - unilogs-network
 
