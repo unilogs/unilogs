@@ -27,8 +27,7 @@ schema_config:
 
 limits_config:
   metric_aggregation_enabled: false
-  # reject_old_samples: false
-  reject_old_samples_max_age: 2h
+  reject_old_samples: false
 
 ruler:
   alertmanager_url: http://localhost:9093

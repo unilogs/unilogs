@@ -28,10 +28,10 @@ function logRandomEvents(message) {
   const formats = ['plainText'];
   const randomFormat = formats[Math.floor(Math.random() * formats.length)];
 
-  // uncomment to test old logs
-  const time = Date.now() - 7.889 * 10 ** 11;
-  const timestamp = new Date(time).toISOString();
-  // const timestamp = new Date().toISOString();
+  // uncomment to test 25-year old logs
+  // const time = Date.now() - 7.889 * 10 ** 11;
+  // const timestamp = new Date(time).toISOString();
+  const timestamp = new Date().toISOString();
   const randomLogMessage = `${message} at ${timestamp}`;
 
   switch (randomLevel) {
