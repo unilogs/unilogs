@@ -5,7 +5,7 @@ export interface FileSource {
 
 export type Source = FileSource; // Ready to add new source types if we want.
 
-enum TransformFile {
+export enum TransformFile {
   Apache = './apache-remap.vrl',
   PlainText = './plaintext-remap.vrl',
 }
