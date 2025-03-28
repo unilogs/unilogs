@@ -13,12 +13,13 @@ transforms:
       - kafka
     source: |
       . = parse_json!(.message)
+      .timestamp = parse_timestamp!(.timestamp, format: "%Y-%m-%dT%H:%M:%S.%fZ")
 
 sinks:
   loki:
     type: loki
     inputs:
-      - parse_json  # Use the transformed logs
+      - parse_json # Use the transformed logs
     endpoint: http://loki:3100
     labels:
       agent: vector
