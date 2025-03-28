@@ -52,4 +52,4 @@ This may be due to the current user or role not having Kubernetes RBAC permissio
 
 Seems like it may expect me to set up some sort of auth config during bootstrapping (possibly as a AWS Auth Config file)? For now, I have to sign in as my root user to view EKS cluster resources, but it has not caused any problems / there has been no need to do so yet.
 
-2. Bug when deleting EKS Cluster Stack from AWS Cloud Formation console: "The following resource(s) failed to delete: [FargateClusterCoreDnsComputeTypePatch711BF1B2]." Does not prevent deleting everything else, though.
+2. Bug when deleting EKS Cluster Stack from AWS Cloud Formation console (at least previously, not sure about current deployment of course): "The following resource(s) failed to delete: [FargateClusterCoreDnsComputeTypePatch711BF1B2]." Does not prevent deleting everything else, though.
