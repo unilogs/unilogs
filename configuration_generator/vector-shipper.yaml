@@ -5,7 +5,12 @@ sources:
       - /logs/*.log
 
 transforms:
-  parse_logs:
+  parse_logs1:
+    type: remap
+    inputs:
+      - app_logs
+    file: "./apache-remap.vrl"
+  parse_logs2:
     type: remap
     inputs:
       - app_logs
@@ -15,7 +20,8 @@ sinks:
   loki_sink:
     type: loki
     inputs:
-      - parse_logs
+      - parse_logs1
+      - parse_logs2
     endpoint: https://logs-prod-036.grafana.net
     path: /loki/api/v1/push
     auth:
@@ -29,6 +35,7 @@ sinks:
   console:
     type: console
     inputs:
-      - parse_logs
+      - parse_logs1
+      - parse_logs2
     encoding:
-      codec: json
+      codec: logfmt # json
