@@ -4,12 +4,10 @@ import { KubectlV32Layer as KubectlLayer } from "@aws-cdk/lambda-layer-kubectl-v
 import * as cdk from "aws-cdk-lib";
 import * as ec2 from "aws-cdk-lib/aws-ec2";
 import * as eks from "aws-cdk-lib/aws-eks";
+import * as s3 from 'aws-cdk-lib/aws-s3';
 
 // // adding this back from sample AWS code because of permission issues, may need it
 // import * as iam from "aws-cdk-lib/aws-iam";
-
-// new code from ChatGPT for adding S3
-import * as s3 from 'aws-cdk-lib/aws-s3';
 
 // the latest version as of March 2025
 const kubernetesVersion = eks.KubernetesVersion.V1_32;
@@ -23,16 +21,14 @@ const clusterLogging = [
   eks.ClusterLoggingTypes.CONTROLLER_MANAGER,
 ];
 
+const S3_BUCKET_BASE_ENDPOINT = `s3.${process.env.AWS_DEFAULT_REGION}.amazonaws.com`;
+
 class EKSCluster extends cdk.Stack {
   constructor(scope: cdk.App, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
-    // Create a new VPC for our cluster
     const vpc = new ec2.Vpc(this, "EKSVpc");
 
-    // Create a Fargate-based EKS Cluster.
-    // The FargateCluster construct automatically creates a default Fargate
-    // profile that targets the "default" namespace.
     const eksCluster = new eks.FargateCluster(this, "FargateCluster", {
       vpc,
       version: kubernetesVersion,
@@ -57,53 +53,94 @@ class EKSCluster extends cdk.Stack {
     // addManagedAddon("addonEksPodIdentityAgent", "eks-pod-identity-agent");
     // addManagedAddon("addonMetricsServer", "metrics-server"); // critical for HPA
 
-    // // // untested GoogleAI code relying on the cdk8s package
-    // // Create Kubernetes Namespace
-    // const namespace = new k8s.Namespace(this, 'MyNamespace', {
-    //   metadata: {
-    //     name: 'my-namespace'
-    //   }
-    // });
-
-    // // Deploy Helm Chart
-    // new k8s.Chart(this, 'MyHelmChart', {
-    //   chartName: 'my-chart', // Replace with your chart name
-    //   namespace: namespace.metadata.name,
-    //   // ... (Helm chart configuration)
-    // });
-
-
-    // // untested ChatGPT code to add S3 bucket and Loki Helm chart
-    // Create an S3 bucket for application data
-    const appBucket = new s3.Bucket(this, 'AppBucket', {
-      // Note: Bucket names must be globally unique; adjust accordingly.
-      bucketName: `my-app-bucket-${this.account}-${this.region}`.toLowerCase(),
+    const logBucket = new s3.Bucket(this, 'LogBucket', { // names must be globally unique across AWS
+      bucketName: `logBucket-${process.env.AWS_DEFAULT_ACCOUNT}-${process.env.AWS_DEFAULT_REGION}`.toLowerCase(),
       removalPolicy: cdk.RemovalPolicy.DESTROY, // For dev purposes only
       autoDeleteObjects: true, // For dev purposes only
     });
 
-    // add Helm chart(s) for Grafana Loki...
+    const indexBucket = new s3.Bucket(this, 'IndexBucket', {
+      bucketName: `indexBucket-${process.env.AWS_DEFAULT_ACCOUNT}-${process.env.AWS_DEFAULT_REGION}`.toLowerCase(),
+      removalPolicy: cdk.RemovalPolicy.DESTROY, // For dev purposes only
+      autoDeleteObjects: true, // For dev purposes only
+    });
+
+    // add Helm chart for Grafana Loki -- should only be one chart, I think, the "loki" chart
     const lokiHelmChart = eksCluster.addHelmChart('LokiChart', {
       chart: 'loki',
-      // chatGPT gave invalid repo for CDK, trying the github link instead
-      // recommended loki chart moved to new repo, here:
-      repository: 'https://github.com/grafana/loki/tree/main/production/helm/loki',
+      repository: 'https://grafana.github.io/helm-charts/',
       release: 'loki-release',
-      namespace: 'monitoring',
+      namespace: 'default', // to explicitly match namespace used (by default) by FargateCluster construct
       values: {
-        // Pass any configuration values here, e.g., S3 bucket details for storage
-        config: {
+        // config values from grafana instructions with details filled in
+        // (refactor todo: extract to yaml config file and load in)
+        // values may be for both the "loki" chart and the "grafana/loki" chart
+        loki: {
+          schemaConfig: {
+            configs: [{
+              from: "2024-04-01",
+              store: "tsdb",
+              object_store: "s3",
+              schema: "v13",
+              index: {
+                prefix: "loki_index_",
+                period: "24h"
+              }
+            }],
+          },
           storage_config: {
             aws: {
-              s3: {
-                bucket: appBucket.bucketName,
-                region: process.env.CDK_DEFAULT_REGION || 'us-west-1',
-                // additional S3 configuration...
-              },
-            },
+              region: process.env.AWS_DEFAULT_REGION,
+              bucketnames: logBucket.bucketName,
+              s3forcepathstyle: false
+            }
           },
+          pattern_ingester: {
+            enabled: true
+          },
+          limits_config: {
+            allow_structured_metadata: true,
+            volume_enabled: true,
+            retention_period: "672h"
+          },
+          querier: {
+            max_concurrent: 4
+          },
+          storage: {
+            type: "s3",
+            bucketNames: {
+              chunks: logBucket.bucketName,
+              ruler: indexBucket.bucketName
+              // admin: "your-admin-bucket" // not used unless enterprise mode
+            },
+            s3: {
+              // // not using the s3 url because we don't need to, and also I'm not sure which bucket name to specify
+              // s3: `s3://${process.env.AWS_ACCESS_KEY}:${process.env.AWS_SECRET_ACCESS_KEY}@${S3_BUCKET_BASE_ENDPOINT}/bucket_name`,
+              // // using individual fields instead:
+              endpoint: S3_BUCKET_BASE_ENDPOINT,
+              region: process.env.AWS_DEFAULT_REGION,
+              secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+              accessKeyId: process.env.AWS_ACCESS_KEY,
+              signatureVersion: "v4", // standard for most regions
+              s3ForcePathStyle: false,
+              insecure: false,
+              http_config: {}
+            }
+          }
         },
-        // shouldn't need to change anything else I think? simple scalable is the default
+        deploymentMode: "SimpleScalable",
+        backend: {
+          replicas: 3
+        },
+        read: {
+          replicas: 3
+        },
+        write: {
+          replicas: 3
+        },
+        minio: {
+          enabled: false
+        }
       },
     });
   }
@@ -113,11 +150,9 @@ const app = new cdk.App();
 new EKSCluster(app, "MyEKSCluster", {
   env: {
     account: process.env.CDK_DEFAULT_ACCOUNT,
-    region: process.env.CDK_DEFAULT_REGION || 'us-west-1', // added alt default
+    region: process.env.CDK_DEFAULT_REGION || 'us-east-1', // added alt default which seems to match AWS default region
   },
 });
-
-
 
 // creates the CloudFormation template based on stack and environment,
 // needed for bootstrapping
