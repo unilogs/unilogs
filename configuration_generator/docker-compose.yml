@@ -7,3 +7,5 @@ services:
       - ./vector-shipper.yaml:/etc/vector/vector.yaml:ro
       - ./apache-remap.vrl:/apache-remap.vrl:ro
     command: ["-c", "/etc/vector/vector.yaml"]
+    environment:
+      - LOKI_TOKEN=${LOKI_TOKEN}
