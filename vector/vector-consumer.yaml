@@ -14,7 +14,8 @@ transforms:
     source: |
       . = parse_json!(.message)
       .timestamp = parse_timestamp!(.timestamp, format: "%Y-%m-%dT%H:%M:%S.%fZ")
-
+      .test_label = .uni_logs_label
+      
 sinks:
   loki:
     type: loki
@@ -22,6 +23,7 @@ sinks:
       - parse_json # Use the transformed logs
     endpoint: http://loki:3100
     labels:
+      unilogs: '{{ test_label }}'
       agent: vector
     encoding:
       codec: json
