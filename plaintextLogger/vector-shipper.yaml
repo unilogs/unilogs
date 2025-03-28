@@ -15,7 +15,7 @@ transforms:
 
       # Parse the log line using the Grok pattern
       parsed, err = parse_grok(.message, "\\[%{LOGLEVEL:level}\\] %{GREEDYDATA:message} at %{TIMESTAMP_ISO8601:timestamp}")
-      
+
       # Handle errors (e.g., if the log line doesn't match the pattern)
       if err != null {
         log("Failed to parse log line: " + string!(err), level: "error")
@@ -29,6 +29,8 @@ transforms:
         # Timestamp is captured as `timestamp`
       }
 
+      # Testing
+      .uni_logs_label="test"
 
 sinks:
   kafka:
@@ -39,7 +41,7 @@ sinks:
     topic: app_logs_topic
     encoding:
       codec: json
-  
+
   console:
     type: console
     inputs:
