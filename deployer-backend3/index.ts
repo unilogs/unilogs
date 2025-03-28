@@ -1,5 +1,3 @@
-// just noticed discrepancy in version here, changing to v32 instead of v31
-// deployment not yet retested!
 import { KubectlV32Layer as KubectlLayer } from "@aws-cdk/lambda-layer-kubectl-v32";
 import * as cdk from "aws-cdk-lib";
 import * as ec2 from "aws-cdk-lib/aws-ec2";
@@ -36,24 +34,7 @@ class EKSCluster extends cdk.Stack {
       clusterLogging: clusterLogging,
     });
 
-    // // seems like these add-ons are incorporated into the cluster by default for V1_32
-    // // they are not visible in the "add-ons" section of the cluster, unlike with V1_31
-    // // I have not yet tested deployment without this code, however
-
-    // const addManagedAddon = (id: string, addonName: string) => {
-    //   new eks.CfnAddon(this, id, {
-    //     addonName,
-    //     clusterName: eksCluster.clusterName,
-    //   });
-    // };
-
-    // addManagedAddon("addonKubeProxy", "kube-proxy");
-    // addManagedAddon("addonCoreDns", "coredns");
-    // addManagedAddon("addonVpcCni", "vpc-cni");
-    // addManagedAddon("addonEksPodIdentityAgent", "eks-pod-identity-agent");
-    // addManagedAddon("addonMetricsServer", "metrics-server"); // critical for HPA
-
-    const logBucket = new s3.Bucket(this, 'LogBucket', { // names must be globally unique across AWS
+    const logBucket = new s3.Bucket(this, 'LogBucket', {
       bucketName: `logBucket-${process.env.AWS_DEFAULT_ACCOUNT}-${process.env.AWS_DEFAULT_REGION}`.toLowerCase(),
       removalPolicy: cdk.RemovalPolicy.DESTROY, // For dev purposes only
       autoDeleteObjects: true, // For dev purposes only
@@ -65,7 +46,6 @@ class EKSCluster extends cdk.Stack {
       autoDeleteObjects: true, // For dev purposes only
     });
 
-    // add Helm chart for Grafana Loki -- should only be one chart, I think, the "loki" chart
     const lokiHelmChart = eksCluster.addHelmChart('LokiChart', {
       chart: 'loki',
       repository: 'https://grafana.github.io/helm-charts/',
@@ -74,7 +54,6 @@ class EKSCluster extends cdk.Stack {
       values: {
         // config values from grafana instructions with details filled in
         // (refactor todo: extract to yaml config file and load in)
-        // values may be for both the "loki" chart and the "grafana/loki" chart
         loki: {
           schemaConfig: {
             configs: [{
@@ -150,10 +129,8 @@ const app = new cdk.App();
 new EKSCluster(app, "MyEKSCluster", {
   env: {
     account: process.env.CDK_DEFAULT_ACCOUNT,
-    region: process.env.CDK_DEFAULT_REGION || 'us-east-1', // added alt default which seems to match AWS default region
+    region: process.env.CDK_DEFAULT_REGION || 'us-east-1', // alt default
   },
 });
 
-// creates the CloudFormation template based on stack and environment,
-// needed for bootstrapping
-app.synth();
+app.synth(); // make CloudFormation template for bootstrapping
