@@ -3,6 +3,9 @@ import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as msk from 'aws-cdk-lib/aws-msk';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as cr from 'aws-cdk-lib/custom-resources';
+import * as eks from 'aws-cdk-lib/aws-eks';
+import * as s3 from 'aws-cdk-lib/aws-s3';
+import { KubectlV31Layer as KubectlLayer } from '@aws-cdk/lambda-layer-kubectl-v31';
 
 export class UnilogsCdkStack extends cdk.Stack {
   constructor(scope: cdk.App, id: string, props?: cdk.StackProps) {
@@ -33,6 +36,12 @@ export class UnilogsCdkStack extends cdk.Stack {
       description: 'Security group for MSK cluster',
       allowAllOutbound: true,
     });
+
+    mskSecurityGroup.addIngressRule(
+      ec2.Peer.ipv4(vpc.vpcCidrBlock),
+      ec2.Port.tcpRange(9092, 9098),
+      'Allow from EKS pods'
+    );
 
     // Create the MSK Cluster
     const mskCluster = new msk.CfnCluster(this, 'UniLogsKafka', {
@@ -98,5 +107,39 @@ export class UnilogsCdkStack extends cdk.Stack {
     new cdk.CfnOutput(this, 'KafkaBootstrapServers', {
       value: mskBrokers.getResponseField('BootstrapBrokerString'),
     });
+
+    // Create the EKS Fargate Cluster with kubectl layer
+    const cluster = new eks.FargateCluster(this, 'FargateCluster', {
+      vpc,
+      version: eks.KubernetesVersion.V1_32,
+      kubectlLayer: new KubectlLayer(this, 'kubectl'),
+      // No kubectlLayer needed in v2.100.0
+    });
+
+    // Add permissions for the cluster to access MSK
+    cluster.awsAuth.addRoleMapping(
+      new iam.Role(this, 'KafkaAccessRole', {
+        assumedBy: new iam.ServicePrincipal('eks.amazonaws.com'),
+        inlinePolicies: {
+          mskAccess: new iam.PolicyDocument({
+            statements: [
+              new iam.PolicyStatement({
+                actions: ['kafka:DescribeCluster', 'kafka:GetBootstrapBrokers'],
+                resources: [mskCluster.attrArn],
+              }),
+            ],
+          }),
+        },
+      }),
+      {
+        groups: ['system:masters'],
+      }
+    );
+
+    // Output cluster info
+    new cdk.CfnOutput(this, 'ClusterName', { value: cluster.clusterName });
+
+    // Make EKS depend on MSK being ready
+    cluster.node.addDependency(mskCluster);
   }
 }
