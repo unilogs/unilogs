@@ -1,16 +1,16 @@
-require("dotenv").config();
-const winston = require("winston");
+require('dotenv').config();
+const winston = require('winston');
 
 const logFilePath = process.env.LOG_FILE_PATH;
 
 function logRandomEvents(message) {
   const logger = winston.createLogger({
-    level: "info",
+    level: 'info',
     transports: [
       new winston.transports.File({
         filename: logFilePath,
         format: winston.format.printf(({ message }) => message),
-        options: { flags: "a", highWaterMark: 1 },
+        options: { flags: 'a', highWaterMark: 1 },
       }),
       new winston.transports.Console({
         format: winston.format.combine(
@@ -21,18 +21,26 @@ function logRandomEvents(message) {
     ],
   });
 
-  const logLevels = ["info", "warn", "error", "debug"];
+  const logLevels = ['info', 'warn', 'error', 'debug'];
   const randomLevel = logLevels[Math.floor(Math.random() * logLevels.length)];
 
   // const formats = ['plainText', 'commonLog', 'apacheCombined', 'syslog'];
-  const formats = ["plainText"];
+  const formats = ['plainText'];
   const randomFormat = formats[Math.floor(Math.random() * formats.length)];
+
+  // uncomment to test 25-year old logs
+  // const time = Date.now() - 7.889 * 10 ** 11;
+  // const timestamp = new Date(time).toISOString();
+
+  // uncomment to test test 30 minute old logs
+  // const time = Date.now() - 1.8 * 10 ** 6;
+  // const timestamp = new Date(time).toISOString();
 
   const timestamp = new Date().toISOString();
   const randomLogMessage = `${message} at ${timestamp}`;
 
   switch (randomLevel) {
-    case "info":
+    case 'info':
       switch (randomFormat) {
         case 'plainText':
           logger.info(`[INFO] ${randomLogMessage}`);
@@ -42,7 +50,7 @@ function logRandomEvents(message) {
             `${'127.0.0.1'} - - [${timestamp}] "GET / HTTP/1.1" 200 2326`
           );
           break;
-        case "apacheCombined":
+        case 'apacheCombined':
           logger.info(
             `127.0.0.1 - - [${timestamp}] "GET / HTTP/1.1" 200 2326 "http://example.com" "Mozilla/5.0"`
           );
@@ -53,7 +61,7 @@ function logRandomEvents(message) {
       }
       break;
 
-    case "warn":
+    case 'warn':
       switch (randomFormat) {
         case 'plainText':
           logger.warn(`[WARN] ${randomLogMessage}`);
@@ -63,7 +71,7 @@ function logRandomEvents(message) {
             `${'127.0.0.1'} - - [${timestamp}] "GET /warn HTTP/1.1" 404 2326`
           );
           break;
-        case "apacheCombined":
+        case 'apacheCombined':
           logger.warn(
             `127.0.0.1 - - [${timestamp}] "GET /warn HTTP/1.1" 404 2326 "http://example.com" "Mozilla/5.0"`
           );
@@ -74,7 +82,7 @@ function logRandomEvents(message) {
       }
       break;
 
-    case "error":
+    case 'error':
       switch (randomFormat) {
         case 'plainText':
           logger.error(`[ERROR] ${randomLogMessage}`);
@@ -84,7 +92,7 @@ function logRandomEvents(message) {
             `${'127.0.0.1'} - - [${timestamp}] "GET /error HTTP/1.1" 500 2326`
           );
           break;
-        case "apacheCombined":
+        case 'apacheCombined':
           logger.error(
             `127.0.0.1 - - [${timestamp}] "GET /error HTTP/1.1" 500 2326 "http://example.com" "Mozilla/5.0"`
           );
@@ -95,17 +103,17 @@ function logRandomEvents(message) {
       }
       break;
 
-    case "debug":
+    case 'debug':
       switch (randomFormat) {
         case 'plainText':
           logger.debug(`[DEBUG] ${randomLogMessage}`);
           break;
         case 'commonLog':
-        logger.debug(
+          logger.debug(
             `${'127.0.0.1'} - - [${timestamp}] "GET /debug HTTP/1.1" 200 2326`
           );
           break;
-        case "apacheCombined":
+        case 'apacheCombined':
           logger.debug(
             `127.0.0.1 - - [${timestamp}] "GET /debug HTTP/1.1" 200 2326 "http://example.com" "Mozilla/5.0"`
           );
@@ -120,5 +128,5 @@ function logRandomEvents(message) {
 }
 
 setInterval(() => {
-  logRandomEvents("Random event logged");
+  logRandomEvents('Random event logged');
 }, 2000);
