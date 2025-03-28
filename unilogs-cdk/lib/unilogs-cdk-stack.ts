@@ -11,7 +11,7 @@ export class UnilogsCdkStack extends cdk.Stack {
   constructor(scope: cdk.App, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
-    // Create a VPC with 2 AZs for high availability
+    // ==================== VPC CONFIGURATION ====================
     const vpc = new ec2.Vpc(this, 'UniLogsVpc', {
       maxAzs: 2,
       natGateways: 1,
@@ -26,29 +26,24 @@ export class UnilogsCdkStack extends cdk.Stack {
         },
       ],
     });
-
-    // Output the VPC ID for reference
     new cdk.CfnOutput(this, 'VpcId', { value: vpc.vpcId });
 
-    // MSK Cluster Security Group
+    // ==================== MSK KAFKA CLUSTER ====================
     const mskSecurityGroup = new ec2.SecurityGroup(this, 'MskSecurityGroup', {
       vpc,
       description: 'Security group for MSK cluster',
       allowAllOutbound: true,
     });
-
     mskSecurityGroup.addIngressRule(
       ec2.Peer.ipv4(vpc.vpcCidrBlock),
       ec2.Port.tcpRange(9092, 9098),
       'Allow from EKS pods'
     );
 
-    // Create the MSK Cluster
     const mskCluster = new msk.CfnCluster(this, 'UniLogsKafka', {
       clusterName: 'unilogs-kafka',
       kafkaVersion: '3.6.0',
       numberOfBrokerNodes: 2,
-
       brokerNodeGroupInfo: {
         instanceType: 'kafka.m5.large',
         clientSubnets: vpc.selectSubnets({
@@ -57,29 +52,26 @@ export class UnilogsCdkStack extends cdk.Stack {
         securityGroups: [mskSecurityGroup.securityGroupId],
         storageInfo: {
           ebsStorageInfo: {
-            volumeSize: 100,
+            volumeSize: 100, // GB
           },
         },
       },
-
       clientAuthentication: {
         unauthenticated: {
-          enabled: true,
+          enabled: true, // For testing (production should use TLS)
         },
       },
-
       encryptionInfo: {
         encryptionInTransit: {
-          clientBroker: 'PLAINTEXT',
+          clientBroker: 'PLAINTEXT', // For testing (production should use TLS)
         },
       },
     });
 
-    // Create a role for the custom resource
+    // Custom resource to get MSK brokers
     const mskBrokersRole = new iam.Role(this, 'MskBrokersRole', {
       assumedBy: new iam.ServicePrincipal('lambda.amazonaws.com'),
     });
-
     mskBrokersRole.addToPolicy(
       new iam.PolicyStatement({
         actions: ['kafka:GetBootstrapBrokers', 'kafka:DescribeCluster'],
@@ -87,7 +79,6 @@ export class UnilogsCdkStack extends cdk.Stack {
       })
     );
 
-    // Create the custom resource to get bootstrap brokers
     const mskBrokers = new cr.AwsCustomResource(this, 'MskBootstrapBrokers', {
       policy: cr.AwsCustomResourcePolicy.fromSdkCalls({
         resources: cr.AwsCustomResourcePolicy.ANY_RESOURCE,
@@ -102,21 +93,19 @@ export class UnilogsCdkStack extends cdk.Stack {
       },
       role: mskBrokersRole,
     });
-
-    // Output the bootstrap brokers - ONLY USE THE CUSTOM RESOURCE VERSION
     new cdk.CfnOutput(this, 'KafkaBootstrapServers', {
       value: mskBrokers.getResponseField('BootstrapBrokerString'),
     });
 
-    // Create the EKS Fargate Cluster with kubectl layer
+    // ==================== EKS CLUSTER ====================
     const cluster = new eks.FargateCluster(this, 'FargateCluster', {
       vpc,
       version: eks.KubernetesVersion.V1_32,
       kubectlLayer: new KubectlLayer(this, 'kubectl'),
-      // No kubectlLayer needed in v2.100.0
+      clusterName: 'unilogs-cluster',
     });
 
-    // Add permissions for the cluster to access MSK
+    // IAM permissions for EKS to access MSK
     cluster.awsAuth.addRoleMapping(
       new iam.Role(this, 'KafkaAccessRole', {
         assumedBy: new iam.ServicePrincipal('eks.amazonaws.com'),
@@ -136,10 +125,197 @@ export class UnilogsCdkStack extends cdk.Stack {
       }
     );
 
-    // Output cluster info
-    new cdk.CfnOutput(this, 'ClusterName', { value: cluster.clusterName });
+    // ==================== LOKI STORAGE ====================
+    const timestamp = new Date().getTime();
 
-    // Make EKS depend on MSK being ready
+    const lokiChunkBucket = new s3.Bucket(this, 'LokiChunkBucket', {
+      bucketName: `unilogs-loki-chunk-${this.account}-${this.region}-${cdk.Names.uniqueId(this).toLowerCase()}`,
+      encryption: s3.BucketEncryption.S3_MANAGED,
+      enforceSSL: true,
+      autoDeleteObjects: true, // First empties the bucket
+      removalPolicy: cdk.RemovalPolicy.DESTROY, // Then deletes bucket
+    });
+
+    const lokiRulerBucket = new s3.Bucket(this, 'LokiRulerBucket', {
+      bucketName: `unilogs-loki-ruler-${this.account}-${this.region}-${cdk.Names.uniqueId(this).toLowerCase()}`,
+      encryption: s3.BucketEncryption.S3_MANAGED,
+      enforceSSL: true,
+      autoDeleteObjects: true, // First empties the bucket
+      removalPolicy: cdk.RemovalPolicy.DESTROY, // Then deletes bucket
+    });
+
+    const lokiAdminBucket = new s3.Bucket(this, 'LokiAdminBucket', {
+      bucketName: `unilogs-loki-admin-${this.account}-${this.region}-${cdk.Names.uniqueId(this).toLowerCase()}`,
+      encryption: s3.BucketEncryption.S3_MANAGED,
+      enforceSSL: true,
+      autoDeleteObjects: true, // First empties the bucket
+      removalPolicy: cdk.RemovalPolicy.DESTROY, // Then deletes bucket
+    });
+
+    // IAM role for Loki pods
+    const lokiRole = new iam.Role(this, 'LokiRole', {
+      assumedBy: new iam.ServicePrincipal('eks.amazonaws.com'),
+      inlinePolicies: {
+        lokiS3Access: new iam.PolicyDocument({
+          statements: [
+            new iam.PolicyStatement({
+              actions: [
+                's3:ListBucket',
+                's3:PutObject',
+                's3:GetObject',
+                's3:DeleteObject',
+              ],
+              resources: [
+                lokiChunkBucket.bucketArn,
+                `${lokiChunkBucket.bucketArn}/*`,
+                lokiRulerBucket.bucketArn,
+                `${lokiRulerBucket.bucketArn}/*`,
+                lokiAdminBucket.bucketArn,
+                `${lokiAdminBucket.bucketArn}/*`,
+              ],
+            }),
+          ],
+        }),
+      },
+    });
+    cluster.awsAuth.addRoleMapping(lokiRole, {
+      groups: ['system:masters'],
+      username: 'loki-s3-user',
+    });
+
+    // ==================== LOKI DEPLOYMENT ====================
+    const lokiChart = cluster.addHelmChart('LokiScalable', {
+      chart: 'loki',
+      repository: 'https://grafana.github.io/helm-charts',
+      namespace: 'loki',
+      createNamespace: true,
+      version: '5.42.1',
+      values: {
+        loki: {
+          schemaConfig: {
+            configs: [
+              {
+                from: '2024-04-01',
+                store: 'tsdb',
+                object_store: 's3',
+                schema: 'v13',
+                index: {
+                  prefix: 'loki_index_',
+                  period: '24h',
+                },
+              },
+            ],
+          },
+          storage_config: {
+            aws: {
+              region: this.region,
+              s3: `s3://${lokiChunkBucket.bucketName}`,
+              s3forcepathstyle: false,
+            },
+          },
+          ingester: {
+            chunk_encoding: 'snappy',
+          },
+          querier: {
+            max_concurrent: 4,
+          },
+          pattern_ingester: {
+            enabled: true,
+          },
+          limits_config: {
+            allow_structured_metadata: true,
+            volume_enabled: true,
+            retention_period: '672h', // 28 days
+          },
+        },
+        deploymentMode: 'SimpleScalable',
+        backend: {
+          replicas: 2,
+          persistence: {
+            storageClass: 'gp2',
+            size: '10Gi',
+          },
+        },
+        read: {
+          replicas: 2,
+          persistence: {
+            storageClass: 'gp2',
+            size: '10Gi',
+          },
+        },
+        write: {
+          replicas: 3,
+          persistence: {
+            storageClass: 'gp2',
+            size: '10Gi',
+          },
+        },
+        minio: {
+          enabled: false,
+        },
+        gateway: {
+          enabled: false, // Disabled in favor of custom service
+        },
+        serviceAccount: {
+          create: true,
+          name: 'loki-service-account',
+          annotations: {
+            'eks.amazonaws.com/role-arn': lokiRole.roleArn,
+          },
+        },
+      },
+    });
+
+    // Custom Gateway Service with NLB
+    const lokiGatewayService = cluster.addManifest('LokiGatewayService', {
+      apiVersion: 'v1',
+      kind: 'Service',
+      metadata: {
+        name: 'loki-gateway',
+        namespace: 'loki',
+        labels: { app: 'loki', component: 'gateway' },
+        annotations: {
+          'service.beta.kubernetes.io/aws-load-balancer-type': 'nlb',
+          'service.beta.kubernetes.io/aws-load-balancer-healthcheck-healthy-threshold':
+            '2',
+          'service.beta.kubernetes.io/aws-load-balancer-healthcheck-unhealthy-threshold':
+            '2',
+          'service.beta.kubernetes.io/aws-load-balancer-healthcheck-interval':
+            '10',
+        },
+      },
+      spec: {
+        type: 'LoadBalancer',
+        ports: [{ port: 80, targetPort: 80, protocol: 'TCP' }],
+        selector: { app: 'loki', component: 'gateway' },
+      },
+    });
+    lokiGatewayService.node.addDependency(lokiChart);
+
+    // ==================== DEPENDENCIES ====================
+    lokiChart.node.addDependency(
+      lokiChunkBucket,
+      lokiRulerBucket,
+      lokiAdminBucket,
+      mskCluster
+    );
     cluster.node.addDependency(mskCluster);
+
+    // ==================== OUTPUTS ====================
+    new cdk.CfnOutput(this, 'ClusterName', { value: cluster.clusterName });
+    new cdk.CfnOutput(this, 'LokiGatewayEndpoint', {
+      value: `http://loki-gateway.loki.svc.cluster.local`,
+      description: 'Internal DNS name for Loki Gateway',
+    });
+    new cdk.CfnOutput(this, 'LokiGatewayExternalCommand', {
+      value:
+        'kubectl get svc loki-gateway -n loki -o jsonpath="{.status.loadBalancer.ingress[0].hostname}"',
+      description: 'Command to get external Loki Gateway endpoint',
+    });
+    new cdk.CfnOutput(this, 'ValidationCommand', {
+      value:
+        'kubectl -n loki logs -l app.kubernetes.io/instance=loki -c distributor | grep "msg="starting component"',
+      description: 'Command to verify Loki components started',
+    });
   }
 }
