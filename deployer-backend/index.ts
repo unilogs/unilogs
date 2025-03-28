@@ -3,6 +3,7 @@ import * as cdk from "aws-cdk-lib";
 import * as ec2 from "aws-cdk-lib/aws-ec2";
 import * as eks from "aws-cdk-lib/aws-eks";
 import * as s3 from 'aws-cdk-lib/aws-s3';
+import * as iam from 'aws-cdk-lib/aws-iam';
 
 // // adding this back from sample AWS code because of permission issues, may need it
 // import * as iam from "aws-cdk-lib/aws-iam";
@@ -46,6 +47,26 @@ class EKSCluster extends cdk.Stack {
       autoDeleteObjects: true, // For dev purposes only
     });
 
+    const lokiS3Policy = new iam.Policy(this, 'LokiBucketPolicy', {
+      statements: [new iam.PolicyStatement({
+        sid: 'LokiStorage',
+        effect: iam.Effect.ALLOW,
+        actions: ['s3:ListBucket', 's3:PutObject', 's3:GetObject', 's3:DeleteObject'],
+        resources: [logBucket.bucketArn, indexBucket.bucketArn]
+      })]
+    });
+    const trustPolicy = new iam.Policy(this, 'TrustPolicy', {
+      statements: [new iam.PolicyStatement({
+        effect: iam.Effect.ALLOW,
+        principals: [], // Still need to add this.
+        conditions: {"StringEquals": {
+          [`oidc.eks.${process.env.AWS_DEFAULT_REGION}.amazonaws.com/id/${eksCluster.openIdConnectProvider.node.id /* probably wrong */}:sub`]: 'system:serviceaccount:loki:loki',
+          [`oidc.eks.${process.env.AWS_DEFAULT_REGION}.amazonaws.com/id/< OIDC ID >:aud`]: 'sts.amazonaws.com'
+        }}
+      })]
+    });
+
+    const lokiServiceAccountRole = new iam.Role(this, 'LokiServiceAccountRole', {managedPolicies: trustPolicy})
     const lokiHelmChart = eksCluster.addHelmChart('LokiChart', {
       chart: 'loki',
       repository: 'https://grafana.github.io/helm-charts/',
@@ -90,12 +111,8 @@ class EKSCluster extends cdk.Stack {
             bucketNames: {
               chunks: logBucket.bucketName,
               ruler: indexBucket.bucketName
-              // admin: "your-admin-bucket" // not used unless enterprise mode
             },
             s3: {
-              // // not using the s3 url because we don't need to, and also I'm not sure which bucket name to specify
-              // s3: `s3://${process.env.AWS_ACCESS_KEY}:${process.env.AWS_SECRET_ACCESS_KEY}@${S3_BUCKET_BASE_ENDPOINT}/bucket_name`,
-              // // using individual fields instead:
               endpoint: S3_BUCKET_BASE_ENDPOINT,
               region: process.env.AWS_DEFAULT_REGION,
               secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
