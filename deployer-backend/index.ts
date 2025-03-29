@@ -5,9 +5,6 @@ import * as eks from "aws-cdk-lib/aws-eks";
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as iam from 'aws-cdk-lib/aws-iam';
 
-// // adding this back from sample AWS code because of permission issues, may need it
-// import * as iam from "aws-cdk-lib/aws-iam";
-
 // the latest version as of March 2025
 const kubernetesVersion = eks.KubernetesVersion.V1_32;
 
@@ -47,26 +44,29 @@ class EKSCluster extends cdk.Stack {
       autoDeleteObjects: true, // For dev purposes only
     });
 
-    const lokiS3Policy = new iam.Policy(this, 'LokiBucketPolicy', {
-      statements: [new iam.PolicyStatement({
-        sid: 'LokiStorage',
-        effect: iam.Effect.ALLOW,
-        actions: ['s3:ListBucket', 's3:PutObject', 's3:GetObject', 's3:DeleteObject'],
-        resources: [logBucket.bucketArn, indexBucket.bucketArn]
-      })]
-    });
-    const trustPolicy = new iam.Policy(this, 'TrustPolicy', {
-      statements: [new iam.PolicyStatement({
-        effect: iam.Effect.ALLOW,
-        principals: [], // Still need to add this.
-        conditions: {"StringEquals": {
-          [`oidc.eks.${process.env.AWS_DEFAULT_REGION}.amazonaws.com/id/${eksCluster.openIdConnectProvider.node.id /* probably wrong */}:sub`]: 'system:serviceaccount:loki:loki',
-          [`oidc.eks.${process.env.AWS_DEFAULT_REGION}.amazonaws.com/id/< OIDC ID >:aud`]: 'sts.amazonaws.com'
-        }}
-      })]
+    // Create a policy statement for accessing the S3 buckets
+    const lokiS3PolicyStatement = new iam.PolicyStatement({
+      sid: 'LokiStorage',
+      effect: iam.Effect.ALLOW,
+      actions: ['s3:ListBucket', 's3:PutObject', 's3:GetObject', 's3:DeleteObject'],
+      resources: [logBucket.bucketArn, indexBucket.bucketArn],
     });
 
-    const lokiServiceAccountRole = new iam.Role(this, 'LokiServiceAccountRole', {managedPolicies: trustPolicy})
+    // Create a service account in the "loki" namespace for Grafana Loki
+    const lokiServiceAccount = eksCluster.addServiceAccount('LokiServiceAccount', {
+      name: 'loki',
+      namespace: 'loki', // you can choose "default" if you prefer; using a dedicated namespace is recommended
+    });
+
+    // Cast the role to iam.Role so that addToPolicy is available,
+    // and attach S3 access policy as an inline policy to the service account's IAM role
+    (lokiServiceAccount.role as iam.Role).addToPolicy(lokiS3PolicyStatement);
+
+    // (Optional) Output the service account role ARN for debugging purposes
+    new cdk.CfnOutput(this, 'LokiServiceAccountRoleArn', {
+      value: lokiServiceAccount.role.roleArn,
+    });
+
     const lokiHelmChart = eksCluster.addHelmChart('LokiChart', {
       chart: 'loki',
       repository: 'https://grafana.github.io/helm-charts/',
