@@ -1,4 +1,4 @@
-import { Source, Transform, Sink } from './types';
+import { Source, Transform, Sink } from './vector-types';
 
 export class VectorConfiguration {
   private sources: Source[];

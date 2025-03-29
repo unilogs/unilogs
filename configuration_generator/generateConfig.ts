@@ -2,7 +2,7 @@ import { stringify } from 'yaml';
 // import fs from 'fs';
 // import prompts from 'prompts';
 import { VectorConfiguration } from './VectorConfiguration';
-import { TransformFile } from './types';
+import { ConsoleEncoding, SinkType, TransformFile } from './vector-types';
 
 // const templateString = fs.readFileSync('./vector-shipper-template.yaml', 'utf8');
 
@@ -36,9 +36,15 @@ testConfig.addSource({
   include: ['/logs/*.log'],
 });
 testConfig.addTransform({
-  transformName: 'testApacheTransform',
+  transformName: 'test_apache_transform',
   inputs: ['test_apache_source'],
-  file: './apache-remap.vrl' as TransformFile.Apache
+  file: TransformFile.Apache,
+});
+testConfig.addSink({
+  sinkName: 'console_sink',
+  inputs: ['test_apache_transform'],
+  type: SinkType.Console,
+  encoding: ConsoleEncoding.Logfmt,
 });
 
 console.log(stringify(testConfig.objectify()));

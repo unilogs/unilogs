@@ -12,6 +12,7 @@ export enum TransformFile {
 interface BaseTransform {
   transformName: string;
   inputs: Source['sourceName'][];
+  file: TransformFile;
 }
 
 export interface ApacheTransform extends BaseTransform {
@@ -24,13 +25,20 @@ export interface PlainTextTransform extends BaseTransform {
 
 export type Transform = ApacheTransform | PlainTextTransform;
 
+export enum SinkType {
+  Console = 'console',
+  Loki = 'loki',
+  Kafka = 'kafka',
+}
+
 interface BaseSink {
   sinkName: string;
+  type: SinkType;
   inputs: BaseTransform['transformName'][];
 }
 
 export interface LokiSink extends BaseSink {
-  type: 'loki';
+  type: SinkType.Loki;
   endpoint: string;
   path: string;
   auth: {
@@ -39,9 +47,13 @@ export interface LokiSink extends BaseSink {
   };
 }
 
+export enum ConsoleEncoding {
+  Logfmt = 'logfmt',
+  Json = 'json',
+}
 export interface ConsoleSink extends BaseSink {
-  type: 'console';
-  encoding: 'logfmt' | 'json';
+  type: SinkType.Console;
+  encoding: ConsoleEncoding;
 }
 
 export type Sink = ConsoleSink | LokiSink;
