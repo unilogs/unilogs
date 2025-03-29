@@ -55,7 +55,7 @@ class EKSCluster extends cdk.Stack {
     // Create a service account in the "loki" namespace for Grafana Loki
     const lokiServiceAccount = eksCluster.addServiceAccount('LokiServiceAccount', {
       name: 'loki',
-      namespace: 'loki', // you can choose "default" if you prefer; using a dedicated namespace is recommended
+      namespace: 'default',
     });
 
     // Cast the role to iam.Role so that addToPolicy is available,
