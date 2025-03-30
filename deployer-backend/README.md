@@ -77,3 +77,27 @@ data:
 
 7. Finally, apply the new aws-auth ConfigMap with `kubectl apply -f aws-auth.yaml`
 8. You can now exit CloudShell, navigate to your cluster on AWS EKS, and view the resources! (Refresh if you're already there.)
+
+## Loki backend pods not scheduled by Fargate
+
+All three of the Loki backend pods, "loki-backend-<0, 1, or 2>", have a Warning event with a "FailedScheduling" reason.
+
+Message: "Pod not supported on Fargate: volumes not supported: data not supported because: PVC data-loki-backend-<0, 1, or 2> not bound"
+
+I think this is because it is not yet properly configured so that it has permissions to use the S3 buckets, and is instead trying to rely on volumes which don't work with Fargate.
+
+## Errors with the three loki read pods
+
+Type: Warning
+	
+Reason: BackOff
+	
+Message: Back-off restarting failed container loki in pod loki-read-<id number>(df7a1fa9-a5fb-4d55-8944-4e47942b7637) [not sure what the other id is here]
+
+Not sure what this implies.
+
+## Grafana error?
+
+I thought for sure I saw somewhere (maybe when looking at the "grafana-release-<id number>" pod) that I saw an event warning stating that after a few successful things, it failed the health check, because the connection was refused. It also gave an error for the logging, saying the logging was not set up / configured. But for some reason when I look back at the pod I don't see any events.
+
+Also, related, I'm not yet sure exactly where to go to attempt to access the Grafana UI, but it doesn't work to simply go to the EIP address for one of the public subnets and use one of the ports for Grafana or Loki. So I'm not sure if this is due to trying the wrong thing or if the UI is inaccessible/down.
