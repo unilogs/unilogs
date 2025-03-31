@@ -222,11 +222,6 @@ class EKSCluster extends cdk.Stack {
 }
 
 const app = new cdk.App();
-new EKSCluster(app, "MyEKSCluster", {
-  env: {
-    account: process.env.CDK_DEFAULT_ACCOUNT,
-    region: process.env.CDK_DEFAULT_REGION || 'us-east-1', // alt default
-  },
-});
+new EKSCluster(app, "MyEKSCluster");
 
 app.synth(); // make CloudFormation template for bootstrapping
