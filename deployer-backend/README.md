@@ -46,9 +46,11 @@ You get a warning on the AWS EKS console when looking at the cluster, signed in 
 
 This may be due to the current user or role not having Kubernetes RBAC permissions to describe cluster resources or not having an entry in the cluster’s auth config map."
 
-We should figure out how to set access up properly during initial CDK deployment. However, there is a manual fix for now, although it takes a little while to do.
+We should figure out how to set access up properly during initial CDK deployment. This will require properly creating IAM roles/permissions, and setting them in the rbac and service account config settings during deployment.
 
-### Post-deployment fix using the AWS EKS console and CloudShell
+However, there is a manual fix for now, although it takes a little while to do.
+
+### Manual (post-deployment) fix using the AWS EKS console and CloudShell
 
 You can grant access after deployment in two main steps.
 
@@ -84,7 +86,7 @@ All three of the Loki backend pods, "loki-backend-<0, 1, or 2>", have a Warning 
 
 Message: "Pod not supported on Fargate: volumes not supported: data not supported because: PVC data-loki-backend-<0, 1, or 2> not bound"
 
-I think this is because it is not yet properly configured so that it has permissions to use the S3 buckets, and is instead trying to rely on volumes which don't work with Fargate.
+This implies we will have to use a regular node group instead of Fargate, at least for the backend pods. However, a mixed cluster may be more complex than desirable.
 
 ## Errors with the three loki read pods
 
@@ -92,12 +94,12 @@ Type: Warning
 	
 Reason: BackOff
 	
-Message: Back-off restarting failed container loki in pod loki-read-<id number>(df7a1fa9-a5fb-4d55-8944-4e47942b7637) [not sure what the other id is here]
+Message: Back-off restarting failed container loki in pod loki-read-<id number>(df7a1fa9-a5fb-4d55-8944-4e47942b7637) [the pod id number?]
 
-Not sure what this implies.
+This implies that the read pods are repeatedly crashing, maybe because the backend pods aren't scheduled.
 
 ## Grafana error?
 
 I thought for sure I saw somewhere (maybe when looking at the "grafana-release-<id number>" pod) that I saw an event warning stating that after a few successful things, it failed the health check, because the connection was refused. It also gave an error for the logging, saying the logging was not set up / configured. But for some reason when I look back at the pod I don't see any events.
 
-Also, related, I'm not yet sure exactly where to go to attempt to access the Grafana UI, but it doesn't work to simply go to the EIP address for one of the public subnets and use one of the ports for Grafana or Loki. So I'm not sure if this is due to trying the wrong thing or if the UI is inaccessible/down.
+Also, related, we will either need to schedule the Grafana pod as a load balancer service, accessible from outside the cluster, or as the default ClusterIP service, internally accessible only (either using the default nginx ingress controller or perhaps from an extra AWS EC2 instance, which could also serve as the hub for our UI if we want).
