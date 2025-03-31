@@ -187,7 +187,7 @@ class EKSCluster extends cdk.Stack {
        // // Set the ip family policy to configure dual-stack see [Configure dual-stack](https://kubernetes.io/docs/concepts/services-networking/dual-stack/#services)
           ipFamilyPolicy: 'PreferDualStack',
        // // Sets the families that should be supported and the order in which they should be applied to ClusterIP as well. Can be IPv4 and/or IPv6.
-          ipFamilies: ['IPv4', 'IPv6'],
+          ipFamilies: ['IPv4'], // can only use what is configured on cluster
           // loadBalancerSourceRanges: [],
           port: 80,
           targetPort: 3000,

@@ -1,19 +1,17 @@
 {
-  "name": "eks-cluster",
-  "version": "1.1.0",
-  "description": "Basic EKS cluster with VPC and Managed Node Group",
-  "private": true,
+  "name": "deployer-backend",
+  "version": "1.0.0",
+  "description": "CDK stack to deploy unilogs on AWS EKS",
   "scripts": {
     "build": "tsc",
     "watch": "tsc -w",
     "cdk": "cdk"
   },
   "author": {
-    "name": "Amazon Web Services",
-    "url": "https://aws.amazon.com",
+    "name": "unilogs",
     "organization": true
   },
-  "license": "Apache-2.0",
+  "license": "ISC",
   "devDependencies": {
     "@types/js-yaml": "^4.0.9",
     "@types/node": "22.7.9",
