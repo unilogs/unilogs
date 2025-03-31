@@ -178,17 +178,16 @@ class EKSCluster extends cdk.Stack {
             //  eks.amazonaws.com/role-arn: arn:aws:iam::123456789000:role/iam-role-name-here
           automountServiceAccountToken: false
         },
-
-          //  Expose the grafana service to be accessed from outside the cluster (LoadBalancer service).
-          //  or access it from within the cluster (ClusterIP service). Set the service type and the port to serve it.
-          //  ref: http://kubernetes.io/docs/user-guide/services/
+      //  Expose the grafana service to be accessed from outside the cluster (LoadBalancer service).
+      //  or access it from within the cluster (ClusterIP service). Set the service type and the port to serve it.
+      //  ref: http://kubernetes.io/docs/user-guide/services/
         service: {
           enabled: true,
           type: 'loadbalancer',
        // // Set the ip family policy to configure dual-stack see [Configure dual-stack](https://kubernetes.io/docs/concepts/services-networking/dual-stack/#services)
-          ipFamilyPolicy: eks.IpFamily.IP_V4, // to match node group config above
+          ipFamilyPolicy: 'PreferDualStack',
        // // Sets the families that should be supported and the order in which they should be applied to ClusterIP as well. Can be IPv4 and/or IPv6.
-          // ipFamilies: [],
+          ipFamilies: ['IPv4', 'IPv6'],
           // loadBalancerSourceRanges: [],
           port: 80,
           targetPort: 3000,

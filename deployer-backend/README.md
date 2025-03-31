@@ -5,8 +5,6 @@ I bootstrapped and deployed the cluster in a bash shell. To do this, I added a `
 `bootstrap.sh` should contain the following code (replace string descriptors with your info):
 
 `
-`export CDK_DEFAULT_ACCOUNT="your account number"`
-`export CDK_DEFAULT_REGION="choose a default region"`
 `export AWS_DEFAULT_ACCOUNT="your account number"`
 `export AWS_DEFAULT_REGION="choose a default region"`
 `export AWS_ACCESS_KEY_ID="your IAM user access key"`
@@ -26,7 +24,7 @@ I bootstrapped and deployed the cluster in a bash shell. To do this, I added a `
 `cdk deploy`
 `
 
-This temporarily provides the environment of the shell with the variables/values necessary to execute each command. Both the `CDK` and `AWS` account/region keys are needed for the bootstrap, because the `env` property of the stack instantiation config object uses the `CDK` values. However, I haven't tested removing that and letting it rely completely on the shell environment during the bootstrap process yet, maybe we can remove the `env` config object and also the `CDK` keys from the bash file.
+This temporarily provides the environment of the shell with the variables/values necessary to execute each command.
 
 # General Notes / Concerns
 
