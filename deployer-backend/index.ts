@@ -3,11 +3,10 @@ import * as cdk from "aws-cdk-lib";
 import * as ec2 from "aws-cdk-lib/aws-ec2";
 import * as eks from "aws-cdk-lib/aws-eks";
 import * as s3 from 'aws-cdk-lib/aws-s3';
-// import * as iam from "aws-cdk-lib/aws-iam";
+import * as iam from "aws-cdk-lib/aws-iam";
 // import * as yaml from 'js-yaml';
 // import * as fs from 'fs';
 
-// the latest version as of March 2025
 const kubernetesVersion = eks.KubernetesVersion.V1_32;
 
 // including all logging types for now just to see what they look like...
@@ -19,6 +18,11 @@ const clusterLogging = [
   eks.ClusterLoggingTypes.CONTROLLER_MANAGER,
 ];
 
+const instanceTypes = [
+  new ec2.InstanceType("m5.large"),
+  new ec2.InstanceType("m5a.large"),
+];
+
 const S3_BUCKET_BASE_ENDPOINT = `s3.${process.env.AWS_DEFAULT_REGION}.amazonaws.com`;
 
 class EKSCluster extends cdk.Stack {
@@ -27,11 +31,31 @@ class EKSCluster extends cdk.Stack {
 
     const vpc = new ec2.Vpc(this, "EKSVpc");
 
-    const eksCluster = new eks.FargateCluster(this, "FargateCluster", {
-      vpc,
+    const eksCluster = new eks.Cluster(this, "EKSCluster", {
+      vpc: vpc,
+      defaultCapacity: 0,
       version: kubernetesVersion,
       kubectlLayer: new KubectlLayer(this, "kubectl"),
+      ipFamily: eks.IpFamily.IP_V4,
       clusterLogging: clusterLogging,
+    });
+
+    eksCluster.addNodegroupCapacity("custom-node-group", {
+      amiType: eks.NodegroupAmiType.AL2023_X86_64_STANDARD,
+      instanceTypes: instanceTypes,
+      desiredSize: 2,
+      minSize: 2,
+      maxSize: 5,
+      diskSize: 20,
+      nodeRole: new iam.Role(this, "eksClusterNodeGroupRole", {
+        roleName: "eksClusterNodeGroupRole",
+        assumedBy: new iam.ServicePrincipal("ec2.amazonaws.com"),
+        managedPolicies: [
+          "AmazonEKSWorkerNodePolicy",
+          "AmazonEC2ContainerRegistryReadOnly",
+          "AmazonEKS_CNI_Policy",
+        ].map((policy) => iam.ManagedPolicy.fromAwsManagedPolicyName(policy)),
+      }),
     });
 
     const logBucket = new s3.Bucket(this, 'LogBucket', {
@@ -91,12 +115,8 @@ class EKSCluster extends cdk.Stack {
             bucketNames: {
               chunks: logBucket.bucketName,
               ruler: indexBucket.bucketName
-              // admin: "your-admin-bucket" // not used except in enterprise mode
             },
             s3: {
-              // // not using the s3 url because we don't need to, and also I'm not sure which bucket name to specify
-              // s3: `s3://${process.env.AWS_ACCESS_KEY}:${process.env.AWS_SECRET_ACCESS_KEY}@${S3_BUCKET_BASE_ENDPOINT}/bucket_name`,
-              // // using individual fields instead:
               endpoint: S3_BUCKET_BASE_ENDPOINT,
               region: process.env.AWS_DEFAULT_REGION,
               secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
@@ -131,19 +151,55 @@ class EKSCluster extends cdk.Stack {
       namespace: 'default',
       values: {
         rbac: {
-          // Use an existing ClusterRole/Role (depending on rbac.namespaced false/true)
-          //   useExistingRole: name-of-some-role
-          //   useExistingClusterRole: name-of-some-clusterRole
-          // namespaced: false // or true?
+          create: true,
+      // // Use an existing ClusterRole/Role (depending on rbac.namespaced false/true)
+          // useExistingRole: name-of-some-role
+          // useExistingClusterRole: name-of-some-clusterRole
+          pspEnabled: false,
+          pspUseAppArmor: false,
+          namespaced: false, // should it be true? does that imply ClusterRole or Role?
+          extraRoleRules: [],
+          // - apiGroups: []
+            // resources: []
+            // verbs: []
+          extraClusterRoleRules: [],
+          // - apiGroups: []
+            // resources: []
+            // verbs: []
         },
         serviceAccount: {
-          // name:
-          // annotations:
-          // // example: eks.amazonaws.com/role-arn: arn:aws:iam::123456789000:role/iam-role-name-here
-
+          create: true,
+          // name: 
+          // nameTest: 
+      // // ServiceAccount labels.
+          labels: {},
+      // // Service account annotations. Can be templated.
+          //  annotations:
+            //  eks.amazonaws.com/role-arn: arn:aws:iam::123456789000:role/iam-role-name-here
+          automountServiceAccountToken: false
         },
+
+          //  Expose the grafana service to be accessed from outside the cluster (LoadBalancer service).
+          //  or access it from within the cluster (ClusterIP service). Set the service type and the port to serve it.
+          //  ref: http://kubernetes.io/docs/user-guide/services/
         service: {
-          type: 'LoadBalancer' // dev only for direct external access, should default to ClusterIP--and set Ingress class to nginx
+          enabled: true,
+          type: 'loadbalancer',
+       // // Set the ip family policy to configure dual-stack see [Configure dual-stack](https://kubernetes.io/docs/concepts/services-networking/dual-stack/#services)
+          ipFamilyPolicy: eks.IpFamily.IP_V4, // to match node group config above
+       // // Sets the families that should be supported and the order in which they should be applied to ClusterIP as well. Can be IPv4 and/or IPv6.
+          // ipFamilies: [],
+          // loadBalancerSourceRanges: [],
+          port: 80,
+          targetPort: 3000,
+       // //   targetPort: 4181 To be used with a proxy extraContainer
+          // Service annotations. Can be templated.
+          annotations: {},
+          labels: {},
+          portName: 'service',
+       // // Adds the appProtocol field to the service. This allows to work with istio protocol selection. Ex: "http" or "tcp"
+          appProtocol: "",
+          sessionAffinity: "",
         },
      // ingress:
         // enabled: false // or true when using nginx? not sure
