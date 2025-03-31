@@ -14,5 +14,6 @@ if err != null {
   } else {
     .level = split(.path, "/")[1] ?? "unknown"
   }
-  .service_name = "test_add_service_transform"
+
+  .unilogs_service_label = "[[service]]"
 }

@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node apacheLogger.js",
     "tsc": "tsc",
-    "dev": "ts-node-dev generateConfig.ts",
+    "dev": "ts-node-dev ConfigGenerator.ts",
     "lint": "eslint ."
   },
   "keywords": [],
@@ -16,6 +16,7 @@
   "dependencies": {
     "@types/prompts": "^2.4.9",
     "dotenv": "^16.4.7",
+    "mustache": "^4.2.0",
     "prompts": "^2.4.2",
     "winston": "^3.17.0",
     "yaml": "^2.7.0"
@@ -24,6 +25,7 @@
     "@eslint/js": "^9.23.0",
     "@stylistic/eslint-plugin": "^4.2.0",
     "@types/eslint__js": "^8.42.3",
+    "@types/mustache": "^4.2.5",
     "eslint": "^9.23.0",
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.8.2",

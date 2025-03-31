@@ -11,6 +11,8 @@ if err != null {
   # Merge the parsed fields into the event
   . = merge(., parsed)
 
+  .unilogs_service_label = "[[service]]"
+
   # You can also process further if needed, e.g., extracting specific data
   # Log level is already captured as `level`
   # Original message is captured as `original_message`

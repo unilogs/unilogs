@@ -1,4 +1,4 @@
-import { Source, Transform, Sink } from './vector-types';
+import { Source, Transform, Sink, SinkType } from './vector-types';
 
 export class VectorConfiguration {
   private sources: Source[];
@@ -35,7 +35,7 @@ export class VectorConfiguration {
       myTransforms[transform.transformName] = {
         type: 'remap',
         inputs: transform.inputs,
-        file: transform.file,
+        source: transform.source,
       };
     }
 
@@ -44,19 +44,27 @@ export class VectorConfiguration {
       Record<string, string | string[] | Record<string, string | string[]>>
     > = {};
     for (const sink of this.sinks) {
-      if (sink.type === 'loki') {
+      if (sink.type === SinkType.Loki) {
         mySinks[sink.sinkName] = {
           type: sink.type,
           endpoint: sink.endpoint,
           path: sink.path,
           auth: sink.auth,
-          encoding: 'json'
+          encoding: 'json',
         };
-      } else if (sink.type === 'console') {
+      } else if (sink.type === SinkType.Console) {
         mySinks[sink.sinkName] = {
           type: sink.type,
           inputs: sink.inputs,
-          encoding: {codec: sink.encoding}
+          encoding: { codec: sink.encoding },
+        };
+      } else if (sink.type === SinkType.Kafka) {
+        mySinks[sink.sinkName] = {
+          type: sink.type,
+          inputs: sink.inputs,
+          bootstrap_servers: sink.bootstrap_servers,
+          topic: sink.topic,
+          encoding: sink.encoding,
         };
       }
     }
@@ -68,5 +76,4 @@ export class VectorConfiguration {
     };
   }
 
-  generateYamlConfig() {}
 }

@@ -5,23 +5,20 @@ export interface FileSource {
 
 export type Source = FileSource; // Ready to add new source types if we want.
 
-export enum TransformFile {
-  Apache = './apache-remap.vrl',
-  PlainText = './plaintext-remap.vrl',
+export enum TransformSourceOption {
+  Apache = 'apache_template',
+  PlainText = 'plaintext_template',
 }
+
 interface BaseTransform {
   transformName: string;
   inputs: Source['sourceName'][];
-  file: TransformFile;
+  source: string;
 }
 
-export interface ApacheTransform extends BaseTransform {
-  file: TransformFile.Apache;
-}
+export interface ApacheTransform extends BaseTransform {}
 
-export interface PlainTextTransform extends BaseTransform {
-  file: TransformFile.PlainText;
-}
+export interface PlainTextTransform extends BaseTransform {}
 
 export type Transform = ApacheTransform | PlainTextTransform;
 
@@ -47,6 +44,15 @@ export interface LokiSink extends BaseSink {
   };
 }
 
+export interface KafkaSink extends BaseSink {
+  type: SinkType.Kafka;
+  bootstrap_servers: string;
+  topic: 'app_logs_topic';
+  encoding: {
+    codec: 'json';
+  };
+}
+
 export enum ConsoleEncoding {
   Logfmt = 'logfmt',
   Json = 'json',
@@ -56,4 +62,4 @@ export interface ConsoleSink extends BaseSink {
   encoding: ConsoleEncoding;
 }
 
-export type Sink = ConsoleSink | LokiSink;
+export type Sink = ConsoleSink | LokiSink | KafkaSink;
