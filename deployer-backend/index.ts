@@ -3,9 +3,9 @@ import * as cdk from "aws-cdk-lib";
 import * as ec2 from "aws-cdk-lib/aws-ec2";
 import * as eks from "aws-cdk-lib/aws-eks";
 import * as s3 from 'aws-cdk-lib/aws-s3';
-
-// // adding this back from sample AWS code because of permission issues, may need it
 // import * as iam from "aws-cdk-lib/aws-iam";
+// import * as yaml from 'js-yaml';
+// import * as fs from 'fs';
 
 // the latest version as of March 2025
 const kubernetesVersion = eks.KubernetesVersion.V1_32;
@@ -53,7 +53,8 @@ class EKSCluster extends cdk.Stack {
       namespace: 'default', // to explicitly match namespace used (by default) by FargateCluster construct
       values: {
         // config values from grafana instructions with details filled in
-        // (refactor todo: extract to yaml config file and load in)
+        // not set up as a YAML file in order to make it easier to reference
+        // sensitive data from the environment more simply, without hardcoding.
         loki: {
           schemaConfig: {
             configs: [{
@@ -90,7 +91,7 @@ class EKSCluster extends cdk.Stack {
             bucketNames: {
               chunks: logBucket.bucketName,
               ruler: indexBucket.bucketName
-              // admin: "your-admin-bucket" // not used unless enterprise mode
+              // admin: "your-admin-bucket" // not used except in enterprise mode
             },
             s3: {
               // // not using the s3 url because we don't need to, and also I'm not sure which bucket name to specify
@@ -119,6 +120,45 @@ class EKSCluster extends cdk.Stack {
         },
         minio: {
           enabled: false
+        }
+      },
+    });
+
+    const grafanaHelmChart = eksCluster.addHelmChart('GrafanaChart', {
+      chart: 'grafana',
+      repository: 'https://grafana.github.io/helm-charts/',
+      release: 'grafana-release',
+      namespace: 'default',
+      values: {
+        rbac: {
+          // Use an existing ClusterRole/Role (depending on rbac.namespaced false/true)
+          //   useExistingRole: name-of-some-role
+          //   useExistingClusterRole: name-of-some-clusterRole
+          // namespaced: false // or true?
+        },
+        serviceAccount: {
+          // name:
+          // annotations:
+          // // example: eks.amazonaws.com/role-arn: arn:aws:iam::123456789000:role/iam-role-name-here
+
+        },
+        service: {
+          type: 'LoadBalancer' // dev only for direct external access, should default to ClusterIP--and set Ingress class to nginx
+        },
+     // ingress:
+        // enabled: false // or true when using nginx? not sure
+        //   ingressClassName: nginx
+        // annotations: {}
+        //     kubernetes.io/ingress.class: nginx
+        //     kubernetes.io/tls-acme: "true"
+        // labels: {}
+        // path: /
+        // pathType: Prefix
+        // hosts:
+        //   - chart-example.local
+        persistence: {
+          type: 'pvc',
+          enabled: true
         }
       },
     });
