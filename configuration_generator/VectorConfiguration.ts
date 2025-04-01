@@ -1,4 +1,4 @@
-import { Source, Transform, Sink, SinkType } from './vector-types';
+import { Source, Transform, Sink, SinkType } from './vector-types.js';
 
 export class VectorConfiguration {
   private sources: Source[];

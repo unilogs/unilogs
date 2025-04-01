@@ -1,3 +1,8 @@
+export interface LogSource {
+  service: string;
+  sourceName: string;
+}
+
 export interface FileSource {
   sourceName: string;
   include: string[];

@@ -1,5 +1,5 @@
 import Mustache from 'mustache';
-import { TransformSourceOption } from './vector-types';
+import { TransformSourceOption } from './vector-types.js';
 import fs from 'fs';
 
 // Note that we're using double brackets [[ and ]] rather than braces because

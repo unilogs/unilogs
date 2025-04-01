@@ -1,63 +1,82 @@
 import { stringify } from 'yaml';
-import fs from 'fs';
-import { VectorConfiguration } from './VectorConfiguration';
+import { VectorConfiguration } from './VectorConfiguration.js';
 import {
   ConsoleEncoding,
+  LogSource,
   SinkType,
   TransformSourceOption,
-} from './vector-types';
-import { TransformSource } from './TransformSource';
-import {
-  FileSource,
-  ApacheTransform,
-  PlainTextTransform,
-  LokiSink,
-  KafkaSink,
-  ConsoleSink,
-} from './vector-types';
+} from './vector-types.js';
+import { TransformSource } from './TransformSource.js';
 
-// Name (default to log_source1 or whatever) -> use this for the "service" label
-// Location
+export class ConfigGenerator {
+  private vectorConfig: VectorConfiguration;
+  private logSources: LogSource[];
 
-// Sources
+  constructor() {
+    this.vectorConfig = new VectorConfiguration();
+    this.logSources = [];
+  }
 
-//  Parsers
-//    service => .unilogs_service_label=`${service}`
+  addSource(
+    serviceName: string,
+    include: string[],
+    transformType: TransformSourceOption
+  ) {
+    const newSource: LogSource = {
+      service: serviceName,
+      sourceName: `${serviceName}_source`,
+    };
+    this.logSources.push(newSource);
+    this.vectorConfig.addSource({
+      sourceName: newSource.sourceName, // 'test_apache_source',
+      include, //['/logs/*.log'],
+    });
+    const transformSource = new TransformSource(
+      transformType,
+      newSource.service
+    );
+    this.vectorConfig.addTransform({
+      transformName: 'test_apache_transform',
+      inputs: [newSource.sourceName],
+      source: transformSource.render(),
+    });
+  }
 
-//  Sinks
-//    Add 'loki' sync
-//      url -> divide into endpoint + path
-//      account:
-//      bearer token:
-//    Add 'kafka' sync
-//      bootstrap_servers
-//    Add 'console' sync
-//      json, logfmt
-// export class ConfigGenerator {}
-const testConfig = new VectorConfiguration();
+  addSink(sinkName: string, inputs: string[], type: SinkType.Console, encoding: ConsoleEncoding): void;
+  addSink(sinkName: string, inputs: string[], type: SinkType.Loki, endpoint: string, path: string, auth: {strategy: 'bearer', token: string}): void;
+  addSink(
+    sinkName: string,
+    inputs: string[],
+    type: SinkType,
+    encoding: ConsoleEncoding | undefined,
+    endpoint: string | undefined,
+    path: string | undefined,
+    auth: {strategy: 'bearer', token: string} | undefined
+  ): void {
+    if (type === SinkType.Console && encoding) {
+      this.vectorConfig.addSink({
+        sinkName, // 'console_sink',
+        inputs, // ['test_apache_transform'],
+        type,
+        encoding, //: ConsoleEncoding.Logfmt,
+      });
+    } else if (type === SinkType.Loki && endpoint && path && auth) {
+      this.vectorConfig.addSink({
+        sinkName, // 'console_sink',
+        inputs, // ['test_apache_transform'],
+        type,
+        endpoint,
+        path,
+        auth
+      });
+    }
+  }
 
-testConfig.addSource({
-  sourceName: 'test_apache_source',
-  include: ['/logs/*.log'],
-});
+  getObject() {
+    return this.vectorConfig.objectify();
+  }
 
-const transformSource = new TransformSource(
-  TransformSourceOption.Apache,
-  'test_service_name'
-);
-
-testConfig.addTransform({
-  transformName: 'test_apache_transform',
-  inputs: ['test_apache_source'],
-  source: transformSource.render(),
-});
-
-testConfig.addSink({
-  sinkName: 'console_sink',
-  inputs: ['test_apache_transform'],
-  type: SinkType.Console,
-  encoding: ConsoleEncoding.Logfmt,
-});
-
-console.log(testConfig.objectify());
-fs.writeFileSync('./vector-shipper.yaml', stringify(testConfig.objectify()));
+  getYaml() {
+    return stringify(this.getObject());
+  }
+}
