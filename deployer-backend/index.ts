@@ -80,6 +80,8 @@ class EKSCluster extends cdk.Stack {
         // not set up as a YAML file in order to make it easier to reference
         // sensitive data from the environment more simply, without hardcoding.
         loki: {
+          // auth_enabled added from untested config example from 2020, rest is 2024
+          // auth_enabled: false, // dev only, may bypass auth requirements, simplify?
           schemaConfig: {
             configs: [{
               from: "2024-04-01",

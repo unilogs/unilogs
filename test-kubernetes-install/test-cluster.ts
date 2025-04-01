@@ -31,6 +31,18 @@ class TESTCluster extends cdk.Stack {
 
     const vpc = new ec2.Vpc(this, "TESTVpc");
 
+    const clusterRole = new iam.Role(this, 'TESTClustRole', {
+      assumedBy: new iam.ServicePrincipal('eks.amazonaws.com'),
+      managedPolicies: [
+        // these 5 policies needed to allow enabling Auto Mode later
+        'AmazonEKSComputePolicy',
+        'AmazonEKSBlockStoragePolicy',
+        'AmazonEKSLoadBalancingPolicy',
+        'AmazonEKSNetworkingPolicy',
+        'AmazonEKSClusterPolicy'
+      ].map((policy) => iam.ManagedPolicy.fromAwsManagedPolicyName(policy)),
+    });
+
     const eksCluster = new eks.Cluster(this, "TESTCluster", {
       vpc: vpc,
       defaultCapacity: 0,
@@ -54,6 +66,9 @@ class TESTCluster extends cdk.Stack {
           "AmazonEKSWorkerNodePolicy",
           "AmazonEC2ContainerRegistryReadOnly",
           "AmazonEKS_CNI_Policy",
+          // next two added to allow enabling Auto Mode, possibly redundant
+          'AmazonEKSWorkerNodeMinimalPolicy',
+          'AmazonEC2ContainerRegistryPullOnly'
         ].map((policy) => iam.ManagedPolicy.fromAwsManagedPolicyName(policy)),
       }),
     });
