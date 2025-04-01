@@ -1,12 +1,13 @@
 {
   "name": "logs",
   "version": "1.0.0",
-  "bin": "./apacheLogger.js",
-  "main": "apacheLogger.js",
+  "bin": "./build/main.js",
+  "main": "./build/main.js",
+  "type": "module",
   "scripts": {
     "start": "node apacheLogger.js",
     "tsc": "tsc",
-    "dev": "ts-node-dev ConfigGenerator.ts",
+    "dev": "node --loader ts-node/esm ./main.ts",
     "lint": "eslint ."
   },
   "keywords": [],
@@ -15,10 +16,9 @@
   "description": "",
   "dependencies": {
     "@types/prompts": "^2.4.9",
-    "dotenv": "^16.4.7",
+    "gradient-string": "^3.0.0",
     "mustache": "^4.2.0",
     "prompts": "^2.4.2",
-    "winston": "^3.17.0",
     "yaml": "^2.7.0"
   },
   "devDependencies": {
@@ -27,7 +27,7 @@
     "@types/eslint__js": "^8.42.3",
     "@types/mustache": "^4.2.5",
     "eslint": "^9.23.0",
-    "ts-node-dev": "^2.0.0",
+    "ts-node": "^10.9.2",
     "typescript": "^5.8.2",
     "typescript-eslint": "^8.28.0"
   }
