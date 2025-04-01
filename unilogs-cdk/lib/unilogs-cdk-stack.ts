@@ -1,4 +1,5 @@
 import * as cdk from 'aws-cdk-lib';
+import { CfnJson } from 'aws-cdk-lib';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as msk from 'aws-cdk-lib/aws-msk';
 import * as iam from 'aws-cdk-lib/aws-iam';
@@ -10,6 +11,16 @@ import { KubectlV32Layer as KubectlLayer } from '@aws-cdk/lambda-layer-kubectl-v
 export class UnilogsCdkStack extends cdk.Stack {
   constructor(scope: cdk.App, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
+
+    // Helper function for IAM conditions
+    const createConditionJson = (id: string, serviceAccount: string) => {
+      return new CfnJson(this, id, {
+        value: {
+          [`${cluster.clusterOpenIdConnectIssuerUrl}:aud`]: 'sts.amazonaws.com',
+          [`${cluster.clusterOpenIdConnectIssuerUrl}:sub`]: `system:serviceaccount:${serviceAccount}`,
+        },
+      });
+    };
 
     // ==================== VPC CONFIGURATION ====================
     const vpc = new ec2.Vpc(this, 'UniLogsVpc', {
@@ -28,6 +39,16 @@ export class UnilogsCdkStack extends cdk.Stack {
     });
 
     // ==================== MSK KAFKA CLUSTER ====================
+    const mskConfig = new msk.CfnConfiguration(this, 'MskConfig', {
+      name: 'unilogs-config',
+      kafkaVersionsList: ['3.6.0'],
+      serverProperties: `
+        auto.create.topics.enable=true
+        num.partitions=3
+        default.replication.factor=2
+      `,
+    });
+
     const mskSecurityGroup = new ec2.SecurityGroup(this, 'MskSecurityGroup', {
       vpc,
       description: 'Security group for MSK cluster',
@@ -51,22 +72,26 @@ export class UnilogsCdkStack extends cdk.Stack {
         securityGroups: [mskSecurityGroup.securityGroupId],
         storageInfo: {
           ebsStorageInfo: {
-            volumeSize: 100, // GB
+            volumeSize: 100,
           },
         },
       },
       clientAuthentication: {
         sasl: {
           iam: {
-            enabled: true, // Enable IAM auth
+            enabled: true,
           },
         },
       },
       encryptionInfo: {
         encryptionInTransit: {
-          clientBroker: 'TLS', // For production
+          clientBroker: 'TLS',
           inCluster: true,
         },
+      },
+      configurationInfo: {
+        arn: mskConfig.attrArn,
+        revision: 1,
       },
     });
 
@@ -111,6 +136,27 @@ export class UnilogsCdkStack extends cdk.Stack {
       outputConfigCommand: true,
     });
 
+    // Add Fargate profiles
+    cluster.addFargateProfile('LokiProfile', {
+      selectors: [{ namespace: 'loki' }],
+      subnetSelection: { subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS },
+    });
+
+    cluster.addFargateProfile('GrafanaProfile', {
+      selectors: [{ namespace: 'grafana' }],
+      subnetSelection: { subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS },
+    });
+
+    cluster.addFargateProfile('VectorProfile', {
+      selectors: [{ namespace: 'vector' }],
+      subnetSelection: { subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS },
+    });
+
+    cluster.addFargateProfile('DefaultProfile', {
+      selectors: [{ namespace: 'default' }],
+      subnetSelection: { subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS },
+    });
+
     // Explicitly map your IAM user
     cluster.awsAuth.addUserMapping(
       iam.User.fromUserArn(
@@ -130,26 +176,6 @@ export class UnilogsCdkStack extends cdk.Stack {
       username: 'cdk-admin',
     });
 
-    // IAM permissions for EKS to access MSK
-    cluster.awsAuth.addRoleMapping(
-      new iam.Role(this, 'KafkaAccessRole', {
-        assumedBy: new iam.ServicePrincipal('eks.amazonaws.com'),
-        inlinePolicies: {
-          mskAccess: new iam.PolicyDocument({
-            statements: [
-              new iam.PolicyStatement({
-                actions: ['kafka:DescribeCluster', 'kafka:GetBootstrapBrokers'],
-                resources: [mskCluster.attrArn],
-              }),
-            ],
-          }),
-        },
-      }),
-      {
-        groups: ['system:masters'],
-      }
-    );
-
     // ==================== LOKI STORAGE ====================
     const lokiChunkBucket = new s3.Bucket(this, 'LokiChunkBucket', {
       bucketName: `unilogs-loki-chunk-${this.account}-${
@@ -159,7 +185,7 @@ export class UnilogsCdkStack extends cdk.Stack {
       enforceSSL: true,
       autoDeleteObjects: true,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
-      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL
+      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
     });
 
     const lokiRulerBucket = new s3.Bucket(this, 'LokiRulerBucket', {
@@ -170,7 +196,7 @@ export class UnilogsCdkStack extends cdk.Stack {
       enforceSSL: true,
       autoDeleteObjects: true,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
-      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL
+      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
     });
 
     const lokiAdminBucket = new s3.Bucket(this, 'LokiAdminBucket', {
@@ -181,12 +207,21 @@ export class UnilogsCdkStack extends cdk.Stack {
       enforceSSL: true,
       autoDeleteObjects: true,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
-      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL
+      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
     });
 
-    // IAM role for Loki pods
+    // IAM role for Loki pods with proper IRSA configuration
+    const lokiCondition = createConditionJson(
+      'LokiCondition',
+      'loki:loki-service-account'
+    );
     const lokiRole = new iam.Role(this, 'LokiRole', {
-      assumedBy: new iam.ServicePrincipal('pods.eks.amazonaws.com'),
+      assumedBy: new iam.WebIdentityPrincipal(
+        cluster.openIdConnectProvider.openIdConnectProviderArn,
+        {
+          StringEquals: lokiCondition,
+        }
+      ),
       inlinePolicies: {
         lokiS3Access: new iam.PolicyDocument({
           statements: [
@@ -209,10 +244,6 @@ export class UnilogsCdkStack extends cdk.Stack {
           ],
         }),
       },
-    });
-    cluster.awsAuth.addRoleMapping(lokiRole, {
-      groups: ['system:masters'],
-      username: 'loki-s3-user',
     });
 
     // ==================== LOKI DEPLOYMENT ====================
@@ -241,7 +272,7 @@ export class UnilogsCdkStack extends cdk.Stack {
           storage_config: {
             aws: {
               region: this.region,
-              s3: `s3://${lokiChunkBucket.bucketName}`,
+              s3: lokiChunkBucket.bucketName,
               s3forcepathstyle: false,
             },
           },
@@ -257,29 +288,26 @@ export class UnilogsCdkStack extends cdk.Stack {
           limits_config: {
             allow_structured_metadata: true,
             volume_enabled: true,
-            retention_period: '672h', // 28 days
+            retention_period: '672h',
           },
         },
         deploymentMode: 'SimpleScalable',
         backend: {
           replicas: 2,
           persistence: {
-            storageClass: 'gp2',
-            size: '10Gi',
+            enabled: false,
           },
         },
         read: {
           replicas: 2,
           persistence: {
-            storageClass: 'gp2',
-            size: '10Gi',
+            enabled: false,
           },
         },
         write: {
           replicas: 3,
           persistence: {
-            storageClass: 'gp2',
-            size: '10Gi',
+            enabled: false,
           },
         },
         minio: {
@@ -308,9 +336,12 @@ export class UnilogsCdkStack extends cdk.Stack {
         labels: { app: 'loki', component: 'gateway' },
         annotations: {
           'service.beta.kubernetes.io/aws-load-balancer-type': 'nlb',
-          'service.beta.kubernetes.io/aws-load-balancer-healthcheck-healthy-threshold': '2',
-          'service.beta.kubernetes.io/aws-load-balancer-healthcheck-unhealthy-threshold': '2',
-          'service.beta.kubernetes.io/aws-load-balancer-healthcheck-interval': '10',
+          'service.beta.kubernetes.io/aws-load-balancer-healthcheck-healthy-threshold':
+            '2',
+          'service.beta.kubernetes.io/aws-load-balancer-healthcheck-unhealthy-threshold':
+            '2',
+          'service.beta.kubernetes.io/aws-load-balancer-healthcheck-interval':
+            '10',
         },
       },
       spec: {
@@ -322,6 +353,19 @@ export class UnilogsCdkStack extends cdk.Stack {
     lokiGatewayService.node.addDependency(lokiChart);
 
     // ==================== GRAFANA UI DEPLOYMENT ====================
+    const grafanaCondition = createConditionJson(
+      'GrafanaCondition',
+      'grafana:grafana-service-account'
+    );
+    const grafanaRole = new iam.Role(this, 'GrafanaRole', {
+      assumedBy: new iam.WebIdentityPrincipal(
+        cluster.openIdConnectProvider.openIdConnectProviderArn,
+        {
+          StringEquals: grafanaCondition,
+        }
+      ),
+    });
+
     const grafanaChart = cluster.addHelmChart('Grafana', {
       chart: 'grafana',
       repository: 'https://grafana.github.io/helm-charts',
@@ -331,9 +375,7 @@ export class UnilogsCdkStack extends cdk.Stack {
         adminUser: 'admin',
         adminPassword: process.env.GRAFANA_ADMIN_PASSWORD || 'admin',
         persistence: {
-          enabled: true,
-          storageClassName: 'gp2',
-          size: '10Gi',
+          enabled: false,
         },
         datasources: {
           'datasources.yaml': {
@@ -358,18 +400,29 @@ export class UnilogsCdkStack extends cdk.Stack {
             'service.beta.kubernetes.io/aws-load-balancer-type': 'nlb',
           },
         },
+        serviceAccount: {
+          create: true,
+          name: 'grafana-service-account',
+          annotations: {
+            'eks.amazonaws.com/role-arn': grafanaRole.roleArn,
+          },
+        },
       },
     });
     grafanaChart.node.addDependency(lokiGatewayService);
 
     // ==================== VECTOR CONSUMER DEPLOYMENT ====================
+    const vectorCondition = createConditionJson(
+      'VectorCondition',
+      'vector:vector-service-account'
+    );
     const vectorRole = new iam.Role(this, 'VectorRole', {
-      assumedBy: new iam.ServicePrincipal('pods.eks.amazonaws.com'),
-    });
-
-    cluster.awsAuth.addRoleMapping(vectorRole, {
-      username: 'vector',
-      groups: ['system:authenticated'],
+      assumedBy: new iam.WebIdentityPrincipal(
+        cluster.openIdConnectProvider.openIdConnectProviderArn,
+        {
+          StringEquals: vectorCondition,
+        }
+      ),
     });
 
     vectorRole.addToPolicy(
@@ -397,6 +450,7 @@ export class UnilogsCdkStack extends cdk.Stack {
         role: 'Agent',
         serviceAccount: {
           create: true,
+          name: 'vector-service-account',
           annotations: {
             'eks.amazonaws.com/role-arn': vectorRole.roleArn,
           },
@@ -408,12 +462,15 @@ export class UnilogsCdkStack extends cdk.Stack {
               bootstrap_servers: mskBrokers.getResponseField('BootstrapBrokerStringSaslIam'),
               group_id: 'vector-consumer',
               topics: ['app_logs_topic'],
-              security_protocol: 'sasl_ssl',
+              security_protocol: 'SASL_SSL',
               sasl: {
-                mechanism: 'aws_msk_iam',
-                region: this.region
-              }
-            }
+                mechanism: 'OAUTHBEARER',
+                oauthbearer_token_provider: 'aws',
+                region: this.region,
+              },
+              auto_offset_reset: 'earliest',
+              auto_create_topics: true,
+            },
           },
           sinks: {
             loki: {
@@ -422,28 +479,36 @@ export class UnilogsCdkStack extends cdk.Stack {
               endpoint: 'http://loki-gateway.loki.svc.cluster.local',
               labels: {
                 unilogs: 'test_label',
-                agent: 'vector'
+                agent: 'vector',
               },
               encoding: {
-                codec: 'json'
-              }
-            }
-          }
+                codec: 'json',
+              },
+            },
+          },
         },
         service: {
           enabled: true,
-          type: "ClusterIP",
+          type: 'ClusterIP',
           ports: [
             {
-              name: "vector",
+              name: 'vector',
               port: 8686,
               targetPort: 8686,
-              protocol: "TCP"
-            }
-          ]
-        }
-      }
+              protocol: 'TCP',
+            },
+          ],
+        },
+      },
     });
+
+    const vectorNamespace = cluster.addManifest('VectorNamespace', {
+      apiVersion: 'v1',
+      kind: 'Namespace',
+      metadata: { name: 'vector' }
+    });
+
+    vectorChart.node.addDependency(vectorNamespace);
 
     // MSK Cluster Policy
     new msk.CfnClusterPolicy(this, 'MskClusterPolicy', {
@@ -471,7 +536,12 @@ export class UnilogsCdkStack extends cdk.Stack {
 
     cluster.node.addDependency(mskCluster);
     cluster.node.addDependency(mskSecurityGroup);
-    vectorChart.node.addDependency(mskCluster, lokiGatewayService, grafanaChart);
+    vectorChart.node.addDependency(
+      mskCluster,
+      lokiGatewayService,
+      grafanaChart,
+      mskBrokers
+    );
 
     // ==================== OUTPUTS ====================
     new cdk.CfnOutput(this, 'ClusterName', { value: cluster.clusterName });
@@ -483,13 +553,14 @@ export class UnilogsCdkStack extends cdk.Stack {
       value: `http://loki-gateway.loki.svc.cluster.local`,
     });
     new cdk.CfnOutput(this, 'LokiGatewayExternalCommand', {
-      value: 'kubectl get svc loki-gateway -n loki -o jsonpath="{.status.loadBalancer.ingress[0].hostname}"',
+      value:
+        'kubectl get svc loki-gateway -n loki -o jsonpath="{.status.loadBalancer.ingress[0].hostname}"',
     });
     new cdk.CfnOutput(this, 'GrafanaURLCommand', {
       value: `kubectl get svc -n grafana grafana -o jsonpath='{.status.loadBalancer.ingress[0].hostname}'`,
     });
     new cdk.CfnOutput(this, 'VectorTestCommand', {
-      value: 'kubectl logs -n vector -l app.kubernetes.io/instance=vector'
+      value: 'kubectl logs -n vector -l app.kubernetes.io/instance=vector',
     });
   }
 }
