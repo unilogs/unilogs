@@ -1,7 +1,7 @@
 {
-  "name": "deployer-backend",
+  "name": "test-kubernetes-install",
   "version": "1.0.0",
-  "description": "CDK stack to deploy unilogs on AWS EKS",
+  "description": "Empty EKS cluster with VPC and Managed Node Group",
   "scripts": {
     "build": "tsc",
     "watch": "tsc -w",
