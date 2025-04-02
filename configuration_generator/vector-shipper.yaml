@@ -1,13 +1,13 @@
 sources:
-  test_apache_source:
+  foo_file_source:
     type: file
     include:
-      - /logs/*.log
+      - ./logs/*.log
 transforms:
-  test_apache_transform:
+  foo_apache_transform:
     type: remap
     inputs:
-      - test_apache_source
+      - foo_file_source
     source: >-
       # Parse the log line using Apache combined format
 
@@ -30,12 +30,15 @@ transforms:
           .level = split(.path, "/")[1] ?? "unknown"
         }
 
-        .unilogs_service_label = "test_service_name"
+        .unilogs_service_label = "foo"
       }
 sinks:
-  console_sink:
-    type: console
+  loki_sink:
+    type: loki
     inputs:
-      - test_apache_transform
-    encoding:
-      codec: logfmt
+      - foo_apache_transform
+    endpoint: http://endpointurl.com
+    path: /path_to_endpoint
+    auth:
+      strategy: bearer
+      token: afshjklasdfkjhasdfjioqwepriounadglfkshjfdg

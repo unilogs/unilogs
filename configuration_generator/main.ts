@@ -3,7 +3,13 @@
 import prompts from 'prompts';
 import gradient from 'gradient-string';
 import { VectorConfiguration } from './lib/VectorConfiguration.js';
-import { ConsoleEncoding, ConsoleSink, SinkType } from './lib/Sink.js';
+import {
+  ConsoleEncoding,
+  ConsoleSink,
+  KafkaSink,
+  LokiSink,
+  SinkType,
+} from './lib/Sink.js';
 import {
   ApacheTransform,
   PlainTextTransform,
@@ -11,6 +17,7 @@ import {
 } from './lib/Transform.js';
 import { FileSource, Source, SourceType } from './lib/Source.js';
 import { stringify } from 'yaml';
+import fs from 'fs';
 
 const logo = `                            ██           ████    
                           ██▓██      ███████     
@@ -48,7 +55,7 @@ async function getMenuChoice() {
       { title: 'Add sink', value: 'add_sink' },
       { title: 'Map source/transform to sink', value: 'map_to_sink' },
       { title: 'Display vector config', value: 'viewConfig' },
-      { title: 'Generate vector_shipper.yaml', value: 'generateYaml' },
+      { title: 'Save vector_shipper.yaml', value: 'saveYaml' },
       { title: 'Docker build and run shipper', value: 'buildAndRun' },
       { title: 'Exit', value: 'exit' },
     ],
@@ -63,21 +70,26 @@ async function mapTransformToSink(vectorConfiguration: VectorConfiguration) {
     type: 'multiselect',
     name: 'selectedTransforms',
     message: 'Select all transforms you want to map to a sink',
-    choices: availableTransforms.map(transformName => {return {title: transformName, value: transformName};}),
+    choices: availableTransforms.map((transformName) => {
+      return { title: transformName, value: transformName };
+    }),
     instructions: false,
     min: 1,
-    hint: '- Space to select, return to submit.'
+    hint: '- Space to select, return to submit.',
   });
   const { selectedSink } = await prompts<string>({
     type: 'select',
     name: 'selectedSink',
     message: 'Select sink to map transforms to',
-    choices: availableSinks.map(sinkName => {return {title: sinkName, value: sinkName};}),
+    choices: availableSinks.map((sinkName) => {
+      return { title: sinkName, value: sinkName };
+    }),
   });
   const sinkToMapTo = vectorConfiguration.getSinkByName(selectedSink);
   if (sinkToMapTo.length !== 1) return;
   for (const transformName of selectedTransforms) {
-    const transformToMap = vectorConfiguration.getTransformByName(transformName);
+    const transformToMap =
+      vectorConfiguration.getTransformByName(transformName);
     if (transformToMap.length !== 1) return;
     sinkToMapTo[0].addInput(transformToMap[0]);
   }
@@ -179,6 +191,60 @@ async function createConsoleSink(): Promise<ConsoleSink> {
   });
 }
 
+async function createLokiSink(): Promise<LokiSink> {
+  const { sinkName } = await prompts<string>({
+    type: 'text',
+    name: 'sinkName',
+    message: 'What would you like to call this sink?',
+    initial: 'loki_sink',
+    validate: (input) => /^[a-zA-Z0-9\-_]+$/.test(input),
+  });
+  const { endpoint } = await prompts<string>({
+    type: 'text',
+    name: 'endpoint',
+    message: 'What is the endpoint?',
+  });
+  const { path } = await prompts<string>({
+    type: 'text',
+    name: 'path',
+    message: 'What is the path?',
+  });
+  const { authToken } = await prompts<string>({
+    type: 'text',
+    name: 'authToken',
+    message: 'What is the auth token?',
+  });
+  return new LokiSink({
+    sinkName,
+    type: SinkType.Loki,
+    inputs: [],
+    endpoint,
+    path,
+    auth: { strategy: 'bearer', token: authToken },
+  });
+}
+
+async function createKafkaSink(): Promise<KafkaSink> {
+  const { sinkName } = await prompts<string>({
+    type: 'text',
+    name: 'sinkName',
+    message: 'What would you like to call this sink?',
+    initial: 'kafka_sink',
+    validate: (input) => /^[a-zA-Z0-9\-_]+$/.test(input),
+  });
+  const { bootstrap_servers } = await prompts<string>({
+    type: 'text',
+    name: 'bootstrap_servers',
+    message: 'What are the bootstrap servers?',
+  });
+  return new KafkaSink({
+    sinkName,
+    type: SinkType.Kafka,
+    inputs: [],
+    bootstrap_servers,
+  }); 
+}
+
 async function addSink(vectorConfiguration: VectorConfiguration) {
   const { sinkType } = await prompts<string>({
     type: 'select',
@@ -193,6 +259,12 @@ async function addSink(vectorConfiguration: VectorConfiguration) {
   if (sinkType === 'console') {
     const sink = await createConsoleSink();
     vectorConfiguration.addSink(sink);
+  } else if (sinkType === 'loki') {
+    const sink = await createLokiSink();
+    vectorConfiguration.addSink(sink);
+  } else if (sinkType === 'kafka') {
+    const sink = await createKafkaSink();
+    vectorConfiguration.addSink(sink);
   }
 }
 
@@ -201,8 +273,14 @@ async function viewConfig(vectorConfiguration: VectorConfiguration) {
   await prompts({
     type: 'confirm',
     name: 'confirmContinue',
-    message: 'Yes to continue.',
+    message: 'Enter to continue.',
+    instructions: false,
+    initial: true,
   });
+}
+
+function saveYaml(vectorConfiguration: VectorConfiguration) {
+  fs.writeFileSync('vector-shipper.yaml', stringify(vectorConfiguration.objectify()));
 }
 
 async function main() {
@@ -218,7 +296,9 @@ async function main() {
       await viewConfig(vectorConfiguration);
     if (action.menuChoice === 'add_source_and_transform')
       await addSourceAndTransform(vectorConfiguration);
-    if (action.menuChoice === 'map_to_sink') await mapTransformToSink(vectorConfiguration);
+    if (action.menuChoice === 'map_to_sink')
+      await mapTransformToSink(vectorConfiguration);
+    if (action.menuChoice === 'saveYaml') saveYaml(vectorConfiguration);
   }
 }
 

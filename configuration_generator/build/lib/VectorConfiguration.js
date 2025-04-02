@@ -4,6 +4,18 @@ export class VectorConfiguration {
         this.transforms = [];
         this.sinks = [];
     }
+    getAllTransformNames() {
+        return this.transforms.map((transform) => transform.transformName);
+    }
+    getAllSinkNames() {
+        return this.sinks.map((sink) => sink.sinkName);
+    }
+    getSinkByName(sinkName) {
+        return this.sinks.filter(sink => sink.sinkName === sinkName);
+    }
+    getTransformByName(transformName) {
+        return this.transforms.filter(transform => transform.transformName === transformName);
+    }
     addSource(source) {
         this.sources.push(source);
     }
