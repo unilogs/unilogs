@@ -1,0 +1,21 @@
+datasources:
+  datasources.yaml:
+    apiVersion: 1
+    datasources:
+      - name: Loki
+        type: loki
+        access: proxy
+        url: http://loki-gateway.loki.svc.cluster.local/
+        isDefault: true
+        basicAuth: true
+        jsonData:
+          httpHeaderName1: 'Authorization'
+          httpHeaderName2: 'X-Scope-OrgId' # Define the custom header key
+        secureJsonData:
+          httpHeaderValue1: 'Basic YWRtaW46c2VjcmV0' # `echo -n "admin:secret" | base64`
+          httpHeaderValue2: 'default' # Define the header value
+persistence:
+  enabled: true
+  type: pvc
+  size: 1Gi
+  storageClassName: gp2
