@@ -18,32 +18,8 @@ import {
 import { FileSource, Source, SourceType } from './lib/Source.js';
 import { stringify } from 'yaml';
 import fs from 'fs';
-
-const logo = `                            ██           ████    
-                          ██▓██      ███████     
-             ▒░▒███████████  ███ █████▓███       
-              ▒▒  ███▓▒▒███ ██ █████▓███         
-          ░░░███████▒▒█▓        ██████           
-           ░▒ ██▓██░▓█    █   ░    ██            
-       ░░▒██████▓█▒▒█    █    ░█▓█ ▒█            
-       ░░░ ████▒██▒▓█   ▒█       ▒░ ██           
-           ████░██░██    █▓          ▓██         
-       ░░░░████░██▒▓█    ░███▒ ░▒▓     ██        
-        ██ ████░██▒▒█▓    ▒███████▒   █░██       
-       ████████▒░█▓░▒██     ██    ██   ██        
-    ██████ ██ ██░▒█▓░░▓█▒    ▓██   ████          
-   ▒▒▒  ██ ██ ███░▒██▒░░██░    ██                
-    ▒▒  ██ ██  ███▒░▒██▒░░██░   ▒█               
-        ██ ██    ██▓▒░▒██▒░░██   ██              
-        ██ ███████████▒░▒██░░▒█  ░██             
-        ██           ███▒▒▓█▒░▓█  ██             
-        ██████████▒▒▒  ██▒▒▒█▒▒█▓██              
-        ██    ██   ▒    ██▓▒▓█▒████              
-       ▒▒▒▒  ▒▒▒▒         █▓▒█▒███               
-        ▒▒    ▒▒          ██▓████                
-                           █████                 
-                           ███                   
-                           ██                    `;
+import logo from './lib/logo.js';
+import generateDockerfile from './lib/generateDockerfile.js';
 
 async function getMenuChoice() {
   return await prompts({
@@ -56,6 +32,7 @@ async function getMenuChoice() {
       { title: 'Map source/transform to sink', value: 'map_to_sink' },
       { title: 'Display vector config', value: 'viewConfig' },
       { title: 'Save vector_shipper.yaml', value: 'saveYaml' },
+      { title: 'Save Dockerfile', value: 'saveDockerfile' },
       { title: 'Docker build and run shipper', value: 'buildAndRun' },
       { title: 'Exit', value: 'exit' },
     ],
@@ -242,7 +219,7 @@ async function createKafkaSink(): Promise<KafkaSink> {
     type: SinkType.Kafka,
     inputs: [],
     bootstrap_servers,
-  }); 
+  });
 }
 
 async function addSink(vectorConfiguration: VectorConfiguration) {
@@ -280,7 +257,14 @@ async function viewConfig(vectorConfiguration: VectorConfiguration) {
 }
 
 function saveYaml(vectorConfiguration: VectorConfiguration) {
-  fs.writeFileSync('vector-shipper.yaml', stringify(vectorConfiguration.objectify()));
+  fs.writeFileSync(
+    'vector-shipper.yaml',
+    stringify(vectorConfiguration.objectify())
+  );
+}
+
+function saveDockerfile(vectorConfiguration: VectorConfiguration) {
+  fs.writeFileSync('Dockerfile', generateDockerfile(vectorConfiguration));
 }
 
 async function main() {
@@ -299,6 +283,8 @@ async function main() {
     if (action.menuChoice === 'map_to_sink')
       await mapTransformToSink(vectorConfiguration);
     if (action.menuChoice === 'saveYaml') saveYaml(vectorConfiguration);
+    if (action.menuChoice === 'saveDockerfile')
+      saveDockerfile(vectorConfiguration);
   }
 }
 

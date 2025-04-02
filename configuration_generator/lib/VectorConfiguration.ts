@@ -1,6 +1,6 @@
 // import { Source, Transform } from './vector-types.js';
 import { Sink } from './Sink.js';
-import { Source } from './Source.js';
+import { Source, SourceType } from './Source.js';
 import { Transform } from './Transform.js';
 
 export class VectorConfiguration {
@@ -14,20 +14,29 @@ export class VectorConfiguration {
     this.sinks = [];
   }
 
+  getAllFileSourceIncludes() {
+    const fileSources = this.sources.filter(
+      (source) => source.type === SourceType.File
+    );
+    return fileSources.flatMap(source => source.getInclude());
+  }
+
   getAllTransformNames() {
     return this.transforms.map((transform) => transform.transformName);
   }
-  
+
   getAllSinkNames() {
     return this.sinks.map((sink) => sink.sinkName);
   }
-  
+
   getSinkByName(sinkName: string): Sink[] {
-    return this.sinks.filter(sink => sink.sinkName === sinkName);
+    return this.sinks.filter((sink) => sink.sinkName === sinkName);
   }
 
   getTransformByName(transformName: string): Transform[] {
-    return this.transforms.filter(transform => transform.transformName === transformName);
+    return this.transforms.filter(
+      (transform) => transform.transformName === transformName
+    );
   }
 
   addSource(source: Source) {

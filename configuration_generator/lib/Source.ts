@@ -1,3 +1,5 @@
+import { getBase, getInternalDir } from './pathUtils.js';
+
 export enum SourceType {
   File = 'file',
 }
@@ -7,20 +9,20 @@ interface BaseSourceProps {
   type: SourceType;
 }
 
-export interface FileSourceProps extends  BaseSourceProps {
+export interface FileSourceProps extends BaseSourceProps {
   include: string[];
   type: SourceType.File;
 }
 
 class BaseSource {
   readonly sourceName: BaseSourceProps['sourceName'];
-  private type: BaseSourceProps['type'];
+  readonly type: BaseSourceProps['type'];
 
   constructor(props: BaseSourceProps) {
     this.type = props.type;
-    this.sourceName = props.sourceName;   
+    this.sourceName = props.sourceName;
   }
-  
+
   getSourceName() {
     return this.sourceName;
   }
@@ -43,10 +45,19 @@ export class FileSource extends BaseSource {
     this.include.push(fileInclude);
   }
 
+  getInclude() {
+    return [...this.include];
+  }
+
   getObjectBody() {
     const returnBody = {
       ...super.getObjectBody(),
-      include: [...this.include]
+      include: [
+        ...this.include.map(
+          (includePath) =>
+            `${getInternalDir(includePath)}/${getBase(includePath)}`
+        ),
+      ],
     };
     return returnBody;
   }

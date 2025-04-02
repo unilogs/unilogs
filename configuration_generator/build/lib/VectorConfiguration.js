@@ -1,8 +1,13 @@
+import { SourceType } from './Source.js';
 export class VectorConfiguration {
     constructor() {
         this.sources = [];
         this.transforms = [];
         this.sinks = [];
+    }
+    getAllFileSourceIncludes() {
+        const fileSources = this.sources.filter((source) => source.type === SourceType.File);
+        return fileSources.flatMap(source => source.getInclude());
     }
     getAllTransformNames() {
         return this.transforms.map((transform) => transform.transformName);
@@ -11,10 +16,10 @@ export class VectorConfiguration {
         return this.sinks.map((sink) => sink.sinkName);
     }
     getSinkByName(sinkName) {
-        return this.sinks.filter(sink => sink.sinkName === sinkName);
+        return this.sinks.filter((sink) => sink.sinkName === sinkName);
     }
     getTransformByName(transformName) {
-        return this.transforms.filter(transform => transform.transformName === transformName);
+        return this.transforms.filter((transform) => transform.transformName === transformName);
     }
     addSource(source) {
         this.sources.push(source);

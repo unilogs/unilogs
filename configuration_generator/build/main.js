@@ -6,31 +6,9 @@ import { ConsoleEncoding, ConsoleSink, KafkaSink, LokiSink, SinkType, } from './
 import { ApacheTransform, PlainTextTransform, } from './lib/Transform.js';
 import { FileSource, SourceType } from './lib/Source.js';
 import { stringify } from 'yaml';
-const logo = `                            ██           ████    
-                          ██▓██      ███████     
-             ▒░▒███████████  ███ █████▓███       
-              ▒▒  ███▓▒▒███ ██ █████▓███         
-          ░░░███████▒▒█▓        ██████           
-           ░▒ ██▓██░▓█    █   ░    ██            
-       ░░▒██████▓█▒▒█    █    ░█▓█ ▒█            
-       ░░░ ████▒██▒▓█   ▒█       ▒░ ██           
-           ████░██░██    █▓          ▓██         
-       ░░░░████░██▒▓█    ░███▒ ░▒▓     ██        
-        ██ ████░██▒▒█▓    ▒███████▒   █░██       
-       ████████▒░█▓░▒██     ██    ██   ██        
-    ██████ ██ ██░▒█▓░░▓█▒    ▓██   ████          
-   ▒▒▒  ██ ██ ███░▒██▒░░██░    ██                
-    ▒▒  ██ ██  ███▒░▒██▒░░██░   ▒█               
-        ██ ██    ██▓▒░▒██▒░░██   ██              
-        ██ ███████████▒░▒██░░▒█  ░██             
-        ██           ███▒▒▓█▒░▓█  ██             
-        ██████████▒▒▒  ██▒▒▒█▒▒█▓██              
-        ██    ██   ▒    ██▓▒▓█▒████              
-       ▒▒▒▒  ▒▒▒▒         █▓▒█▒███               
-        ▒▒    ▒▒          ██▓████                
-                           █████                 
-                           ███                   
-                           ██                    `;
+import fs from 'fs';
+import logo from './lib/logo.js';
+import generateDockerfile from './lib/generateDockerfile.js';
 async function getMenuChoice() {
     return await prompts({
         type: 'select',
@@ -41,7 +19,7 @@ async function getMenuChoice() {
             { title: 'Add sink', value: 'add_sink' },
             { title: 'Map source/transform to sink', value: 'map_to_sink' },
             { title: 'Display vector config', value: 'viewConfig' },
-            { title: 'Generate vector_shipper.yaml', value: 'generateYaml' },
+            { title: 'Save vector_shipper.yaml', value: 'saveYaml' },
             { title: 'Docker build and run shipper', value: 'buildAndRun' },
             { title: 'Exit', value: 'exit' },
         ],
@@ -241,14 +219,23 @@ async function addSink(vectorConfiguration) {
         const sink = await createLokiSink();
         vectorConfiguration.addSink(sink);
     }
+    else if (sinkType === 'kafka') {
+        const sink = await createKafkaSink();
+        vectorConfiguration.addSink(sink);
+    }
 }
 async function viewConfig(vectorConfiguration) {
     console.log(stringify(vectorConfiguration.objectify()));
     await prompts({
         type: 'confirm',
         name: 'confirmContinue',
-        message: 'Yes to continue.',
+        message: 'Enter to continue.',
+        instructions: false,
+        initial: true,
     });
+}
+function saveYaml(vectorConfiguration) {
+    fs.writeFileSync('vector-shipper.yaml', stringify(vectorConfiguration.objectify()));
 }
 async function main() {
     const vectorConfiguration = new VectorConfiguration();
@@ -267,6 +254,9 @@ async function main() {
             await addSourceAndTransform(vectorConfiguration);
         if (action.menuChoice === 'map_to_sink')
             await mapTransformToSink(vectorConfiguration);
+        if (action.menuChoice === 'saveYaml')
+            saveYaml(vectorConfiguration);
     }
+    console.log(generateDockerfile(vectorConfiguration));
 }
 void main();

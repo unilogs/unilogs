@@ -24,6 +24,9 @@ export class FileSource extends BaseSource {
     addFileInclude(fileInclude) {
         this.include.push(fileInclude);
     }
+    getInclude() {
+        return [...this.include];
+    }
     getObjectBody() {
         const returnBody = {
             ...super.getObjectBody(),
