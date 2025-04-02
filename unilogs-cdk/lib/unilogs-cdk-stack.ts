@@ -65,14 +65,14 @@ export class UnilogsCdkStack extends cdk.Stack {
       kafkaVersion: '3.6.0',
       numberOfBrokerNodes: 2,
       brokerNodeGroupInfo: {
-        instanceType: 'kafka.m5.large',
+        instanceType: 'kafka.t3.small', // Cost optimized (originally m5.large)
         clientSubnets: vpc.selectSubnets({
           subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS,
         }).subnetIds,
         securityGroups: [mskSecurityGroup.securityGroupId],
         storageInfo: {
           ebsStorageInfo: {
-            volumeSize: 100,
+            volumeSize: 20, // Reduced from 100GB
           },
         },
       },
@@ -127,34 +127,29 @@ export class UnilogsCdkStack extends cdk.Stack {
       description: 'Role for cluster administration',
     });
 
-    const cluster = new eks.FargateCluster(this, 'FargateCluster', {
+    const cluster = new eks.Cluster(this, 'EksCluster', {
       vpc,
       version: eks.KubernetesVersion.V1_32,
       kubectlLayer: new KubectlLayer(this, 'kubectl'),
       clusterName: 'unilogs-cluster',
-      mastersRole: clusterAdminRole,
-      outputConfigCommand: true,
+      defaultCapacity: 0, // We'll add our own node groups
     });
 
-    // Add Fargate profiles
-    cluster.addFargateProfile('LokiProfile', {
-      selectors: [{ namespace: 'loki' }],
-      subnetSelection: { subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS },
-    });
-
-    cluster.addFargateProfile('GrafanaProfile', {
-      selectors: [{ namespace: 'grafana' }],
-      subnetSelection: { subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS },
-    });
-
-    cluster.addFargateProfile('VectorProfile', {
-      selectors: [{ namespace: 'vector' }],
-      subnetSelection: { subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS },
-    });
-
-    cluster.addFargateProfile('DefaultProfile', {
-      selectors: [{ namespace: 'default' }],
-      subnetSelection: { subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS },
+    // Add managed node groups
+    cluster.addNodegroupCapacity('AppNodeGroup', {
+      instanceTypes: [
+        new ec2.InstanceType('t3.medium'), // Smaller instance (originally m5.large)
+      ],
+      minSize: 1, // Reduced from 2
+      maxSize: 2, // Reduced from 5
+      desiredSize: 1, // Reduced from 2
+      diskSize: 30, // Reduced from 50GB
+      amiType: eks.NodegroupAmiType.AL2_X86_64,
+      subnets: { subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS },
+      labels: {
+        app: 'unilogs',
+        'workload-type': 'application',
+      },
     });
 
     // Explicitly map your IAM user
@@ -293,22 +288,16 @@ export class UnilogsCdkStack extends cdk.Stack {
         },
         deploymentMode: 'SimpleScalable',
         backend: {
-          replicas: 2,
-          persistence: {
-            enabled: false,
-          },
+          replicas: 1, // Reduced from 2
+          persistence: { enabled: true, storageClassName: 'gp2', size: '10Gi' },
         },
         read: {
-          replicas: 2,
-          persistence: {
-            enabled: false,
-          },
+          replicas: 1, // Reduced from 2
+          persistence: { enabled: true, storageClassName: 'gp2', size: '10Gi' },
         },
         write: {
-          replicas: 3,
-          persistence: {
-            enabled: false,
-          },
+          replicas: 1, // Reduced from 3
+          persistence: { enabled: true, storageClassName: 'gp2', size: '10Gi' },
         },
         minio: {
           enabled: false,
@@ -374,9 +363,7 @@ export class UnilogsCdkStack extends cdk.Stack {
       values: {
         adminUser: 'admin',
         adminPassword: process.env.GRAFANA_ADMIN_PASSWORD || 'admin',
-        persistence: {
-          enabled: false,
-        },
+        persistence: { enabled: true, storageClassName: 'gp2', size: '10Gi' },
         datasources: {
           'datasources.yaml': {
             apiVersion: 1,
@@ -459,7 +446,9 @@ export class UnilogsCdkStack extends cdk.Stack {
           sources: {
             kafka: {
               type: 'kafka',
-              bootstrap_servers: mskBrokers.getResponseField('BootstrapBrokerStringSaslIam'),
+              bootstrap_servers: mskBrokers.getResponseField(
+                'BootstrapBrokerStringSaslIam'
+              ),
               group_id: 'vector-consumer',
               topics: ['app_logs_topic'],
               security_protocol: 'SASL_SSL',
@@ -505,7 +494,7 @@ export class UnilogsCdkStack extends cdk.Stack {
     const vectorNamespace = cluster.addManifest('VectorNamespace', {
       apiVersion: 'v1',
       kind: 'Namespace',
-      metadata: { name: 'vector' }
+      metadata: { name: 'vector' },
     });
 
     vectorChart.node.addDependency(vectorNamespace);
