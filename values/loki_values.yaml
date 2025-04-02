@@ -121,7 +121,7 @@ backend:
     storageClass: gp2
     size: 1Gi
     claims:
-      - name: gateway-data
+      - name: backend-data
         size: 1Gi
         storageClass: gp2
 read:
@@ -133,7 +133,7 @@ write:
     storageClass: gp2
     size: 1Gi
     claims:
-      - name: gateway-data
+      - name: write-data
         size: 1Gi
         storageClass: gp2
 
