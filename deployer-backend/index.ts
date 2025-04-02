@@ -31,15 +31,36 @@ class EKSCluster extends cdk.Stack {
 
     const vpc = new ec2.Vpc(this, "EKSVpc");
 
+    const clusterRole = new iam.Role(this, 'clusterRole', {
+      assumedBy: new iam.ServicePrincipal('eks.amazonaws.com'),
+      managedPolicies: [
+        // these 5 needed to enable auto mode later, if desired
+        'AmazonEKSComputePolicy',
+        'AmazonEKSBlockStoragePolicy',
+        'AmazonEKSLoadBalancingPolicy',
+        'AmazonEKSNetworkingPolicy',
+        'AmazonEKSClusterPolicy'
+      ].map((policy) => iam.ManagedPolicy.fromAwsManagedPolicyName(policy)),
+    });
+
+    clusterRole.assumeRolePolicy?.addStatements(new iam.PolicyStatement({
+      effect: iam.Effect.ALLOW,
+      actions: ["sts:TagSession"],
+      principals: [new iam.ServicePrincipal('eks.amazonaws.com')],
+    }));
+
     const eksCluster = new eks.Cluster(this, "EKSCluster", {
       vpc: vpc,
-      defaultCapacity: 0,
+      defaultCapacity: 0, // ensures no auto mode by default
       version: kubernetesVersion,
       kubectlLayer: new KubectlLayer(this, "kubectl"),
       ipFamily: eks.IpFamily.IP_V4,
       clusterLogging: clusterLogging,
+      authenticationMode: eks.AuthenticationMode.API_AND_CONFIG_MAP,
+      role: clusterRole,
     });
 
+    // self defined node group rather than relying on automode
     eksCluster.addNodegroupCapacity("custom-node-group", {
       amiType: eks.NodegroupAmiType.AL2023_X86_64_STANDARD,
       instanceTypes: instanceTypes,
@@ -47,15 +68,25 @@ class EKSCluster extends cdk.Stack {
       minSize: 2,
       maxSize: 5,
       diskSize: 20,
-      nodeRole: new iam.Role(this, "eksClusterNodeGroupRole", {
-        roleName: "eksClusterNodeGroupRole",
+      nodeRole: new iam.Role(this, "TESTClusterNodeGroupRole", {
+        roleName: "TESTClusterNodeGroupRole",
         assumedBy: new iam.ServicePrincipal("ec2.amazonaws.com"),
         managedPolicies: [
           "AmazonEKSWorkerNodePolicy",
           "AmazonEC2ContainerRegistryReadOnly",
           "AmazonEKS_CNI_Policy",
+          // next two added to allow enabling Auto Mode, possibly redundant
+          'AmazonEKSWorkerNodeMinimalPolicy',
+          'AmazonEC2ContainerRegistryPullOnly'
         ].map((policy) => iam.ManagedPolicy.fromAwsManagedPolicyName(policy)),
       }),
+    });
+
+    const deployingUser = iam.User.fromUserName(this, 'DeployingUser', `${process.env.USER_NAME}`);
+    // deploying IAM user starts with admin access, but users may prefer using roles
+    eksCluster.awsAuth.addUserMapping(deployingUser, {
+      username: `${process.env.USER_NAME}`,
+      groups: ['system:masters'],
     });
 
     const logBucket = new s3.Bucket(this, 'LogBucket', {

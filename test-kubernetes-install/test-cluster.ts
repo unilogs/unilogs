@@ -9,6 +9,8 @@ import * as iam from "aws-cdk-lib/aws-iam";
 
 const kubernetesVersion = eks.KubernetesVersion.V1_32;
 
+const S3_BUCKET_BASE_ENDPOINT = `s3.${process.env.AWS_DEFAULT_REGION}.amazonaws.com`;
+
 // including all logging types for now just to see what they look like...
 const clusterLogging = [
   eks.ClusterLoggingTypes.API,
@@ -18,20 +20,13 @@ const clusterLogging = [
   eks.ClusterLoggingTypes.CONTROLLER_MANAGER,
 ];
 
-const instanceTypes = [
-  new ec2.InstanceType("m5.large"),
-  new ec2.InstanceType("m5a.large"),
-];
-
-const S3_BUCKET_BASE_ENDPOINT = `s3.${process.env.AWS_DEFAULT_REGION}.amazonaws.com`;
-
 class TESTCluster extends cdk.Stack {
   constructor(scope: cdk.App, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
     const vpc = new ec2.Vpc(this, "TESTVpc");
 
-    const clusterRole = new iam.Role(this, 'TESTClustRole', {
+    const TESTClusterRole = new iam.Role(this, 'TESTClusterRole', {
       assumedBy: new iam.ServicePrincipal('eks.amazonaws.com'),
       managedPolicies: [
         // these 5 policies needed to allow enabling Auto Mode later
@@ -43,36 +38,30 @@ class TESTCluster extends cdk.Stack {
       ].map((policy) => iam.ManagedPolicy.fromAwsManagedPolicyName(policy)),
     });
 
-    const eksCluster = new eks.Cluster(this, "TESTCluster", {
+    // Create a policy that grants sts:AssumeRole and sts:TagSession and attach it as an inline policy.
+    TESTClusterRole.assumeRolePolicy?.addStatements(new iam.PolicyStatement({
+      effect: iam.Effect.ALLOW,
+      actions: ["sts:TagSession"],
+      principals: [new iam.ServicePrincipal('eks.amazonaws.com')],
+    }));
+
+    const TESTCluster = new eks.Cluster(this, "TESTCluster", {
       vpc: vpc,
-      defaultCapacity: 0,
+      // defaultCapacity: 0,
       version: kubernetesVersion,
       kubectlLayer: new KubectlLayer(this, "kubectl"),
-      ipFamily: eks.IpFamily.IP_V4,
+      // ipFamily: eks.IpFamily.IP_V4,
       clusterLogging: clusterLogging,
+      authenticationMode: eks.AuthenticationMode.API_AND_CONFIG_MAP,
+      role: TESTClusterRole,
     });
 
-    eksCluster.addNodegroupCapacity("custom-node-group", {
-      amiType: eks.NodegroupAmiType.AL2023_X86_64_STANDARD,
-      instanceTypes: instanceTypes,
-      desiredSize: 2,
-      minSize: 2,
-      maxSize: 5,
-      diskSize: 20,
-      nodeRole: new iam.Role(this, "TESTClusterNodeGroupRole", {
-        roleName: "TESTClusterNodeGroupRole",
-        assumedBy: new iam.ServicePrincipal("ec2.amazonaws.com"),
-        managedPolicies: [
-          "AmazonEKSWorkerNodePolicy",
-          "AmazonEC2ContainerRegistryReadOnly",
-          "AmazonEKS_CNI_Policy",
-          // next two added to allow enabling Auto Mode, possibly redundant
-          'AmazonEKSWorkerNodeMinimalPolicy',
-          'AmazonEC2ContainerRegistryPullOnly'
-        ].map((policy) => iam.ManagedPolicy.fromAwsManagedPolicyName(policy)),
-      }),
-    });
+    const deployingUser = iam.User.fromUserName(this, 'DeployingUser', `${process.env.USER_NAME}`);
 
+    TESTCluster.awsAuth.addUserMapping(deployingUser, {
+      username: `${process.env.USER_NAME}`,
+      groups: ['system:masters'],
+    });
 
     const TESTlogBucket = new s3.Bucket(this, 'TESTLogBucket', {
       bucketName: `TESTlogBucket-${process.env.AWS_DEFAULT_ACCOUNT}-${process.env.AWS_DEFAULT_REGION}`.toLowerCase(),
