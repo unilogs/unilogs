@@ -171,6 +171,13 @@ export class UnilogsCdkStack extends cdk.Stack {
       username: 'cdk-admin',
     });
 
+    // Enable EBS CSI driver
+    cluster.addAutoScalingGroupCapacity('EbsCsiDriver', {
+      instanceType: new ec2.InstanceType('t3.small'),
+      minCapacity: 1,
+      maxCapacity: 2,
+    });
+
     // ==================== LOKI STORAGE ====================
     const lokiChunkBucket = new s3.Bucket(this, 'LokiChunkBucket', {
       bucketName: `unilogs-loki-chunk-${this.account}-${
@@ -451,14 +458,12 @@ export class UnilogsCdkStack extends cdk.Stack {
               ),
               group_id: 'vector-consumer',
               topics: ['app_logs_topic'],
-              security_protocol: 'SASL_SSL',
               sasl: {
-                mechanism: 'OAUTHBEARER',
+                mechanism: 'AWS_MSK_IAM',
                 oauthbearer_token_provider: 'aws',
                 region: this.region,
               },
               auto_offset_reset: 'earliest',
-              auto_create_topics: true,
             },
           },
           sinks: {
