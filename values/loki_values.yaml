@@ -54,7 +54,7 @@ serviceAccount:
     'eks.amazonaws.com/role-arn': 'arn:aws:iam::<Account ID>:role/LokiServiceAccountRole' # The service role you created
 
 deploymentMode: SimpleScalable
-
+# Holdovers from 
 # ingester:
 #   replicas: 3
 #   zoneAwareReplication:
