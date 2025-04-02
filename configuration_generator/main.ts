@@ -10,6 +10,7 @@ import {
   Transform,
 } from './lib/Transform.js';
 import { FileSource, Source, SourceType } from './lib/Source.js';
+import { stringify } from 'yaml';
 
 const logo = `                            ██           ████    
                           ██▓██      ███████     
@@ -46,13 +47,42 @@ async function getMenuChoice() {
       { title: 'Add source and transform', value: 'add_source_and_transform' },
       { title: 'Add sink', value: 'add_sink' },
       { title: 'Map source/transform to sink', value: 'map_to_sink' },
-      { title: 'Generate vector_shipper.yaml', value: 'generateYaml' },
       { title: 'Display vector config', value: 'viewConfig' },
+      { title: 'Generate vector_shipper.yaml', value: 'generateYaml' },
       { title: 'Docker build and run shipper', value: 'buildAndRun' },
       { title: 'Exit', value: 'exit' },
     ],
   });
 }
+
+async function mapTransformToSink(vectorConfiguration: VectorConfiguration) {
+  const availableSinks = vectorConfiguration.getAllSinkNames();
+  const availableTransforms = vectorConfiguration.getAllTransformNames();
+  if (availableSinks.length < 1 || availableTransforms.length < 1) return;
+  const { selectedTransforms } = await prompts<string>({
+    type: 'multiselect',
+    name: 'selectedTransforms',
+    message: 'Select all transforms you want to map to a sink',
+    choices: availableTransforms.map(transformName => {return {title: transformName, value: transformName};}),
+    instructions: false,
+    min: 1,
+    hint: '- Space to select, return to submit.'
+  });
+  const { selectedSink } = await prompts<string>({
+    type: 'select',
+    name: 'selectedSink',
+    message: 'Select sink to map transforms to',
+    choices: availableSinks.map(sinkName => {return {title: sinkName, value: sinkName};}),
+  });
+  const sinkToMapTo = vectorConfiguration.getSinkByName(selectedSink);
+  if (sinkToMapTo.length !== 1) return;
+  for (const transformName of selectedTransforms) {
+    const transformToMap = vectorConfiguration.getTransformByName(transformName);
+    if (transformToMap.length !== 1) return;
+    sinkToMapTo[0].addInput(transformToMap[0]);
+  }
+}
+
 async function addInclude(include: string[]) {
   const { includeToAdd } = await prompts<string>({
     type: 'text',
@@ -61,6 +91,7 @@ async function addInclude(include: string[]) {
   });
   if (includeToAdd) include.push(includeToAdd);
 }
+
 async function createSource(serviceName?: string): Promise<Source> {
   const { sourceName } = await prompts<string>({
     type: 'text',
@@ -91,7 +122,7 @@ async function createTransform(
     type: 'text',
     name: 'transformName',
     message: 'What would you like to call this transform?',
-    initial: `${transformType}_transform`,
+    initial: `${serviceName}_${transformType}_transform`,
     validate: (input) => /^[a-zA-Z0-9\-_]+$/.test(input),
   });
   if (transformType === 'apache') {
@@ -166,7 +197,7 @@ async function addSink(vectorConfiguration: VectorConfiguration) {
 }
 
 async function viewConfig(vectorConfiguration: VectorConfiguration) {
-  console.log(vectorConfiguration.objectify());
+  console.log(stringify(vectorConfiguration.objectify()));
   await prompts({
     type: 'confirm',
     name: 'confirmContinue',
@@ -187,6 +218,7 @@ async function main() {
       await viewConfig(vectorConfiguration);
     if (action.menuChoice === 'add_source_and_transform')
       await addSourceAndTransform(vectorConfiguration);
+    if (action.menuChoice === 'map_to_sink') await mapTransformToSink(vectorConfiguration);
   }
 }
 

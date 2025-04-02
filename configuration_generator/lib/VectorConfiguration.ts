@@ -14,12 +14,30 @@ export class VectorConfiguration {
     this.sinks = [];
   }
 
+  getAllTransformNames() {
+    return this.transforms.map((transform) => transform.transformName);
+  }
+  
+  getAllSinkNames() {
+    return this.sinks.map((sink) => sink.sinkName);
+  }
+  
+  getSinkByName(sinkName: string): Sink[] {
+    return this.sinks.filter(sink => sink.sinkName === sinkName);
+  }
+
+  getTransformByName(transformName: string): Transform[] {
+    return this.transforms.filter(transform => transform.transformName === transformName);
+  }
+
   addSource(source: Source) {
     this.sources.push(source);
   }
+
   addTransform(transform: Transform) {
     this.transforms.push(transform);
   }
+
   addSink(sink: Sink) {
     this.sinks.push(sink);
   }
@@ -49,5 +67,4 @@ export class VectorConfiguration {
       sinks: mySinks,
     };
   }
-
 }
