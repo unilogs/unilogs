@@ -1,6 +1,10 @@
 import Mustache from 'mustache';
-import { TransformSourceOption } from './vector-types.js';
 import fs from 'fs';
+
+export enum TransformSourceOption {
+  Apache = 'apache_template',
+  PlainText = 'plaintext_template',
+}
 
 // Note that we're using double brackets [[ and ]] rather than braces because
 // the Vector template syntax uses braces.

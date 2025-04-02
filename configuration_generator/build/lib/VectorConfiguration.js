@@ -16,45 +16,15 @@ export class VectorConfiguration {
     objectify() {
         const mySources = {};
         for (const source of this.sources) {
-            mySources[source.sourceName] = {
-                type: 'file',
-                include: source.include,
-            };
+            mySources[source.sourceName] = source.getObjectBody();
         }
         const myTransforms = {};
         for (const transform of this.transforms) {
-            myTransforms[transform.transformName] = {
-                type: 'remap',
-                inputs: transform.inputs,
-                source: transform.source,
-            };
+            myTransforms[transform.transformName] = transform.getObjectBody();
         }
         const mySinks = {};
         for (const sink of this.sinks) {
-            // if (sink.type === SinkType.Loki) {
-            //   mySinks[sink.sinkName] = {
-            //     type: sink.type,
-            //     endpoint: sink.endpoint,
-            //     path: sink.path,
-            //     auth: sink.auth,
-            //     encoding: 'json',
-            //   };
-            // } else if (sink.type === SinkType.Console) {
-            //   mySinks[sink.sinkName] = {
-            //     type: sink.type,
-            //     inputs: sink.inputs,
-            //     encoding: { codec: sink.encoding },
-            //   };
-            // } else if (sink.type === SinkType.Kafka) {
-            //   mySinks[sink.sinkName] = {
-            //     type: sink.type,
-            //     inputs: sink.inputs,
-            //     bootstrap_servers: sink.bootstrap_servers,
-            //     topic: sink.topic,
-            //     encoding: sink.encoding,
-            //   };
-            // }
-            mySinks[sink.getSinkName()] = sink.getObjectBody();
+            mySinks[sink.sinkName] = sink.getObjectBody();
         }
         return {
             sources: mySources,

@@ -1,5 +1,7 @@
-import { Source, Transform } from './vector-types.js';
+// import { Source, Transform } from './vector-types.js';
 import { Sink } from './Sink.js';
+import { Source } from './Source.js';
+import { Transform } from './Transform.js';
 
 export class VectorConfiguration {
   private sources: Source[];
@@ -25,19 +27,12 @@ export class VectorConfiguration {
   objectify() {
     const mySources: Record<string, Record<string, string | string[]>> = {};
     for (const source of this.sources) {
-      mySources[source.sourceName] = {
-        type: 'file',
-        include: source.include,
-      };
+      mySources[source.sourceName] = source.getObjectBody();
     }
 
     const myTransforms: Record<string, Record<string, string | string[]>> = {};
     for (const transform of this.transforms) {
-      myTransforms[transform.transformName] = {
-        type: 'remap',
-        inputs: transform.inputs,
-        source: transform.source,
-      };
+      myTransforms[transform.transformName] = transform.getObjectBody();
     }
 
     const mySinks: Record<
@@ -45,7 +40,7 @@ export class VectorConfiguration {
       Record<string, string | string[] | Record<string, string | string[]>>
     > = {};
     for (const sink of this.sinks) {
-      mySinks[sink.getSinkName()] = sink.getObjectBody();
+      mySinks[sink.sinkName] = sink.getObjectBody();
     }
 
     return {

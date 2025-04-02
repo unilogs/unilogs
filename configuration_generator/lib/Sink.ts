@@ -52,9 +52,6 @@ class BaseSink {
     this.inputs.push(input);
   }
 
-  getSinkName() {
-    return this.sinkName;
-  }
   getObjectBody() {
     return {
       type: this.type,

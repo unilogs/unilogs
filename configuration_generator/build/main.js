@@ -1,8 +1,10 @@
 #!/usr/bin/env node
-import prompts from "prompts";
-import gradient from "gradient-string";
-import { VectorConfiguration } from "./lib/VectorConfiguration.js";
-import { ConsoleEncoding, ConsoleSink, SinkType } from "./lib/Sink.js";
+import prompts from 'prompts';
+import gradient from 'gradient-string';
+import { VectorConfiguration } from './lib/VectorConfiguration.js';
+import { ConsoleEncoding, ConsoleSink, SinkType } from './lib/Sink.js';
+import { ApacheTransform, PlainTextTransform, } from './lib/Transform.js';
+import { FileSource, SourceType } from './lib/Source.js';
 const logo = `                            ██           ████    
                           ██▓██      ███████     
              ▒░▒███████████  ███ █████▓███       
@@ -34,22 +36,88 @@ async function getMenuChoice() {
         name: 'menuChoice',
         message: 'What do you want to do?',
         choices: [
-            { title: 'Add source', value: 'add_source' },
+            { title: 'Add source and transform', value: 'add_source_and_transform' },
             { title: 'Add sink', value: 'add_sink' },
+            { title: 'Map source/transform to sink', value: 'map_to_sink' },
             { title: 'Generate vector_shipper.yaml', value: 'generateYaml' },
             { title: 'Display vector config', value: 'viewConfig' },
             { title: 'Docker build and run shipper', value: 'buildAndRun' },
-            { title: 'Exit', value: 'exit' }
-        ]
+            { title: 'Exit', value: 'exit' },
+        ],
     });
 }
+async function addInclude(include) {
+    const { includeToAdd } = await prompts({
+        type: 'text',
+        name: 'includeToAdd',
+        message: 'Enter path to logs',
+    });
+    if (includeToAdd)
+        include.push(includeToAdd);
+}
+async function createSource(serviceName) {
+    const { sourceName } = await prompts({
+        type: 'text',
+        name: 'sourceName',
+        message: 'What would you like to call this source?',
+        initial: `${serviceName ? `${serviceName}_` : ''}file_source`,
+        validate: (input) => /^[a-zA-Z0-9\-_]+$/.test(input),
+    });
+    const include = [];
+    await addInclude(include);
+    return new FileSource({ sourceName, type: SourceType.File, include });
+}
+async function createTransform(inputSource, serviceName) {
+    const { transformType } = await prompts({
+        type: 'select',
+        name: 'transformType',
+        message: 'Select log format',
+        choices: [
+            { title: 'Apache', value: 'apache' },
+            { title: 'PlainText', value: 'plaintext' },
+        ],
+    });
+    const { transformName } = await prompts({
+        type: 'text',
+        name: 'transformName',
+        message: 'What would you like to call this transform?',
+        initial: `${transformType}_transform`,
+        validate: (input) => /^[a-zA-Z0-9\-_]+$/.test(input),
+    });
+    if (transformType === 'apache') {
+        return new ApacheTransform({
+            serviceName,
+            inputs: [inputSource],
+            transformName,
+        });
+    }
+    else {
+        return new PlainTextTransform({
+            serviceName,
+            inputs: [inputSource],
+            transformName,
+        });
+    }
+}
+async function addSourceAndTransform(vectorConfiguration) {
+    const { serviceName } = await prompts({
+        type: 'text',
+        name: 'serviceName',
+        message: 'What is the service that generates these logs?',
+        validate: (input) => /^[a-zA-Z0-9\-_]+$/.test(input),
+    });
+    const newSource = await createSource(serviceName);
+    const newTransform = await createTransform(newSource, serviceName);
+    vectorConfiguration.addSource(newSource);
+    vectorConfiguration.addTransform(newTransform);
+}
 async function createConsoleSink() {
-    const sinkNameResponse = await prompts({
+    const { sinkName } = await prompts({
         type: 'text',
         name: 'sinkName',
         message: 'What would you like to call this sink?',
         initial: 'console_sink',
-        validate: (input) => /^[a-zA-Z0-9\-_]+$/.test(input)
+        validate: (input) => /^[a-zA-Z0-9\-_]+$/.test(input),
     });
     const { encoding } = await prompts({
         type: 'select',
@@ -57,11 +125,15 @@ async function createConsoleSink() {
         message: 'Which encoding would you like to use?',
         choices: [
             { title: 'JSON', value: ConsoleEncoding.Json },
-            { title: 'Logfmt', value: ConsoleEncoding.Logfmt }
-        ]
+            { title: 'Logfmt', value: ConsoleEncoding.Logfmt },
+        ],
     });
-    const sinkName = (typeof sinkNameResponse.sinkName === 'string') ? sinkNameResponse.sinkName : '';
-    return new ConsoleSink({ sinkName, type: SinkType.Console, encoding, inputs: [] });
+    return new ConsoleSink({
+        sinkName,
+        type: SinkType.Console,
+        encoding,
+        inputs: [],
+    });
 }
 async function addSink(vectorConfiguration) {
     const { sinkType } = await prompts({
@@ -71,8 +143,8 @@ async function addSink(vectorConfiguration) {
         choices: [
             { title: 'Console', value: SinkType.Console },
             { title: 'Loki', value: SinkType.Loki },
-            { title: 'Kafka', value: SinkType.Kafka }
-        ]
+            { title: 'Kafka', value: SinkType.Kafka },
+        ],
     });
     if (sinkType === 'console') {
         const sink = await createConsoleSink();
@@ -84,7 +156,7 @@ async function viewConfig(vectorConfiguration) {
     await prompts({
         type: 'confirm',
         name: 'confirmContinue',
-        message: 'Yes to continue.'
+        message: 'Yes to continue.',
     });
 }
 async function main() {
@@ -100,6 +172,8 @@ async function main() {
             await addSink(vectorConfiguration);
         if (action.menuChoice === 'viewConfig')
             await viewConfig(vectorConfiguration);
+        if (action.menuChoice === 'add_source_and_transform')
+            await addSourceAndTransform(vectorConfiguration);
     }
 }
 void main();

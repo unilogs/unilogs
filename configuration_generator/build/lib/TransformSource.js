@@ -1,5 +1,10 @@
 import Mustache from 'mustache';
 import fs from 'fs';
+export var TransformSourceOption;
+(function (TransformSourceOption) {
+    TransformSourceOption["Apache"] = "apache_template";
+    TransformSourceOption["PlainText"] = "plaintext_template";
+})(TransformSourceOption || (TransformSourceOption = {}));
 // Note that we're using double brackets [[ and ]] rather than braces because
 // the Vector template syntax uses braces.
 Mustache.tags = ['[[', ']]'];

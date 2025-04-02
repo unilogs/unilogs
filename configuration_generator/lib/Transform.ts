@@ -35,10 +35,6 @@ class BaseTransform {
     this.source = source;
   }
 
-  getTransformName() {
-    return this.transformName;
-  }
-
   getObjectBody() {
     return {
       type: 'remap',
