@@ -1,4 +1,5 @@
-import { Source, Transform, Sink, SinkType } from './vector-types.js';
+import { Source, Transform } from './vector-types.js';
+import { Sink } from './Sink.js';
 
 export class VectorConfiguration {
   private sources: Source[];
@@ -44,29 +45,7 @@ export class VectorConfiguration {
       Record<string, string | string[] | Record<string, string | string[]>>
     > = {};
     for (const sink of this.sinks) {
-      if (sink.type === SinkType.Loki) {
-        mySinks[sink.sinkName] = {
-          type: sink.type,
-          endpoint: sink.endpoint,
-          path: sink.path,
-          auth: sink.auth,
-          encoding: 'json',
-        };
-      } else if (sink.type === SinkType.Console) {
-        mySinks[sink.sinkName] = {
-          type: sink.type,
-          inputs: sink.inputs,
-          encoding: { codec: sink.encoding },
-        };
-      } else if (sink.type === SinkType.Kafka) {
-        mySinks[sink.sinkName] = {
-          type: sink.type,
-          inputs: sink.inputs,
-          bootstrap_servers: sink.bootstrap_servers,
-          topic: sink.topic,
-          encoding: sink.encoding,
-        };
-      }
+      mySinks[sink.getSinkName()] = sink.getObjectBody();
     }
 
     return {
