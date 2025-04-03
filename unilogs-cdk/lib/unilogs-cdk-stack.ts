@@ -201,16 +201,16 @@ export class UnilogsCdkStack extends cdk.Stack {
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
     });
 
-    const lokiAdminBucket = new s3.Bucket(this, 'LokiAdminBucket', {
-      bucketName: `unilogs-loki-admin-${this.account}-${
-        this.region
-      }-${cdk.Names.uniqueId(this).toLowerCase()}`,
-      encryption: s3.BucketEncryption.S3_MANAGED,
-      enforceSSL: true,
-      autoDeleteObjects: true,
-      removalPolicy: cdk.RemovalPolicy.DESTROY,
-      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
-    });
+    // const lokiAdminBucket = new s3.Bucket(this, 'LokiAdminBucket', {
+    //   bucketName: `unilogs-loki-admin-${this.account}-${
+    //     this.region
+    //   }-${cdk.Names.uniqueId(this).toLowerCase()}`,
+    //   encryption: s3.BucketEncryption.S3_MANAGED,
+    //   enforceSSL: true,
+    //   autoDeleteObjects: true,
+    //   removalPolicy: cdk.RemovalPolicy.DESTROY,
+    //   blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
+    // });
 
     // IAM role for Loki pods with proper IRSA configuration
     const lokiCondition = createConditionJson(
@@ -239,8 +239,8 @@ export class UnilogsCdkStack extends cdk.Stack {
                 `${lokiChunkBucket.bucketArn}/*`,
                 lokiRulerBucket.bucketArn,
                 `${lokiRulerBucket.bucketArn}/*`,
-                lokiAdminBucket.bucketArn,
-                `${lokiAdminBucket.bucketArn}/*`,
+                // lokiAdminBucket.bucketArn,
+                // `${lokiAdminBucket.bucketArn}/*`,
               ],
             }),
           ],
@@ -524,7 +524,7 @@ export class UnilogsCdkStack extends cdk.Stack {
     lokiChart.node.addDependency(
       lokiChunkBucket,
       lokiRulerBucket,
-      lokiAdminBucket,
+      // lokiAdminBucket,
       mskCluster
     );
 
