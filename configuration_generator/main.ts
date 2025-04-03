@@ -20,7 +20,11 @@ import { stringify } from 'yaml';
 import fs from 'fs';
 import logo from './lib/logo.js';
 import generateDockerfile from './lib/generateDockerfile.js';
-import { generateBuildImageCommand, generateRunImageCommand } from './lib/generateDockerCommands.js';
+import {
+  generateBuildImageCommand,
+  generateRunImageCommand,
+} from './lib/generateDockerCommands.js';
+import buildAndRunShipper from './lib/buildAndRunShipper.js';
 
 async function getMenuChoice() {
   return await prompts({
@@ -275,7 +279,11 @@ async function main() {
     console.clear();
     console.log(gradient(['aqua', 'purple']).multiline(logo));
     const action = await getMenuChoice();
-    if (action.menuChoice === 'exit') notDone = false;
+    if (action.menuChoice === 'exit') {
+      notDone = false;
+      console.log(generateBuildImageCommand());
+      console.log(generateRunImageCommand(vectorConfiguration));
+    }
     if (action.menuChoice === 'add_sink') await addSink(vectorConfiguration);
     if (action.menuChoice === 'viewConfig')
       await viewConfig(vectorConfiguration);
@@ -286,9 +294,11 @@ async function main() {
     if (action.menuChoice === 'saveYaml') saveYaml(vectorConfiguration);
     if (action.menuChoice === 'saveDockerfile')
       saveDockerfile(vectorConfiguration);
+    if (action.menuChoice === 'buildAndRun') {
+      notDone = false;
+      buildAndRunShipper(vectorConfiguration);
+    }
   }
-  console.log(generateBuildImageCommand());
-  console.log(generateRunImageCommand(vectorConfiguration));
 }
 
 void main();
