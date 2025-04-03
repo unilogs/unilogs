@@ -296,15 +296,38 @@ export class UnilogsCdkStack extends cdk.Stack {
         deploymentMode: 'SimpleScalable',
         backend: {
           replicas: 1, // Reduced from 2
-          persistence: { enabled: true, storageClassName: 'gp2', size: '10Gi' },
+          persistence: { 
+            enabled: true, 
+            storageClass: 'gp2',
+            size: '1Gi', 
+            claims: [
+              {
+                name: "backend-data",
+                size: "1Gi",
+                storageClass: "gp2"
+              }
+            ]
+          },
         },
         read: {
           replicas: 1, // Reduced from 2
-          persistence: { enabled: true, storageClassName: 'gp2', size: '10Gi' },
+          // read shouldn't need persistence
+          // persistence: { enabled: true, storageClass: 'gp2', size: '1Gi' },
         },
         write: {
-          replicas: 1, // Reduced from 3
-          persistence: { enabled: true, storageClassName: 'gp2', size: '10Gi' },
+          replicas: 1, // Reduced from 2
+          persistence: { 
+            enabled: true, 
+            storageClass: 'gp2',
+            size: '1Gi', 
+            claims: [
+              {
+                name: "backend-data",
+                size: "1Gi",
+                storageClass: "gp2"
+              }
+            ]
+          },
         },
         minio: {
           enabled: false,
@@ -376,14 +399,18 @@ export class UnilogsCdkStack extends cdk.Stack {
             apiVersion: 1,
             datasources: [
               {
-                name: 'Loki',
+                name: 'loki',
                 type: 'loki',
                 url: 'http://loki-gateway.loki.svc.cluster.local',
                 access: 'proxy',
                 isDefault: true,
                 jsonData: {
                   maxLines: 1000,
+                  httpHeaderName1: 'X-Scope-OrgId'
                 },
+                secureJsonData: {
+                  httpHeaderValue1: 'default'
+                }
               },
             ],
           },
