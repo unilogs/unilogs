@@ -1,0 +1,41 @@
+sources:
+  foo_file_source:
+    type: file
+    include:
+      - /logs_0fd73e66/*.log
+transforms:
+  foo_apache_transform:
+    type: remap
+    inputs:
+      - foo_file_source
+    source: >-
+      # Parse the log line using Apache combined format
+
+      parsed, err = parse_apache_log(.message, "combined",
+      "%Y-%m-%dT%H:%M:%S.%fZ")
+
+
+      # Handle errors (e.g., if the log line doesn't match the pattern)
+
+      if err != null {
+        log("Failed to parse log line: " + string!(err), level: "error")
+      } else {
+        # Merge the parsed fields into the event
+        . = merge(., parsed)
+
+        # Extract the "level" from the "path" field
+        if .path == "/" {
+          .level = "info"
+        } else {
+          .level = split(.path, "/")[1] ?? "unknown"
+        }
+
+        .unilogs_service_label = "foo"
+      }
+sinks:
+  console_sink:
+    type: console
+    inputs:
+      - foo_apache_transform
+    encoding:
+      codec: json
