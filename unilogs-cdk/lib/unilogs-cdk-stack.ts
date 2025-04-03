@@ -152,12 +152,12 @@ export class UnilogsCdkStack extends cdk.Stack {
       },
     });
 
-    // Explicitly map your IAM user
+    // Explicitly map your IAM user - username only accessible from environment, not `aws configure`
     cluster.awsAuth.addUserMapping(
       iam.User.fromUserArn(
         this,
-        'MyUser',
-        `arn:aws:iam::${this.account}:user/UnilogsAdmin`
+        `${process.env.AWS_USER_NAME}`,
+        `arn:aws:iam::${this.account}:user/${process.env.AWS_USER_NAME}`
       ),
       {
         groups: ['system:masters'],

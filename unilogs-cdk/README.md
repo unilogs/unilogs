@@ -1,4 +1,22 @@
-# Welcome to your CDK TypeScript project
+# How to test deployment
+
+First, create a `bootstrap.sh` and `deploy.sh` file. Fill in your info as follows in each:
+
+`export AWS_ACCESS_KEY_ID="your key ID"`
+`export AWS_SECRET_ACCESS_KEY="you secret access key"`
+`export AWS_DEFAULT_ACCOUNT="your account number"`
+`export AWS_DEFAULT_REGION="your default region"`
+`export USER_NAME="your IAM username"`
+
+Followed by `cdk bootstrap` or `cdk deploy` as appropriate.
+
+Run `bash bootstrap.sh`.
+
+Then, run `bash deploy.sh`.
+
+# Original README Information
+
+<!-- # Welcome to your CDK TypeScript project
 
 This is a blank project for CDK development with TypeScript.
 
@@ -11,4 +29,4 @@ The `cdk.json` file tells the CDK Toolkit how to execute your app.
 * `npm run test`    perform the jest unit tests
 * `npx cdk deploy`  deploy this stack to your default AWS account/region
 * `npx cdk diff`    compare deployed stack with current state
-* `npx cdk synth`   emits the synthesized CloudFormation template
+* `npx cdk synth`   emits the synthesized CloudFormation template -->
