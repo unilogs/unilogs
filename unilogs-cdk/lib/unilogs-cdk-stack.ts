@@ -172,12 +172,15 @@ export class UnilogsCdkStack extends cdk.Stack {
     });
 
     // Enable EBS CSI driver
-    cluster.addAutoScalingGroupCapacity('EbsCsiDriver', {
-      instanceType: new ec2.InstanceType('t3.small'),
-      minCapacity: 1,
-      maxCapacity: 2,
-    });
-
+    const addManagedAddon = (id: string, addonName: string) => {
+      new eks.CfnAddon(this, id, {
+        addonName,
+        clusterName: cluster.clusterName,
+      });
+    };
+    
+    addManagedAddon("addonEbsCsiDriver", "aws-ebs-csi-driver");
+    
     // ==================== LOKI STORAGE ====================
     const lokiChunkBucket = new s3.Bucket(this, 'LokiChunkBucket', {
       bucketName: `unilogs-loki-chunk-${this.account}-${
