@@ -5,7 +5,7 @@
   "main": "./build/main.js",
   "type": "module",
   "scripts": {
-    "start": "node apacheLogger.js",
+    "start": "node ./build/main.js",
     "tsc": "tsc",
     "dev": "node --loader ts-node/esm ./main.ts",
     "lint": "eslint ."
@@ -15,7 +15,6 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
-    "@types/prompts": "^2.4.9",
     "gradient-string": "^3.0.0",
     "hash-sum": "^2.0.0",
     "mustache": "^4.2.0",
@@ -28,6 +27,7 @@
     "@types/eslint__js": "^8.42.3",
     "@types/hash-sum": "^1.0.2",
     "@types/mustache": "^4.2.5",
+    "@types/prompts": "^2.4.9",
     "eslint": "^9.23.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.8.2",
