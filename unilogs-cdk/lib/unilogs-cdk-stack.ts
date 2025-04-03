@@ -296,18 +296,7 @@ export class UnilogsCdkStack extends cdk.Stack {
         deploymentMode: 'SimpleScalable',
         backend: {
           replicas: 1, // Reduced from 2
-          persistence: { 
-            enabled: true, 
-            storageClass: 'gp2',
-            size: '1Gi', 
-            claims: [
-              {
-                name: "backend-data",
-                size: "1Gi",
-                storageClass: "gp2"
-              }
-            ]
-          },
+          persistence: { enabled: true, storageClass: 'gp2', size: '1Gi' },
         },
         read: {
           replicas: 1, // Reduced from 2
@@ -315,19 +304,8 @@ export class UnilogsCdkStack extends cdk.Stack {
           // persistence: { enabled: true, storageClass: 'gp2', size: '1Gi' },
         },
         write: {
-          replicas: 1, // Reduced from 2
-          persistence: { 
-            enabled: true, 
-            storageClass: 'gp2',
-            size: '1Gi', 
-            claims: [
-              {
-                name: "backend-data",
-                size: "1Gi",
-                storageClass: "gp2"
-              }
-            ]
-          },
+          replicas: 1, // Reduced from 3
+          persistence: { enabled: true, storageClass: 'gp2', size: '1Gi' },
         },
         minio: {
           enabled: false,
@@ -399,7 +377,7 @@ export class UnilogsCdkStack extends cdk.Stack {
             apiVersion: 1,
             datasources: [
               {
-                name: 'loki',
+                name: 'Loki',
                 type: 'loki',
                 url: 'http://loki-gateway.loki.svc.cluster.local',
                 access: 'proxy',
