@@ -34,7 +34,7 @@ export enum ConsoleEncoding {
 }
 export interface ConsoleSinkProps extends BaseSinkProps {
   type: SinkType.Console;
-  encoding: ConsoleEncoding;
+  encoding: { codec: ConsoleEncoding };
 }
 
 class BaseSink {

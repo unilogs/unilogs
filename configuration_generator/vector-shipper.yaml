@@ -2,7 +2,7 @@ sources:
   foo_file_source:
     type: file
     include:
-      - /logs_5679da8f/*.log
+      - /logs_0fd73e66/*.log
 transforms:
   foo_apache_transform:
     type: remap
@@ -32,4 +32,10 @@ transforms:
 
         .unilogs_service_label = "foo"
       }
-sinks: {}
+sinks:
+  console_sink:
+    type: console
+    inputs:
+      - foo_apache_transform
+    encoding:
+      codec: json

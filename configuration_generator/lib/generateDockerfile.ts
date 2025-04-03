@@ -1,10 +1,6 @@
 import { VectorConfiguration } from './VectorConfiguration.js';
 import { getInternalDir } from './pathUtils.js';
 
-// FROM timberio/vector:latest-distroless-static
-// ADD ./vector-shipper.yaml /etc/vector/vector.yaml
-// VOLUME /logs
-
 const dockerfile = [
   'FROM timberio/vector:latest-distroless-static',
   'ADD ./vector-shipper.yaml /etc/vector/vector.yaml',

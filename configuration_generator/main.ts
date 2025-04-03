@@ -20,6 +20,7 @@ import { stringify } from 'yaml';
 import fs from 'fs';
 import logo from './lib/logo.js';
 import generateDockerfile from './lib/generateDockerfile.js';
+import { generateBuildImageCommand, generateRunImageCommand } from './lib/generateDockerCommands.js';
 
 async function getMenuChoice() {
   return await prompts({
@@ -163,7 +164,7 @@ async function createConsoleSink(): Promise<ConsoleSink> {
   return new ConsoleSink({
     sinkName,
     type: SinkType.Console,
-    encoding,
+    encoding: { codec: encoding },
     inputs: [],
   });
 }
@@ -286,6 +287,8 @@ async function main() {
     if (action.menuChoice === 'saveDockerfile')
       saveDockerfile(vectorConfiguration);
   }
+  console.log(generateBuildImageCommand());
+  console.log(generateRunImageCommand(vectorConfiguration));
 }
 
 void main();

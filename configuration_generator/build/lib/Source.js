@@ -1,3 +1,4 @@
+import { getBase, getInternalDir } from './pathUtils.js';
 export var SourceType;
 (function (SourceType) {
     SourceType["File"] = "file";
@@ -30,7 +31,9 @@ export class FileSource extends BaseSource {
     getObjectBody() {
         const returnBody = {
             ...super.getObjectBody(),
-            include: [...this.include]
+            include: [
+                ...this.include.map((includePath) => `${getInternalDir(includePath)}/${getBase(includePath)}`),
+            ],
         };
         return returnBody;
     }

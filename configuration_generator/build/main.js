@@ -9,6 +9,7 @@ import { stringify } from 'yaml';
 import fs from 'fs';
 import logo from './lib/logo.js';
 import generateDockerfile from './lib/generateDockerfile.js';
+import { generateBuildImageCommand, generateRunImageCommand } from './lib/generateDockerCommands.js';
 async function getMenuChoice() {
     return await prompts({
         type: 'select',
@@ -20,6 +21,7 @@ async function getMenuChoice() {
             { title: 'Map source/transform to sink', value: 'map_to_sink' },
             { title: 'Display vector config', value: 'viewConfig' },
             { title: 'Save vector_shipper.yaml', value: 'saveYaml' },
+            { title: 'Save Dockerfile', value: 'saveDockerfile' },
             { title: 'Docker build and run shipper', value: 'buildAndRun' },
             { title: 'Exit', value: 'exit' },
         ],
@@ -144,7 +146,7 @@ async function createConsoleSink() {
     return new ConsoleSink({
         sinkName,
         type: SinkType.Console,
-        encoding,
+        encoding: { codec: encoding },
         inputs: [],
     });
 }
@@ -237,6 +239,9 @@ async function viewConfig(vectorConfiguration) {
 function saveYaml(vectorConfiguration) {
     fs.writeFileSync('vector-shipper.yaml', stringify(vectorConfiguration.objectify()));
 }
+function saveDockerfile(vectorConfiguration) {
+    fs.writeFileSync('Dockerfile', generateDockerfile(vectorConfiguration));
+}
 async function main() {
     const vectorConfiguration = new VectorConfiguration();
     let notDone = true;
@@ -256,7 +261,10 @@ async function main() {
             await mapTransformToSink(vectorConfiguration);
         if (action.menuChoice === 'saveYaml')
             saveYaml(vectorConfiguration);
+        if (action.menuChoice === 'saveDockerfile')
+            saveDockerfile(vectorConfiguration);
     }
-    console.log(generateDockerfile(vectorConfiguration));
+    console.log(generateBuildImageCommand());
+    console.log(generateRunImageCommand(vectorConfiguration));
 }
 void main();
