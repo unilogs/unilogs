@@ -171,7 +171,6 @@ export class UnilogsCdkStack extends cdk.Stack {
       username: 'cdk-admin',
     });
 
-    // Enable EBS CSI driver
     const addManagedAddon = (id: string, addonName: string) => {
       new eks.CfnAddon(this, id, {
         addonName,
@@ -179,6 +178,7 @@ export class UnilogsCdkStack extends cdk.Stack {
       });
     };
     
+    // Enable EBS CSI driver for provisioning persistent volumes
     addManagedAddon("addonEbsCsiDriver", "aws-ebs-csi-driver");
     
     // ==================== LOKI STORAGE ====================
