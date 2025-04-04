@@ -201,15 +201,51 @@ export class UnilogsCdkStack extends cdk.Stack {
     //   username: 'ClusterAdminRole',
     // });
 
-    const addManagedAddon = (id: string, addonName: string) => {
-      new eks.CfnAddon(this, id, {
-        addonName,
-        clusterName: cluster.clusterName,
-      });
-    };
-    
-    // Enable EBS CSI driver for provisioning persistent volumes
-    addManagedAddon("addonEbsCsiDriver", "aws-ebs-csi-driver");
+    // prerequisite for other add-ons
+    new eks.CfnAddon(this, 'PodIdentityAgentAddon', {
+      addonName: 'eks-pod-identity-agent',
+      clusterName: cluster.clusterName,
+      configurationValues: JSON.stringify({
+        agent: {
+          additionalArgs: {
+            '-b': '169.254.170.23' // specify IPv4 address only, disables IPv6 for cluster compatibility
+          }
+        }
+      }),
+    });
+
+    // necessary to provision PVCs
+    new eks.CfnAddon(this, 'EbsCsiDriverAddon', {
+      addonName: "aws-ebs-csi-driver",
+      clusterName: cluster.clusterName,
+    });
+
+    // this add-on included by default, but needs IAM role with its service to function
+    const vpcCniRole = new iam.Role(this, 'VpcCniRole', {
+      assumedBy: new iam.ServicePrincipal('pods.eks.amazonaws.com'),
+    });
+
+    const ebsCsiRole = new iam.Role(this, 'EbsCsiRole', {
+      assumedBy: new iam.ServicePrincipal('pods.eks.amazonaws.com'),
+    });
+
+    vpcCniRole.addManagedPolicy(iam.ManagedPolicy.fromAwsManagedPolicyName('AmazonEKS_CNI_Policy'));
+
+    ebsCsiRole.addManagedPolicy(iam.ManagedPolicy.fromAwsManagedPolicyName('service-role/AmazonEBSCSIDriverPolicy'));
+
+    new eks.CfnPodIdentityAssociation(this, 'VpcCniPodIdentityAssociation', {
+      clusterName: cluster.clusterName,
+      namespace: 'kube-system', // defaults name for add-on
+      serviceAccount: 'aws-node',
+      roleArn: vpcCniRole.roleArn,
+    });
+
+    new eks.CfnPodIdentityAssociation(this, 'EbsCsiPodIdentityAssociation', {
+      clusterName: cluster.clusterName,
+      namespace: 'kube-system',
+      serviceAccount: 'ebs-csi-controller-sa',
+      roleArn: ebsCsiRole.roleArn,
+    });
     
     // ==================== LOKI STORAGE ====================
     const lokiChunkBucket = new s3.Bucket(this, 'LokiChunkBucket', {
