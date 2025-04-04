@@ -563,3 +563,8 @@ export class UnilogsCdkStack extends cdk.Stack {
     });
   }
 }
+
+// explicitly instantiate app, stack, and synth() to ensure updated template
+const app = new cdk.App();
+new UnilogsCdkStack(app, 'EksStack');
+app.synth();

@@ -14,7 +14,7 @@ Create a `bootstrap.sh` and `deploy.sh` file. Fill in your info as follows in ea
 
 Followed by `cdk bootstrap` or `cdk deploy` as appropriate.
 
-Run `bash bootstrap.sh`. (may need to delete `cdk.out` directory or run `cdk synth` first if not the first time bootstrapping)
+Run `bash bootstrap.sh`.
 
 Then, run `bash deploy.sh`.
 
