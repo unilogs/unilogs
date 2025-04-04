@@ -10,11 +10,11 @@ Create a `bootstrap.sh` and `deploy.sh` file. Fill in your info as follows in ea
 `export AWS_SECRET_ACCESS_KEY="<you secret access key>"`
 `export AWS_DEFAULT_ACCOUNT="<your account number>"`
 `export AWS_DEFAULT_REGION="<your default region>"`
-`export USER_NAME="<your IAM username>"`
+`export AWS_USER_NAME="<your IAM username>"`
 
 Followed by `cdk bootstrap` or `cdk deploy` as appropriate.
 
-Run `bash bootstrap.sh`.
+Run `bash bootstrap.sh`. (may need to delete `cdk.out` directory or run `cdk synth` first if not the first time bootstrapping)
 
 Then, run `bash deploy.sh`.
 

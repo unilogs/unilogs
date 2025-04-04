@@ -122,10 +122,32 @@ export class UnilogsCdkStack extends cdk.Stack {
     });
 
     // ==================== EKS CLUSTER ====================
-    const clusterAdminRole = new iam.Role(this, 'ClusterAdminRole', {
-      assumedBy: new iam.AccountRootPrincipal(),
-      description: 'Role for cluster administration',
-    });
+
+    // if giving cluster access by user--username is only accessible from environment, not `aws configure`
+    const deployingUser = iam.User.fromUserName(this, 'DeployingUser', process.env.AWS_USER_NAME!);
+
+    // // creates a role assumeable by any IAM entity on the account, but is not automatic/convenient
+    // const clusterAdminRole = new iam.Role(this, 'ClusterAdminRole', {
+    //   assumedBy: new iam.AccountRootPrincipal(),
+    //   description: 'Role for cluster administration',
+    // });
+
+    // // a custom cluster role which can allow the user to enable auto mode later, if desired
+    // const clusterRole = new iam.Role(this, 'clusterRole', {
+    //   assumedBy: new iam.ServicePrincipal('eks.amazonaws.com'),
+    //   managedPolicies: [
+    //     'AmazonEKSComputePolicy',
+    //     'AmazonEKSBlockStoragePolicy',
+    //     'AmazonEKSLoadBalancingPolicy',
+    //     'AmazonEKSNetworkingPolicy',
+    //     'AmazonEKSClusterPolicy'
+    //   ].map((policy) => iam.ManagedPolicy.fromAwsManagedPolicyName(policy)),
+    // });
+    // clusterRole.assumeRolePolicy?.addStatements(new iam.PolicyStatement({
+    //   effect: iam.Effect.ALLOW,
+    //   actions: ["sts:TagSession"],
+    //   principals: [new iam.ServicePrincipal('eks.amazonaws.com')],
+    // }));
 
     const cluster = new eks.Cluster(this, 'EksCluster', {
       vpc,
@@ -133,6 +155,8 @@ export class UnilogsCdkStack extends cdk.Stack {
       kubectlLayer: new KubectlLayer(this, 'kubectl'),
       clusterName: 'unilogs-cluster',
       defaultCapacity: 0, // We'll add our own node groups
+      authenticationMode: eks.AuthenticationMode.API_AND_CONFIG_MAP,
+      // role: clusterRole, // rely on the default for simplicity unless specifically wanting auto mode
     });
 
     // Add managed node groups
@@ -150,26 +174,32 @@ export class UnilogsCdkStack extends cdk.Stack {
         app: 'unilogs',
         'workload-type': 'application',
       },
+      nodeRole: new iam.Role(this, "EKSClusterNodeGroupRole", {
+        roleName: "EKSClusterNodeGroupRole",
+        assumedBy: new iam.ServicePrincipal("ec2.amazonaws.com"),
+        managedPolicies: [
+          "AmazonEKSWorkerNodePolicy",
+          "AmazonEC2ContainerRegistryReadOnly",
+          "AmazonEKS_CNI_Policy",
+          // 'AmazonEC2ContainerRegistryPullOnly' // add to allow enabling Auto Mode
+        ].map((policy) => iam.ManagedPolicy.fromAwsManagedPolicyName(policy)),
+      }),
     });
 
-    // Explicitly map your IAM user - username only accessible from environment, not `aws configure`
+    // Explicitly map the IAM user
     cluster.awsAuth.addUserMapping(
-      iam.User.fromUserArn(
-        this,
-        `${process.env.AWS_USER_NAME}`,
-        `arn:aws:iam::${this.account}:user/${process.env.AWS_USER_NAME}`
-      ),
+      deployingUser,
       {
         groups: ['system:masters'],
-        username: 'admin',
+        username: 'deployingUserAdmin',
       }
     );
 
-    // Map the admin role
-    cluster.awsAuth.addRoleMapping(clusterAdminRole, {
-      groups: ['system:masters'],
-      username: 'cdk-admin',
-    });
+    // // Map the admin role if using the broadly assumable role instead of the specific user
+    // cluster.awsAuth.addRoleMapping(clusterAdminRole, {
+    //   groups: ['system:masters'],
+    //   username: 'ClusterAdminRole',
+    // });
 
     const addManagedAddon = (id: string, addonName: string) => {
       new eks.CfnAddon(this, id, {
