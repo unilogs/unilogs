@@ -6,6 +6,7 @@ import * as iam from 'aws-cdk-lib/aws-iam';
 import * as cr from 'aws-cdk-lib/custom-resources';
 import * as eks from 'aws-cdk-lib/aws-eks';
 import * as s3 from 'aws-cdk-lib/aws-s3';
+import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
 import { KubectlV32Layer as KubectlLayer } from '@aws-cdk/lambda-layer-kubectl-v32';
 
 export class UnilogsCdkStack extends cdk.Stack {
@@ -81,6 +82,9 @@ export class UnilogsCdkStack extends cdk.Stack {
           iam: {
             enabled: true,
           },
+          scram: {
+            enabled: true,
+          },
         },
       },
       encryptionInfo: {
@@ -117,6 +121,38 @@ export class UnilogsCdkStack extends cdk.Stack {
           ClusterArn: mskCluster.attrArn,
         },
         physicalResourceId: cr.PhysicalResourceId.of('MskBootstrapBrokers'),
+      },
+      role: mskBrokersRole,
+    });
+
+    // Create a Secrets Manager secret for SCRAM credentials
+    const scramCredentials = new secretsmanager.Secret(
+      this,
+      'MskScramCredentials',
+      {
+        description: 'MSK SCRAM credentials',
+        generateSecretString: {
+          secretStringTemplate: JSON.stringify({ username: 'unilogs-user' }),
+          generateStringKey: 'password',
+          excludePunctuation: true,
+          passwordLength: 16,
+        },
+      }
+    );
+
+    // Associate the SCRAM secret with the cluster
+    const scramSecret = new cr.AwsCustomResource(this, 'MskScramSecret', {
+      policy: cr.AwsCustomResourcePolicy.fromSdkCalls({
+        resources: [mskCluster.attrArn, scramCredentials.secretArn],
+      }),
+      onCreate: {
+        service: 'Kafka',
+        action: 'batchAssociateScramSecret',
+        parameters: {
+          ClusterArn: mskCluster.attrArn,
+          SecretArnList: [scramCredentials.secretArn],
+        },
+        physicalResourceId: cr.PhysicalResourceId.of('MskScramSecret'),
       },
       role: mskBrokersRole,
     });
@@ -540,8 +576,14 @@ export class UnilogsCdkStack extends cdk.Stack {
     // ==================== OUTPUTS ====================
     new cdk.CfnOutput(this, 'ClusterName', { value: cluster.clusterName });
     new cdk.CfnOutput(this, 'VpcId', { value: vpc.vpcId });
-    new cdk.CfnOutput(this, 'KafkaBootstrapServers', {
+    new cdk.CfnOutput(this, 'KafkaBootstrapServersIam', {
       value: mskBrokers.getResponseField('BootstrapBrokerStringSaslIam'),
+    });
+    new cdk.CfnOutput(this, 'KafkaBootstrapServersScram', {
+      value: mskBrokers.getResponseField('BootstrapBrokerStringSaslScram'),
+    });
+    new cdk.CfnOutput(this, 'ScramSecretArn', {
+      value: scramCredentials.secretArn,
     });
     new cdk.CfnOutput(this, 'LokiGatewayEndpoint', {
       value: `http://loki-gateway.loki.svc.cluster.local`,
