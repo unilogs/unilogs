@@ -3,6 +3,7 @@ import { AwsCredentialIdentity } from '@smithy/types';
 import safeAssertString from './utils/safeAssertString';
 
 async function createAwsCredentialIdentity(): Promise<AwsCredentialIdentity> {
+
   const { accessKeyId } = await prompts<string>({
     type: 'text',
     name: 'accessKeyId',

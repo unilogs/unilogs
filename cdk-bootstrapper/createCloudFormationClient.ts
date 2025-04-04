@@ -7,6 +7,7 @@ import safeAssertString from './utils/safeAssertString';
 import createAwsCredentialIdentity from './createAwsCredentialIdentity';
 
 async function createCloudFormationClient(): Promise<CloudFormationClient> {
+
   const { region } = await prompts<string>({
     type: 'text',
     name: 'region',
