@@ -1,6 +1,6 @@
 import prompts from 'prompts';
 import { AwsCredentialIdentity } from '@smithy/types';
-import safeAssertString from './utils/safeAssertString';
+import safeAssertString from './safeAssertString';
 
 async function createAwsCredentialIdentity(): Promise<AwsCredentialIdentity> {
 
