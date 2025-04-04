@@ -182,12 +182,7 @@ export class UnilogsCdkStack extends cdk.Stack {
       }),
     });
 
-    // necessary to provision PVCs
-    new eks.CfnAddon(this, 'EbsCsiDriverAddon', {
-      addonName: "aws-ebs-csi-driver",
-      clusterName: cluster.clusterName,
-    });
-
+    // service account modified for driver necessary to provision PVCs
     const ebsCsiServiceAccount = cluster.addServiceAccount('EbsCsiServiceAccount', {
       name: 'ebs-csi-controller-sa',
       namespace: 'kube-system',
@@ -196,6 +191,12 @@ export class UnilogsCdkStack extends cdk.Stack {
     ebsCsiServiceAccount.role.addManagedPolicy(
       iam.ManagedPolicy.fromAwsManagedPolicyName('service-role/AmazonEBSCSIDriverPolicy')
     );
+
+    new eks.CfnAddon(this, 'EbsCsiDriverAddon', {
+      addonName: "aws-ebs-csi-driver",
+      clusterName: cluster.clusterName,
+      resolveConflicts: 'OVERWRITE' // duplicate service account created when add-on is added
+    });
 
     // ==================== LOKI STORAGE ====================
     const lokiChunkBucket = new s3.Bucket(this, 'LokiChunkBucket', {
