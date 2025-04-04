@@ -13,11 +13,19 @@
   "description": "",
   "devDependencies": {
     "@eslint/js": "^9.23.0",
+    "@smithy/types": "^4.2.0",
     "@stylistic/eslint-plugin": "^4.2.0",
     "@types/eslint__js": "^8.42.3",
+    "@types/prompts": "^2.4.9",
     "eslint": "^9.23.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.8.2",
     "typescript-eslint": "^8.29.0"
+  },
+  "dependencies": {
+    "@aws-sdk/client-cloudformation": "^3.782.0",
+    "aws-cdk-lib": "^2.187.0",
+    "constructs": "^10.4.2",
+    "prompts": "^2.4.2"
   }
 }
