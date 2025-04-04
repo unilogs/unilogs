@@ -311,7 +311,14 @@ export class UnilogsCdkStack extends cdk.Stack {
           enabled: false,
         },
         gateway: {
-          enabled: false,
+          service: {
+            type: 'LoadBalancer'
+          },
+          basicAuth: {
+            enabled: true,
+            username: 'admin',
+            password: 'secret'
+          }
         },
         serviceAccount: {
           create: true,
@@ -324,30 +331,30 @@ export class UnilogsCdkStack extends cdk.Stack {
     });
 
     // Custom Gateway Service with NLB
-    const lokiGatewayService = cluster.addManifest('LokiGatewayService', {
-      apiVersion: 'v1',
-      kind: 'Service',
-      metadata: {
-        name: 'loki-gateway',
-        namespace: 'loki',
-        labels: { app: 'loki', component: 'gateway' },
-        annotations: {
-          'service.beta.kubernetes.io/aws-load-balancer-type': 'nlb',
-          'service.beta.kubernetes.io/aws-load-balancer-healthcheck-healthy-threshold':
-            '2',
-          'service.beta.kubernetes.io/aws-load-balancer-healthcheck-unhealthy-threshold':
-            '2',
-          'service.beta.kubernetes.io/aws-load-balancer-healthcheck-interval':
-            '10',
-        },
-      },
-      spec: {
-        type: 'LoadBalancer',
-        ports: [{ port: 80, targetPort: 80, protocol: 'TCP' }],
-        selector: { app: 'loki', component: 'gateway' },
-      },
-    });
-    lokiGatewayService.node.addDependency(lokiChart);
+    // const lokiGatewayService = cluster.addManifest('LokiGatewayService', {
+    //   apiVersion: 'v1',
+    //   kind: 'Service',
+    //   metadata: {
+    //     name: 'loki-gateway',
+    //     namespace: 'loki',
+    //     labels: { app: 'loki', component: 'gateway' },
+    //     annotations: {
+    //       'service.beta.kubernetes.io/aws-load-balancer-type': 'nlb',
+    //       'service.beta.kubernetes.io/aws-load-balancer-healthcheck-healthy-threshold':
+    //         '2',
+    //       'service.beta.kubernetes.io/aws-load-balancer-healthcheck-unhealthy-threshold':
+    //         '2',
+    //       'service.beta.kubernetes.io/aws-load-balancer-healthcheck-interval':
+    //         '10',
+    //     },
+    //   },
+    //   spec: {
+    //     type: 'LoadBalancer',
+    //     ports: [{ port: 80, targetPort: 80, protocol: 'TCP' }],
+    //     selector: { app: 'loki', component: 'gateway' },
+    //   },
+    // });
+    // lokiGatewayService.node.addDependency(lokiChart);
 
     // ==================== GRAFANA UI DEPLOYMENT ====================
     const grafanaCondition = createConditionJson(
@@ -384,10 +391,12 @@ export class UnilogsCdkStack extends cdk.Stack {
                 isDefault: true,
                 jsonData: {
                   maxLines: 1000,
-                  httpHeaderName1: 'X-Scope-OrgId'
+                  httpHeaderName1: 'X-Scope-OrgId',
+                  httpHeaderName2: 'Authorization'
                 },
                 secureJsonData: {
-                  httpHeaderValue1: 'default'
+                  httpHeaderValue1: 'default',
+                  httpHeaderValue2: 'Basic YWRtaW46c2VjcmV0' // `echo -n "admin:secret" | base64`
                 }
               },
             ],
@@ -408,7 +417,9 @@ export class UnilogsCdkStack extends cdk.Stack {
         },
       },
     });
-    grafanaChart.node.addDependency(lokiGatewayService);
+    // grafanaChart.node.addDependency(lokiGatewayService); wanna remove lokiGatewayService, probably need a new dependancy so grafana does not initialize before loki?
+    // not sure if I can add dependancies like this, but it's worth a try as it seems how vector gets a dependancy on grafana
+    grafanaChart.node.addDependency(lokiChart);
 
     // ==================== VECTOR CONSUMER DEPLOYMENT ====================
     const vectorCondition = createConditionJson(
@@ -537,7 +548,7 @@ export class UnilogsCdkStack extends cdk.Stack {
     cluster.node.addDependency(mskSecurityGroup);
     vectorChart.node.addDependency(
       mskCluster,
-      lokiGatewayService,
+      // lokiGatewayService,
       grafanaChart,
       mskBrokers
     );
