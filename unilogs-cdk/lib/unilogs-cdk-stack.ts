@@ -13,16 +13,6 @@ export class UnilogsCdkStack extends cdk.Stack {
   constructor(scope: cdk.App, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
-    // Helper function for IAM conditions
-    const createConditionJson = (id: string, serviceAccount: string) => {
-      return new CfnJson(this, id, {
-        value: {
-          [`${cluster.clusterOpenIdConnectIssuerUrl}:aud`]: 'sts.amazonaws.com',
-          [`${cluster.clusterOpenIdConnectIssuerUrl}:sub`]: `system:serviceaccount:${serviceAccount}`,
-        },
-      });
-    };
-
     // ==================== VPC CONFIGURATION ====================
     const vpc = new ec2.Vpc(this, 'UniLogsVpc', {
       maxAzs: 2,
@@ -47,6 +37,7 @@ export class UnilogsCdkStack extends cdk.Stack {
         auto.create.topics.enable=true
         num.partitions=3
         default.replication.factor=2
+        allow.everyone.if.no.acl.found=false
       `,
     });
 
@@ -55,11 +46,6 @@ export class UnilogsCdkStack extends cdk.Stack {
       description: 'Security group for MSK cluster',
       allowAllOutbound: true,
     });
-    mskSecurityGroup.addIngressRule(
-      ec2.Peer.ipv4(vpc.vpcCidrBlock),
-      ec2.Port.tcpRange(9092, 9098),
-      'Allow from EKS pods'
-    );
 
     const mskCluster = new msk.CfnCluster(this, 'UniLogsKafka', {
       clusterName: 'unilogs-kafka',
@@ -79,9 +65,6 @@ export class UnilogsCdkStack extends cdk.Stack {
       },
       clientAuthentication: {
         sasl: {
-          iam: {
-            enabled: true,
-          },
           scram: {
             enabled: true,
           },
@@ -103,10 +86,17 @@ export class UnilogsCdkStack extends cdk.Stack {
     const mskBrokersRole = new iam.Role(this, 'MskBrokersRole', {
       assumedBy: new iam.ServicePrincipal('lambda.amazonaws.com'),
     });
+
     mskBrokersRole.addToPolicy(
       new iam.PolicyStatement({
-        actions: ['kafka:GetBootstrapBrokers', 'kafka:DescribeCluster'],
-        resources: [mskCluster.attrArn],
+        actions: [
+          'kafka:GetBootstrapBrokers',
+          'kafka:DescribeCluster',
+          'kafka:UpdateConnectivity',
+          'ec2:DescribeSubnets', // Add this permission
+          'ec2:DescribeVpcs', // Often needed with DescribeSubnets
+        ],
+        resources: ['*'], // These are descriptive actions that typically require wildcard
       })
     );
 
@@ -130,6 +120,7 @@ export class UnilogsCdkStack extends cdk.Stack {
       this,
       'MskScramCredentials',
       {
+        secretName: `AmazonMSK_unilogs-user-${this.stackName}`, // Unique name
         description: 'MSK SCRAM credentials',
         generateSecretString: {
           secretStringTemplate: JSON.stringify({ username: 'unilogs-user' }),
@@ -207,12 +198,29 @@ export class UnilogsCdkStack extends cdk.Stack {
       username: 'cdk-admin',
     });
 
-    // Enable EBS CSI driver
-    cluster.addAutoScalingGroupCapacity('EbsCsiDriver', {
-      instanceType: new ec2.InstanceType('t3.small'),
-      minCapacity: 1,
-      maxCapacity: 2,
-    });
+    // Allow EKS nodes to access MSK
+    mskSecurityGroup.addIngressRule(
+      ec2.Peer.securityGroupId(cluster.clusterSecurityGroupId),
+      ec2.Port.tcpRange(9092, 9098),
+      'Allow EKS access to MSK'
+    );
+
+    // Allow Public Access to MSK
+    mskSecurityGroup.addIngressRule(
+      ec2.Peer.anyIpv4(), // Instead of vpc.vpcCidrBlock
+      ec2.Port.tcpRange(9092, 9098),
+      'Allow public access'
+    );
+
+    // Helper function for IAM conditions
+    const createConditionJson = (id: string, serviceAccount: string) => {
+      return new CfnJson(this, id, {
+        value: {
+          [`${cluster.clusterOpenIdConnectIssuerUrl}:aud`]: 'sts.amazonaws.com',
+          [`${cluster.clusterOpenIdConnectIssuerUrl}:sub`]: `system:serviceaccount:${serviceAccount}`,
+        },
+      });
+    };
 
     // ==================== LOKI STORAGE ====================
     const lokiChunkBucket = new s3.Bucket(this, 'LokiChunkBucket', {
@@ -332,21 +340,28 @@ export class UnilogsCdkStack extends cdk.Stack {
         deploymentMode: 'SimpleScalable',
         backend: {
           replicas: 1, // Reduced from 2
-          persistence: { enabled: true, storageClassName: 'gp2', size: '10Gi' },
+          persistence: { enabled: true, storageClassName: 'gp2', size: '1Gi' },
         },
         read: {
           replicas: 1, // Reduced from 2
-          persistence: { enabled: true, storageClassName: 'gp2', size: '10Gi' },
+          // persistence: { enabled: true, storageClassName: 'gp2', size: '1Gi' },
         },
         write: {
           replicas: 1, // Reduced from 3
-          persistence: { enabled: true, storageClassName: 'gp2', size: '10Gi' },
+          persistence: { enabled: true, storageClassName: 'gp2', size: '1Gi' },
         },
         minio: {
           enabled: false,
         },
         gateway: {
-          enabled: false,
+          service: {
+            type: 'LoadBalancer',
+          },
+          basicAuth: {
+            enabled: true,
+            username: 'admin',
+            password: 'secret',
+          },
         },
         serviceAccount: {
           create: true,
@@ -357,32 +372,6 @@ export class UnilogsCdkStack extends cdk.Stack {
         },
       },
     });
-
-    // Custom Gateway Service with NLB
-    const lokiGatewayService = cluster.addManifest('LokiGatewayService', {
-      apiVersion: 'v1',
-      kind: 'Service',
-      metadata: {
-        name: 'loki-gateway',
-        namespace: 'loki',
-        labels: { app: 'loki', component: 'gateway' },
-        annotations: {
-          'service.beta.kubernetes.io/aws-load-balancer-type': 'nlb',
-          'service.beta.kubernetes.io/aws-load-balancer-healthcheck-healthy-threshold':
-            '2',
-          'service.beta.kubernetes.io/aws-load-balancer-healthcheck-unhealthy-threshold':
-            '2',
-          'service.beta.kubernetes.io/aws-load-balancer-healthcheck-interval':
-            '10',
-        },
-      },
-      spec: {
-        type: 'LoadBalancer',
-        ports: [{ port: 80, targetPort: 80, protocol: 'TCP' }],
-        selector: { app: 'loki', component: 'gateway' },
-      },
-    });
-    lokiGatewayService.node.addDependency(lokiChart);
 
     // ==================== GRAFANA UI DEPLOYMENT ====================
     const grafanaCondition = createConditionJson(
@@ -439,7 +428,6 @@ export class UnilogsCdkStack extends cdk.Stack {
         },
       },
     });
-    grafanaChart.node.addDependency(lokiGatewayService);
 
     // ==================== VECTOR CONSUMER DEPLOYMENT ====================
     const vectorCondition = createConditionJson(
@@ -471,6 +459,26 @@ export class UnilogsCdkStack extends cdk.Stack {
       })
     );
 
+    // First, create a Kubernetes secret for the MSK credentials
+    const vectorMskSecret = cluster.addManifest('VectorMskSecret', {
+      apiVersion: 'v1',
+      kind: 'Secret',
+      metadata: {
+        name: 'msk-credentials',
+        namespace: 'vector',
+      },
+      type: 'Opaque',
+      data: {
+        username: cdk.Fn.base64(
+          scramCredentials.secretValueFromJson('username').unsafeUnwrap()
+        ),
+        password: cdk.Fn.base64(
+          scramCredentials.secretValueFromJson('password').unsafeUnwrap()
+        ),
+      },
+    });
+
+    // Then update the Vector Helm chart configuration
     const vectorChart = cluster.addHelmChart('VectorConsumer', {
       chart: 'vector',
       repository: 'https://helm.vector.dev',
@@ -485,19 +493,49 @@ export class UnilogsCdkStack extends cdk.Stack {
             'eks.amazonaws.com/role-arn': vectorRole.roleArn,
           },
         },
+        extraVolumes: [
+          {
+            name: 'msk-credentials',
+            secret: {
+              secretName: 'msk-credentials',
+            },
+          },
+        ],
+        extraVolumeMounts: [
+          {
+            name: 'msk-credentials',
+            mountPath: '/etc/vector/msk-credentials',
+            readOnly: true,
+          },
+        ],
         customConfig: {
           sources: {
             kafka: {
               type: 'kafka',
               bootstrap_servers: mskBrokers.getResponseField(
-                'BootstrapBrokerStringSaslIam'
+                'BootstrapBrokerStringSaslScram'
               ),
+              security_protocol: 'SASL_SSL',
               group_id: 'vector-consumer',
               topics: ['app_logs_topic'],
               sasl: {
-                mechanism: 'AWS_MSK_IAM',
-                oauthbearer_token_provider: 'aws',
-                region: this.region,
+                mechanism: 'SCRAM-SHA-512',
+                username: {
+                  valueFrom: {
+                    secretKeyRef: {
+                      name: 'msk-credentials',
+                      key: 'username',
+                    },
+                  },
+                },
+                password: {
+                  valueFrom: {
+                    secretKeyRef: {
+                      name: 'msk-credentials',
+                      key: 'password',
+                    },
+                  },
+                },
               },
               auto_offset_reset: 'earliest',
             },
@@ -538,50 +576,30 @@ export class UnilogsCdkStack extends cdk.Stack {
       metadata: { name: 'vector' },
     });
 
-    vectorChart.node.addDependency(vectorNamespace);
-
-    // MSK Cluster Policy
-    new msk.CfnClusterPolicy(this, 'MskClusterPolicy', {
-      clusterArn: mskCluster.attrArn,
-      policy: {
-        Version: '2012-10-17',
-        Statement: [
-          {
-            Effect: 'Allow',
-            Principal: { AWS: vectorRole.roleArn },
-            Action: 'kafka-cluster:*',
-            Resource: mskCluster.attrArn,
-          },
-        ],
-      },
-    });
-
     // ==================== DEPENDENCIES ====================
+    // Core infrastructure dependencies
+    mskCluster.node.addDependency(mskSecurityGroup, mskConfig);
+    scramSecret.node.addDependency(scramCredentials, mskCluster);
+    mskBrokers.node.addDependency(mskCluster, scramSecret);
+
+    // EKS depends on network resources
+    cluster.node.addDependency(vpc);
+
+    // Loki depends on its storage resources
     lokiChart.node.addDependency(
       lokiChunkBucket,
       lokiRulerBucket,
-      lokiAdminBucket,
-      mskCluster
+      lokiAdminBucket
     );
 
-    cluster.node.addDependency(mskCluster);
-    cluster.node.addDependency(mskSecurityGroup);
-    vectorChart.node.addDependency(
-      mskCluster,
-      lokiGatewayService,
-      grafanaChart,
-      mskBrokers
-    );
+    vectorChart.node.addDependency(vectorMskSecret);
 
     // ==================== OUTPUTS ====================
     new cdk.CfnOutput(this, 'ClusterName', { value: cluster.clusterName });
     new cdk.CfnOutput(this, 'VpcId', { value: vpc.vpcId });
-    new cdk.CfnOutput(this, 'KafkaBootstrapServersIam', {
-      value: mskBrokers.getResponseField('BootstrapBrokerStringSaslIam'),
-    });
-    new cdk.CfnOutput(this, 'KafkaBootstrapServersScram', {
-      value: mskBrokers.getResponseField('BootstrapBrokerStringSaslScram'),
-    });
+    // new cdk.CfnOutput(this, 'KafkaBootstrapServersScram', {
+    //   value: mskBrokers.getResponseField('BootstrapBrokerStringSaslScram'),
+    // });
     new cdk.CfnOutput(this, 'ScramSecretArn', {
       value: scramCredentials.secretArn,
     });
