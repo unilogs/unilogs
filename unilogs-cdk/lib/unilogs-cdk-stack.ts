@@ -313,15 +313,15 @@ export class UnilogsCdkStack extends cdk.Stack {
         deploymentMode: 'SimpleScalable',
         backend: {
           replicas: 1, // Reduced from 2
-          persistence: { enabled: true, storageClassName: 'gp2', size: '10Gi' },
+          persistence: { enabled: true, storageClass: 'gp2', size: '10Gi' },
         },
         read: {
           replicas: 1, // Reduced from 2
-          persistence: { enabled: true, storageClassName: 'gp2', size: '10Gi' },
+          persistence: { enabled: true, storageClass: 'gp2', size: '10Gi' },
         },
         write: {
           replicas: 1, // Reduced from 3
-          persistence: { enabled: true, storageClassName: 'gp2', size: '10Gi' },
+          persistence: { enabled: true, storageClass: 'gp2', size: '10Gi' },
         },
         minio: {
           enabled: false,
