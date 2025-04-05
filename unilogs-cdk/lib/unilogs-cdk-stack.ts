@@ -169,33 +169,43 @@ export class UnilogsCdkStack extends cdk.Stack {
       }
     );
 
-    // prerequisite for add-ons reliant on pod identities
-    new eks.CfnAddon(this, 'PodIdentityAgentAddon', {
-      addonName: 'eks-pod-identity-agent',
-      clusterName: cluster.clusterName,
-      configurationValues: JSON.stringify({
-        agent: {
-          additionalArgs: {
-            '-b': '169.254.170.23' // specify IPv4 address only, disables IPv6 for cluster compatibility
-          }
-        }
-      }),
-    });
+    // ---------------- EKS Add-ons ----------------------
 
-    // service account modified for driver necessary to provision PVCs
+    // // prerequisite for add-ons reliant on pod identities, preserved in case we need it
+    // new eks.CfnAddon(this, 'PodIdentityAgentAddon', {
+    //   addonName: 'eks-pod-identity-agent',
+    //   clusterName: cluster.clusterName,
+    //   configurationValues: JSON.stringify({
+    //     agent: {
+    //       additionalArgs: {
+    //         '-b': '169.254.170.23' // specify IPv4 address only, disables IPv6 for cluster compatibility
+    //       }
+    //     }
+    //   }),
+    // });
+
+    // driver needed to provision PVCs - patching role into its service account
     const ebsCsiServiceAccount = cluster.addServiceAccount('EbsCsiServiceAccount', {
       name: 'ebs-csi-controller-sa',
-      namespace: 'kube-system',
+      namespace: 'kube-system', // default for this add-on, other things may expect it
     });
 
     ebsCsiServiceAccount.role.addManagedPolicy(
       iam.ManagedPolicy.fromAwsManagedPolicyName('service-role/AmazonEBSCSIDriverPolicy')
     );
 
-    new eks.CfnAddon(this, 'EbsCsiDriverAddon', {
-      addonName: "aws-ebs-csi-driver",
-      clusterName: cluster.clusterName,
-      resolveConflicts: 'OVERWRITE' // duplicate service account created when add-on is added
+    cluster.addHelmChart('EbsCsiDriverHelm', {
+      chart: 'aws-ebs-csi-driver',
+      repository: 'https://kubernetes-sigs.github.io/aws-ebs-csi-driver/',
+      namespace: 'kube-system',
+      values: {
+        controller: {
+          serviceAccount: {
+            create: false,
+            name: ebsCsiServiceAccount.serviceAccountName,
+          },
+        }
+      },
     });
 
     // ==================== LOKI STORAGE ====================
