@@ -125,6 +125,15 @@ export class UnilogsCdkStack extends cdk.Stack {
 
     const deployingUser = iam.User.fromUserName(this, 'DeployingUser', process.env.AWS_USER_NAME!);
 
+    // enable all logging types, though maybe just leave AUDIT for production
+    const clusterLogging = [
+      eks.ClusterLoggingTypes.API,
+      eks.ClusterLoggingTypes.AUTHENTICATOR,
+      eks.ClusterLoggingTypes.SCHEDULER,
+      eks.ClusterLoggingTypes.AUDIT,
+      eks.ClusterLoggingTypes.CONTROLLER_MANAGER,
+    ];
+
     const cluster = new eks.Cluster(this, 'EksCluster', {
       vpc,
       version: eks.KubernetesVersion.V1_32,
@@ -132,6 +141,7 @@ export class UnilogsCdkStack extends cdk.Stack {
       clusterName: 'unilogs-cluster',
       defaultCapacity: 0, // We'll add our own node groups
       authenticationMode: eks.AuthenticationMode.API_AND_CONFIG_MAP,
+      clusterLogging: clusterLogging,
     });
 
     // Add managed node groups
@@ -184,7 +194,13 @@ export class UnilogsCdkStack extends cdk.Stack {
     //   }),
     // });
 
-    // driver needed to provision PVCs - patching role into its service account
+    // enable metrics, at least for dev
+    new eks.CfnAddon(this, 'addonMetricsServer', {
+      addonName: 'metrics-server',
+      clusterName: cluster.clusterName,
+    });
+
+    // // driver needed to provision PVCs - patching role into its service account
     const ebsCsiServiceAccount = cluster.addServiceAccount('EbsCsiServiceAccount', {
       name: 'ebs-csi-controller-sa',
       namespace: 'kube-system', // default for this add-on, other things may expect it
@@ -317,7 +333,6 @@ export class UnilogsCdkStack extends cdk.Stack {
         },
         read: {
           replicas: 1, // Reduced from 2
-          persistence: { enabled: true, storageClass: 'gp2', size: '10Gi' },
         },
         write: {
           replicas: 1, // Reduced from 3
