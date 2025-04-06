@@ -122,10 +122,17 @@ export class UnilogsCdkStack extends cdk.Stack {
     });
 
     // ==================== EKS CLUSTER ====================
-    const clusterAdminRole = new iam.Role(this, 'ClusterAdminRole', {
-      assumedBy: new iam.AccountRootPrincipal(),
-      description: 'Role for cluster administration',
-    });
+
+    const deployingUser = iam.User.fromUserName(this, 'DeployingUser', process.env.AWS_USER_NAME!);
+
+    // enable all logging types, though maybe just leave AUDIT for production
+    const clusterLogging = [
+      eks.ClusterLoggingTypes.API,
+      eks.ClusterLoggingTypes.AUTHENTICATOR,
+      eks.ClusterLoggingTypes.SCHEDULER,
+      eks.ClusterLoggingTypes.AUDIT,
+      eks.ClusterLoggingTypes.CONTROLLER_MANAGER,
+    ];
 
     const cluster = new eks.Cluster(this, 'EksCluster', {
       vpc,
@@ -133,6 +140,8 @@ export class UnilogsCdkStack extends cdk.Stack {
       kubectlLayer: new KubectlLayer(this, 'kubectl'),
       clusterName: 'unilogs-cluster',
       defaultCapacity: 0, // We'll add our own node groups
+      authenticationMode: eks.AuthenticationMode.API_AND_CONFIG_MAP,
+      clusterLogging: clusterLogging,
     });
 
     // Add managed node groups
@@ -150,32 +159,69 @@ export class UnilogsCdkStack extends cdk.Stack {
         app: 'unilogs',
         'workload-type': 'application',
       },
+      nodeRole: new iam.Role(this, "EKSClusterNodeGroupRole", {
+        roleName: "EKSClusterNodeGroupRole",
+        assumedBy: new iam.ServicePrincipal("ec2.amazonaws.com"),
+        managedPolicies: [
+          "AmazonEKSWorkerNodePolicy",
+          "AmazonEC2ContainerRegistryReadOnly",
+          "AmazonEKS_CNI_Policy",
+        ].map((policy) => iam.ManagedPolicy.fromAwsManagedPolicyName(policy)),
+      }),
     });
 
-    // Explicitly map your IAM user
+    // Explicitly map the IAM user
     cluster.awsAuth.addUserMapping(
-      iam.User.fromUserArn(
-        this,
-        'MyUser',
-        `arn:aws:iam::${this.account}:user/UnilogsAdmin`
-      ),
+      deployingUser,
       {
         groups: ['system:masters'],
-        username: 'admin',
+        username: 'deployingUserAdmin',
       }
     );
 
-    // Map the admin role
-    cluster.awsAuth.addRoleMapping(clusterAdminRole, {
-      groups: ['system:masters'],
-      username: 'cdk-admin',
+    // ---------------- EKS Add-ons ----------------------
+
+    // // prerequisite for add-ons reliant on pod identities, preserved in case we need it
+    // new eks.CfnAddon(this, 'PodIdentityAgentAddon', {
+    //   addonName: 'eks-pod-identity-agent',
+    //   clusterName: cluster.clusterName,
+    //   configurationValues: JSON.stringify({
+    //     agent: {
+    //       additionalArgs: {
+    //         '-b': '169.254.170.23' // specify IPv4 address only, disables IPv6 for cluster compatibility
+    //       }
+    //     }
+    //   }),
+    // });
+
+    // enable metrics, at least for dev
+    new eks.CfnAddon(this, 'addonMetricsServer', {
+      addonName: 'metrics-server',
+      clusterName: cluster.clusterName,
     });
 
-    // Enable EBS CSI driver
-    cluster.addAutoScalingGroupCapacity('EbsCsiDriver', {
-      instanceType: new ec2.InstanceType('t3.small'),
-      minCapacity: 1,
-      maxCapacity: 2,
+    // // driver needed to provision PVCs - patching role into its service account
+    const ebsCsiServiceAccount = cluster.addServiceAccount('EbsCsiServiceAccount', {
+      name: 'ebs-csi-controller-sa',
+      namespace: 'kube-system', // default for this add-on, other things may expect it
+    });
+
+    ebsCsiServiceAccount.role.addManagedPolicy(
+      iam.ManagedPolicy.fromAwsManagedPolicyName('service-role/AmazonEBSCSIDriverPolicy')
+    );
+
+    cluster.addHelmChart('EbsCsiDriverHelm', {
+      chart: 'aws-ebs-csi-driver',
+      repository: 'https://kubernetes-sigs.github.io/aws-ebs-csi-driver/',
+      namespace: 'kube-system',
+      values: {
+        controller: {
+          serviceAccount: {
+            create: false,
+            name: ebsCsiServiceAccount.serviceAccountName,
+          },
+        }
+      },
     });
 
     // ==================== LOKI STORAGE ====================
@@ -192,17 +238,6 @@ export class UnilogsCdkStack extends cdk.Stack {
 
     const lokiRulerBucket = new s3.Bucket(this, 'LokiRulerBucket', {
       bucketName: `unilogs-loki-ruler-${this.account}-${
-        this.region
-      }-${cdk.Names.uniqueId(this).toLowerCase()}`,
-      encryption: s3.BucketEncryption.S3_MANAGED,
-      enforceSSL: true,
-      autoDeleteObjects: true,
-      removalPolicy: cdk.RemovalPolicy.DESTROY,
-      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
-    });
-
-    const lokiAdminBucket = new s3.Bucket(this, 'LokiAdminBucket', {
-      bucketName: `unilogs-loki-admin-${this.account}-${
         this.region
       }-${cdk.Names.uniqueId(this).toLowerCase()}`,
       encryption: s3.BucketEncryption.S3_MANAGED,
@@ -239,8 +274,6 @@ export class UnilogsCdkStack extends cdk.Stack {
                 `${lokiChunkBucket.bucketArn}/*`,
                 lokiRulerBucket.bucketArn,
                 `${lokiRulerBucket.bucketArn}/*`,
-                lokiAdminBucket.bucketArn,
-                `${lokiAdminBucket.bucketArn}/*`,
               ],
             }),
           ],
@@ -296,6 +329,7 @@ export class UnilogsCdkStack extends cdk.Stack {
         deploymentMode: 'SimpleScalable',
         backend: {
           replicas: 1, // Reduced from 2
+
           persistence: { enabled: true, storageClass: 'gp2', size: '1Gi' },
         },
         read: {
@@ -540,7 +574,6 @@ export class UnilogsCdkStack extends cdk.Stack {
     lokiChart.node.addDependency(
       lokiChunkBucket,
       lokiRulerBucket,
-      lokiAdminBucket,
       mskCluster
     );
 
@@ -574,3 +607,8 @@ export class UnilogsCdkStack extends cdk.Stack {
     });
   }
 }
+
+// explicitly instantiate app, stack, and synth() to ensure updated template
+const app = new cdk.App();
+new UnilogsCdkStack(app, 'EksStack');
+app.synth();
