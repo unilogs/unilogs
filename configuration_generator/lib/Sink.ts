@@ -1,4 +1,4 @@
-import { Transform } from "./Transform.js"; // todo: change to Transform class
+import { Transform } from './Transform.js'; // todo: change to Transform class
 
 export enum SinkType {
   Console = 'console',
@@ -23,15 +23,34 @@ export interface LokiSinkProps extends BaseSinkProps {
   auth: LokiSinkAuthProps;
 }
 
+interface KafkaSinkSaslConfig {
+  enabled: boolean;
+  mechanism: 'SCRAM-SHA-256' | 'SCRAM-SHA-512';
+  password: string;
+  username: string;
+}
 export interface KafkaSinkProps extends BaseSinkProps {
   type: SinkType.Kafka;
   bootstrap_servers: string;
+  sasl: KafkaSinkSaslConfig;
 }
 
 export enum ConsoleEncoding {
   Logfmt = 'logfmt',
   Json = 'json',
 }
+export function safeAssertConsoleEncoding(
+  val: unknown
+): asserts val is ConsoleEncoding {
+  if (typeof val !== 'string') throw new Error('Expected a ConsoleEncoding');
+  if (
+    !Object.values(ConsoleEncoding)
+      .map((encoding) => encoding.toString())
+      .includes(val)
+  )
+    throw new Error('Expected a ConsoleEncoding');
+}
+
 export interface ConsoleSinkProps extends BaseSinkProps {
   type: SinkType.Console;
   encoding: { codec: ConsoleEncoding };
@@ -87,12 +106,14 @@ export class KafkaSink extends BaseSink {
   private bootstrap_servers: KafkaSinkProps['bootstrap_servers'];
   private topic: 'app_logs_topic';
   private encoding: { codec: 'json' };
+  private sasl: KafkaSinkSaslConfig;
 
   constructor(props: KafkaSinkProps) {
     super(props);
     this.bootstrap_servers = props.bootstrap_servers;
     this.topic = 'app_logs_topic';
     this.encoding = { codec: 'json' };
+    this.sasl = props.sasl;
   }
 
   getObjectBody() {
@@ -101,6 +122,12 @@ export class KafkaSink extends BaseSink {
       bootstrap_servers: this.bootstrap_servers,
       topic: this.topic,
       encoding: this.encoding,
+      sasl: {
+        enabled: this.sasl.enabled,
+        mechanism: this.sasl.mechanism,
+        username: this.sasl.username,
+        password: this.sasl.password,
+      },
     };
     return returnBody;
   }

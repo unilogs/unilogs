@@ -2,14 +2,16 @@
 import prompts from 'prompts';
 import gradient from 'gradient-string';
 import { VectorConfiguration } from './lib/VectorConfiguration.js';
-import { ConsoleEncoding, ConsoleSink, KafkaSink, LokiSink, SinkType, } from './lib/Sink.js';
+import { ConsoleEncoding, ConsoleSink, KafkaSink, LokiSink, SinkType, safeAssertConsoleEncoding, } from './lib/Sink.js';
 import { ApacheTransform, PlainTextTransform, } from './lib/Transform.js';
 import { FileSource, SourceType } from './lib/Source.js';
 import { stringify } from 'yaml';
 import fs from 'fs';
 import logo from './lib/logo.js';
 import generateDockerfile from './lib/generateDockerfile.js';
-import { generateBuildImageCommand, generateRunImageCommand } from './lib/generateDockerCommands.js';
+import { generateBuildImageCommand, generateRunImageCommand, } from './lib/generateDockerCommands.js';
+import buildAndRunShipper from './lib/buildAndRunShipper.js';
+import safeAssertString from './lib/safeAssertString.js';
 async function getMenuChoice() {
     return await prompts({
         type: 'select',
@@ -43,6 +45,7 @@ async function mapTransformToSink(vectorConfiguration) {
         min: 1,
         hint: '- Space to select, return to submit.',
     });
+    safeAssertString(selectedTransforms);
     const { selectedSink } = await prompts({
         type: 'select',
         name: 'selectedSink',
@@ -51,6 +54,7 @@ async function mapTransformToSink(vectorConfiguration) {
             return { title: sinkName, value: sinkName };
         }),
     });
+    safeAssertString(selectedSink);
     const sinkToMapTo = vectorConfiguration.getSinkByName(selectedSink);
     if (sinkToMapTo.length !== 1)
         return;
@@ -67,6 +71,7 @@ async function addInclude(include) {
         name: 'includeToAdd',
         message: 'Enter path to logs',
     });
+    safeAssertString(includeToAdd);
     if (includeToAdd)
         include.push(includeToAdd);
 }
@@ -78,6 +83,7 @@ async function createSource(serviceName) {
         initial: `${serviceName ? `${serviceName}_` : ''}file_source`,
         validate: (input) => /^[a-zA-Z0-9\-_]+$/.test(input),
     });
+    safeAssertString(sourceName);
     const include = [];
     await addInclude(include);
     return new FileSource({ sourceName, type: SourceType.File, include });
@@ -92,6 +98,7 @@ async function createTransform(inputSource, serviceName) {
             { title: 'PlainText', value: 'plaintext' },
         ],
     });
+    safeAssertString(transformType);
     const { transformName } = await prompts({
         type: 'text',
         name: 'transformName',
@@ -99,6 +106,7 @@ async function createTransform(inputSource, serviceName) {
         initial: `${serviceName}_${transformType}_transform`,
         validate: (input) => /^[a-zA-Z0-9\-_]+$/.test(input),
     });
+    safeAssertString(transformName);
     if (transformType === 'apache') {
         return new ApacheTransform({
             serviceName,
@@ -121,6 +129,7 @@ async function addSourceAndTransform(vectorConfiguration) {
         message: 'What is the service that generates these logs?',
         validate: (input) => /^[a-zA-Z0-9\-_]+$/.test(input),
     });
+    safeAssertString(serviceName);
     const newSource = await createSource(serviceName);
     const newTransform = await createTransform(newSource, serviceName);
     vectorConfiguration.addSource(newSource);
@@ -134,6 +143,7 @@ async function createConsoleSink() {
         initial: 'console_sink',
         validate: (input) => /^[a-zA-Z0-9\-_]+$/.test(input),
     });
+    safeAssertString(sinkName);
     const { encoding } = await prompts({
         type: 'select',
         name: 'encoding',
@@ -143,6 +153,7 @@ async function createConsoleSink() {
             { title: 'Logfmt', value: ConsoleEncoding.Logfmt },
         ],
     });
+    safeAssertConsoleEncoding(encoding);
     return new ConsoleSink({
         sinkName,
         type: SinkType.Console,
@@ -158,21 +169,25 @@ async function createLokiSink() {
         initial: 'loki_sink',
         validate: (input) => /^[a-zA-Z0-9\-_]+$/.test(input),
     });
+    safeAssertString(sinkName);
     const { endpoint } = await prompts({
         type: 'text',
         name: 'endpoint',
         message: 'What is the endpoint?',
     });
+    safeAssertString(endpoint);
     const { path } = await prompts({
         type: 'text',
         name: 'path',
         message: 'What is the path?',
     });
+    safeAssertString(path);
     const { authToken } = await prompts({
         type: 'text',
         name: 'authToken',
         message: 'What is the auth token?',
     });
+    safeAssertString(authToken);
     return new LokiSink({
         sinkName,
         type: SinkType.Loki,
@@ -190,16 +205,31 @@ async function createKafkaSink() {
         initial: 'kafka_sink',
         validate: (input) => /^[a-zA-Z0-9\-_]+$/.test(input),
     });
+    safeAssertString(sinkName);
     const { bootstrap_servers } = await prompts({
         type: 'text',
         name: 'bootstrap_servers',
         message: 'What are the bootstrap servers?',
     });
+    safeAssertString(bootstrap_servers);
+    const { username } = await prompts({
+        type: 'text',
+        name: 'username',
+        message: 'SCRAM username',
+    });
+    safeAssertString(username);
+    const { password } = await prompts({
+        type: 'password',
+        name: 'password',
+        message: 'SCRAM password'
+    });
+    safeAssertString(password);
     return new KafkaSink({
         sinkName,
         type: SinkType.Kafka,
         inputs: [],
         bootstrap_servers,
+        sasl: { enabled: true, mechanism: 'SCRAM-SHA-512', username, password },
     });
 }
 async function addSink(vectorConfiguration) {
@@ -249,8 +279,11 @@ async function main() {
         console.clear();
         console.log(gradient(['aqua', 'purple']).multiline(logo));
         const action = await getMenuChoice();
-        if (action.menuChoice === 'exit')
+        if (action.menuChoice === 'exit') {
             notDone = false;
+            console.log(generateBuildImageCommand());
+            console.log(generateRunImageCommand(vectorConfiguration));
+        }
         if (action.menuChoice === 'add_sink')
             await addSink(vectorConfiguration);
         if (action.menuChoice === 'viewConfig')
@@ -263,8 +296,10 @@ async function main() {
             saveYaml(vectorConfiguration);
         if (action.menuChoice === 'saveDockerfile')
             saveDockerfile(vectorConfiguration);
+        if (action.menuChoice === 'buildAndRun') {
+            notDone = false;
+            buildAndRunShipper(vectorConfiguration);
+        }
     }
-    console.log(generateBuildImageCommand());
-    console.log(generateRunImageCommand(vectorConfiguration));
 }
 void main();

@@ -9,6 +9,7 @@ import {
   KafkaSink,
   LokiSink,
   SinkType,
+  safeAssertConsoleEncoding,
 } from './lib/Sink.js';
 import {
   ApacheTransform,
@@ -25,6 +26,7 @@ import {
   generateRunImageCommand,
 } from './lib/generateDockerCommands.js';
 import buildAndRunShipper from './lib/buildAndRunShipper.js';
+import safeAssertString from './lib/safeAssertString.js';
 
 async function getMenuChoice() {
   return await prompts({
@@ -59,6 +61,7 @@ async function mapTransformToSink(vectorConfiguration: VectorConfiguration) {
     min: 1,
     hint: '- Space to select, return to submit.',
   });
+  safeAssertString(selectedTransforms);
   const { selectedSink } = await prompts<string>({
     type: 'select',
     name: 'selectedSink',
@@ -67,6 +70,7 @@ async function mapTransformToSink(vectorConfiguration: VectorConfiguration) {
       return { title: sinkName, value: sinkName };
     }),
   });
+  safeAssertString(selectedSink);
   const sinkToMapTo = vectorConfiguration.getSinkByName(selectedSink);
   if (sinkToMapTo.length !== 1) return;
   for (const transformName of selectedTransforms) {
@@ -83,6 +87,7 @@ async function addInclude(include: string[]) {
     name: 'includeToAdd',
     message: 'Enter path to logs',
   });
+  safeAssertString(includeToAdd);
   if (includeToAdd) include.push(includeToAdd);
 }
 
@@ -92,8 +97,9 @@ async function createSource(serviceName?: string): Promise<Source> {
     name: 'sourceName',
     message: 'What would you like to call this source?',
     initial: `${serviceName ? `${serviceName}_` : ''}file_source`,
-    validate: (input) => /^[a-zA-Z0-9\-_]+$/.test(input),
+    validate: (input: string) => /^[a-zA-Z0-9\-_]+$/.test(input),
   });
+  safeAssertString(sourceName);
   const include: string[] = [];
   await addInclude(include);
   return new FileSource({ sourceName, type: SourceType.File, include });
@@ -112,13 +118,15 @@ async function createTransform(
       { title: 'PlainText', value: 'plaintext' },
     ],
   });
+  safeAssertString(transformType);
   const { transformName } = await prompts<string>({
     type: 'text',
     name: 'transformName',
     message: 'What would you like to call this transform?',
     initial: `${serviceName}_${transformType}_transform`,
-    validate: (input) => /^[a-zA-Z0-9\-_]+$/.test(input),
+    validate: (input: string) => /^[a-zA-Z0-9\-_]+$/.test(input),
   });
+  safeAssertString(transformName);
   if (transformType === 'apache') {
     return new ApacheTransform({
       serviceName,
@@ -139,8 +147,9 @@ async function addSourceAndTransform(vectorConfiguration: VectorConfiguration) {
     type: 'text',
     name: 'serviceName',
     message: 'What is the service that generates these logs?',
-    validate: (input) => /^[a-zA-Z0-9\-_]+$/.test(input),
+    validate: (input: string) => /^[a-zA-Z0-9\-_]+$/.test(input),
   });
+  safeAssertString(serviceName);
   const newSource = await createSource(serviceName);
   const newTransform = await createTransform(newSource, serviceName);
   vectorConfiguration.addSource(newSource);
@@ -153,8 +162,9 @@ async function createConsoleSink(): Promise<ConsoleSink> {
     name: 'sinkName',
     message: 'What would you like to call this sink?',
     initial: 'console_sink',
-    validate: (input) => /^[a-zA-Z0-9\-_]+$/.test(input),
+    validate: (input: string) => /^[a-zA-Z0-9\-_]+$/.test(input),
   });
+  safeAssertString(sinkName);
   const { encoding } = await prompts<string>({
     type: 'select',
     name: 'encoding',
@@ -164,6 +174,7 @@ async function createConsoleSink(): Promise<ConsoleSink> {
       { title: 'Logfmt', value: ConsoleEncoding.Logfmt },
     ],
   });
+  safeAssertConsoleEncoding(encoding);
 
   return new ConsoleSink({
     sinkName,
@@ -179,23 +190,27 @@ async function createLokiSink(): Promise<LokiSink> {
     name: 'sinkName',
     message: 'What would you like to call this sink?',
     initial: 'loki_sink',
-    validate: (input) => /^[a-zA-Z0-9\-_]+$/.test(input),
+    validate: (input: string) => /^[a-zA-Z0-9\-_]+$/.test(input),
   });
+  safeAssertString(sinkName);
   const { endpoint } = await prompts<string>({
     type: 'text',
     name: 'endpoint',
     message: 'What is the endpoint?',
   });
+  safeAssertString(endpoint);
   const { path } = await prompts<string>({
     type: 'text',
     name: 'path',
     message: 'What is the path?',
   });
+  safeAssertString(path);
   const { authToken } = await prompts<string>({
     type: 'text',
     name: 'authToken',
     message: 'What is the auth token?',
   });
+  safeAssertString(authToken);
   return new LokiSink({
     sinkName,
     type: SinkType.Loki,
@@ -212,18 +227,33 @@ async function createKafkaSink(): Promise<KafkaSink> {
     name: 'sinkName',
     message: 'What would you like to call this sink?',
     initial: 'kafka_sink',
-    validate: (input) => /^[a-zA-Z0-9\-_]+$/.test(input),
+    validate: (input: string) => /^[a-zA-Z0-9\-_]+$/.test(input),
   });
+  safeAssertString(sinkName);
   const { bootstrap_servers } = await prompts<string>({
     type: 'text',
     name: 'bootstrap_servers',
     message: 'What are the bootstrap servers?',
   });
+  safeAssertString(bootstrap_servers);
+  const { username } = await prompts<string>({
+    type: 'text',
+    name: 'username',
+    message: 'SCRAM username',
+  });
+  safeAssertString(username);
+  const { password } = await prompts<string>({
+    type: 'password',
+    name: 'password',
+    message: 'SCRAM password'
+  });
+  safeAssertString(password);
   return new KafkaSink({
     sinkName,
     type: SinkType.Kafka,
     inputs: [],
     bootstrap_servers,
+    sasl: { enabled: true, mechanism: 'SCRAM-SHA-512', username, password },
   });
 }
 

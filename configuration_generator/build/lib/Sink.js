@@ -9,6 +9,14 @@ export var ConsoleEncoding;
     ConsoleEncoding["Logfmt"] = "logfmt";
     ConsoleEncoding["Json"] = "json";
 })(ConsoleEncoding || (ConsoleEncoding = {}));
+export function safeAssertConsoleEncoding(val) {
+    if (typeof val !== 'string')
+        throw new Error('Expected a ConsoleEncoding');
+    if (!Object.values(ConsoleEncoding)
+        .map((encoding) => encoding.toString())
+        .includes(val))
+        throw new Error('Expected a ConsoleEncoding');
+}
 class BaseSink {
     constructor(props) {
         this.sinkName = props.sinkName;
@@ -48,6 +56,7 @@ export class KafkaSink extends BaseSink {
         this.bootstrap_servers = props.bootstrap_servers;
         this.topic = 'app_logs_topic';
         this.encoding = { codec: 'json' };
+        this.sasl = props.sasl;
     }
     getObjectBody() {
         const returnBody = {
@@ -55,6 +64,12 @@ export class KafkaSink extends BaseSink {
             bootstrap_servers: this.bootstrap_servers,
             topic: this.topic,
             encoding: this.encoding,
+            sasl: {
+                enabled: this.sasl.enabled,
+                mechanism: this.sasl.mechanism,
+                username: this.sasl.username,
+                password: this.sasl.password,
+            },
         };
         return returnBody;
     }
