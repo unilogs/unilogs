@@ -1,5 +1,0 @@
-bootstrap.sh
-deploy.sh
-cdk.context.json
-cdk.out/
-test-aws-env-for-cli-commands.sh
