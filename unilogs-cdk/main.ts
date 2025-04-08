@@ -41,7 +41,7 @@ async function main() {
     initial: 'unilogsadmin',
   });
   child_process.spawnSync(
-    `PATH=${process.env.PATH} && cdk bootstrap && cdk deploy --require-approval never`,
+    `PATH="${process.env.PATH}" && cdk bootstrap && cdk deploy --require-approval never`,
     {
       shell: true,
       stdio: 'inherit',
