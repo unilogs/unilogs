@@ -1,12 +1,14 @@
 import * as cdk from 'aws-cdk-lib';
-import { CfnJson } from 'aws-cdk-lib';
-import * as ec2 from 'aws-cdk-lib/aws-ec2';
-import * as msk from 'aws-cdk-lib/aws-msk';
-import * as iam from 'aws-cdk-lib/aws-iam';
-import * as cr from 'aws-cdk-lib/custom-resources';
-import * as eks from 'aws-cdk-lib/aws-eks';
-import * as s3 from 'aws-cdk-lib/aws-s3';
+import { CfnJson,
+  aws_ec2 as ec2,
+  aws_msk as msk,
+  aws_iam as iam,
+  aws_eks as eks,
+  aws_s3 as s3,
+  custom_resources as cr,
+} from 'aws-cdk-lib';
 import { KubectlV32Layer as KubectlLayer } from '@aws-cdk/lambda-layer-kubectl-v32';
+
 
 export class UnilogsCdkStack extends cdk.Stack {
   constructor(scope: cdk.App, id: string, props?: cdk.StackProps) {
