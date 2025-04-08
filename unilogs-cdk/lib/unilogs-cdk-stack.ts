@@ -196,16 +196,18 @@ export class UnilogsCdkStack extends cdk.Stack {
       },
       type: 'Opaque',
       data: {
-        'sasl-client-passwords': Buffer.from('password').toString('base64'),
-        'sasl-interbroker-password':
+        // CORRECTED KEY NAMES (remove 'sasl-' prefix)
+        'client-passwords': Buffer.from('password').toString('base64'),
+        'inter-broker-password':
           Buffer.from('broker-password').toString('base64'),
-        'sasl-controller-password': Buffer.from('controller-password').toString(
+        'controller-password': Buffer.from('controller-password').toString(
           'base64'
         ),
       },
     });
 
-    const kafkaChart = cluster.addHelmChart('Kafka', {
+    const kafkaChart = cluster.addHelmChart('kafka', {
+      release: 'kafka',
       chart: 'kafka',
       repository: 'https://charts.bitnami.com/bitnami',
       namespace: 'kafka',
@@ -217,6 +219,16 @@ export class UnilogsCdkStack extends cdk.Stack {
             repository: 'bitnami/os-shell',
             tag: '11-debian-11-r86',
             pullPolicy: 'IfNotPresent',
+          },
+          resources: {
+            limits: {
+              cpu: '100m',
+              memory: '128Mi',
+            },
+            requests: {
+              cpu: '100m',
+              memory: '128Mi',
+            },
           },
         },
 
@@ -233,9 +245,28 @@ export class UnilogsCdkStack extends cdk.Stack {
         clusterId: 'unilogs-kafka-cluster',
 
         controller: {
+          persistence: {
+            storageClass: 'gp2',
+            size: '10Gi', // Can be different from controllers
+            accessModes: ['ReadWriteOnce'],
+          },
+          sasl: {
+            enabled: true,
+            existingSecret: 'kafka-scram-credentials',
+            passwordKey: 'controller-password'
+          },
           quorumVoters:
             'unilogs-kafka-cluster@kafka-0.kafka-headless.kafka.svc.cluster.local:9093,kafka-1.kafka-headless.kafka.svc.cluster.local:9093,kafka-2.kafka-headless.kafka.svc.cluster.local:9093',
         },
+
+        broker: {
+          persistence: {
+            storageClass: 'gp2',
+            size: '10Gi', // Can be different from controllers
+            accessModes: ['ReadWriteOnce'],
+          },
+        },
+
         kraft: {
           enabled: true, // Explicitly enable KRaft mode
         },
@@ -270,10 +301,12 @@ export class UnilogsCdkStack extends cdk.Stack {
           existingSecret: 'kafka-scram-credentials',
           enabledMechanisms: 'SCRAM-SHA-512',
           interBrokerMechanism: 'SCRAM-SHA-512',
-          controllerMechanism: 'SCRAM-SHA-512', // Add this line
+          controllerMechanism: 'SCRAM-SHA-512',
           client: {
             users: ['vector-client'],
           },
+          interBrokerUser: 'inter_broker_user',       // Add this
+          controllerUser: 'controller_user',          // Add this
         },
 
         tls: {
@@ -328,6 +361,7 @@ export class UnilogsCdkStack extends cdk.Stack {
           enabled: true,
           size: '10Gi',
           storageClass: 'gp2',
+          accessModes: ['ReadWriteOnce'],
         },
 
         // Resource limits
@@ -627,9 +661,14 @@ export class UnilogsCdkStack extends cdk.Stack {
       ebsCsiDriver
     );
     vectorChart.node.addDependency(lokiChart, kafkaChart, ebsCsiDriver);
-    kafkaChart.node.addDependency(kafkaSecurityGroup, scramSecret, kafkaNamespace);
+    kafkaChart.node.addDependency(
+      kafkaSecurityGroup,
+      scramSecret,
+      kafkaNamespace,
+      ebsCsiDriver
+    );
     scramSecret.node.addDependency(kafkaNamespace);
-    cluster.node.addDependency(vpc,nodeGroupRole);
+    cluster.node.addDependency(vpc, nodeGroupRole);
     ebsCsiDriver.node.addDependency(ebsCsiServiceAccount);
 
     // ==================== OUTPUTS ====================

@@ -18,7 +18,7 @@
         "validateOnSynth": false,
         "assumeRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-deploy-role-${AWS::AccountId}-${AWS::Region}",
         "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-cfn-exec-role-${AWS::AccountId}-${AWS::Region}",
-        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}/649118ceb7911f8327d3ba3ed582f79f2293fc0fed7d9b167da7d08e997a3b9d.json",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}/e4bd420601ee5be997b89857cc7f961e07c2bce458d77edf3e375647171ddf2c.json",
         "requiresBootstrapStackVersion": 6,
         "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
         "additionalDependencies": [
@@ -1036,16 +1036,16 @@
             "data": "EksClustermanifestKafkaScramSecretB39E7DCC"
           }
         ],
-        "/UnilogsCdkStack/EksCluster/chart-Kafka/Resource": [
+        "/UnilogsCdkStack/EksCluster/chart-kafka/Resource": [
           {
             "type": "aws:cdk:analytics:construct",
             "data": "*"
           }
         ],
-        "/UnilogsCdkStack/EksCluster/chart-Kafka/Resource/Default": [
+        "/UnilogsCdkStack/EksCluster/chart-kafka/Resource/Default": [
           {
             "type": "aws:cdk:logicalId",
-            "data": "EksClusterchartKafka7CD3E408"
+            "data": "EksClusterchartkafka0A034996"
           }
         ],
         "/UnilogsCdkStack/EksCluster/chart-LokiScalable/Resource": [

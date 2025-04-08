@@ -719,6 +719,7 @@
     ]
    },
    "DependsOn": [
+    "EKSClusterNodeGroupRoleB9BCBC3E",
     "UniLogsVpcIGW47EF4FCD",
     "UniLogsVpcPrivateSubnet1DefaultRouteFFA9F2D7",
     "UniLogsVpcPrivateSubnet1RouteTableC2AD5B26",
@@ -782,6 +783,7 @@
     ]
    },
    "DependsOn": [
+    "EKSClusterNodeGroupRoleB9BCBC3E",
     "UniLogsVpcIGW47EF4FCD",
     "UniLogsVpcPrivateSubnet1DefaultRouteFFA9F2D7",
     "UniLogsVpcPrivateSubnet1RouteTableC2AD5B26",
@@ -840,6 +842,7 @@
     ]
    },
    "DependsOn": [
+    "EKSClusterNodeGroupRoleB9BCBC3E",
     "UniLogsVpcIGW47EF4FCD",
     "UniLogsVpcPrivateSubnet1DefaultRouteFFA9F2D7",
     "UniLogsVpcPrivateSubnet1RouteTableC2AD5B26",
@@ -883,6 +886,7 @@
     }
    },
    "DependsOn": [
+    "EKSClusterNodeGroupRoleB9BCBC3E",
     "UniLogsVpcIGW47EF4FCD",
     "UniLogsVpcPrivateSubnet1DefaultRouteFFA9F2D7",
     "UniLogsVpcPrivateSubnet1RouteTableC2AD5B26",
@@ -946,6 +950,7 @@
     }
    },
    "DependsOn": [
+    "EKSClusterNodeGroupRoleB9BCBC3E",
     "UniLogsVpcIGW47EF4FCD",
     "UniLogsVpcPrivateSubnet1DefaultRouteFFA9F2D7",
     "UniLogsVpcPrivateSubnet1RouteTableC2AD5B26",
@@ -1098,6 +1103,7 @@
     ]
    },
    "DependsOn": [
+    "EKSClusterNodeGroupRoleB9BCBC3E",
     "UniLogsVpcIGW47EF4FCD",
     "UniLogsVpcPrivateSubnet1DefaultRouteFFA9F2D7",
     "UniLogsVpcPrivateSubnet1RouteTableC2AD5B26",
@@ -1201,6 +1207,7 @@
    "DependsOn": [
     "EksClusterCreationRoleDefaultPolicy2DFE4D73",
     "EksClusterCreationRole75AABE42",
+    "EKSClusterNodeGroupRoleB9BCBC3E",
     "UniLogsVpcIGW47EF4FCD",
     "UniLogsVpcPrivateSubnet1DefaultRouteFFA9F2D7",
     "UniLogsVpcPrivateSubnet1RouteTableC2AD5B26",
@@ -1240,6 +1247,7 @@
     "EksClusterCreationRoleDefaultPolicy2DFE4D73",
     "EksClusterCreationRole75AABE42",
     "EksClusterFAB68BDB",
+    "EKSClusterNodeGroupRoleB9BCBC3E",
     "UniLogsVpcIGW47EF4FCD",
     "UniLogsVpcPrivateSubnet1DefaultRouteFFA9F2D7",
     "UniLogsVpcPrivateSubnet1RouteTableC2AD5B26",
@@ -1304,6 +1312,7 @@
     ]
    },
    "DependsOn": [
+    "EKSClusterNodeGroupRoleB9BCBC3E",
     "UniLogsVpcIGW47EF4FCD",
     "UniLogsVpcPrivateSubnet1DefaultRouteFFA9F2D7",
     "UniLogsVpcPrivateSubnet1RouteTableC2AD5B26",
@@ -1377,6 +1386,7 @@
    },
    "DependsOn": [
     "EksClusterKubectlReadyBarrier502B0E83",
+    "EKSClusterNodeGroupRoleB9BCBC3E",
     "UniLogsVpcIGW47EF4FCD",
     "UniLogsVpcPrivateSubnet1DefaultRouteFFA9F2D7",
     "UniLogsVpcPrivateSubnet1RouteTableC2AD5B26",
@@ -1453,6 +1463,7 @@
     }
    },
    "DependsOn": [
+    "EKSClusterNodeGroupRoleB9BCBC3E",
     "UniLogsVpcIGW47EF4FCD",
     "UniLogsVpcPrivateSubnet1DefaultRouteFFA9F2D7",
     "UniLogsVpcPrivateSubnet1RouteTableC2AD5B26",
@@ -1523,6 +1534,7 @@
     ]
    },
    "DependsOn": [
+    "EKSClusterNodeGroupRoleB9BCBC3E",
     "UniLogsVpcIGW47EF4FCD",
     "UniLogsVpcPrivateSubnet1DefaultRouteFFA9F2D7",
     "UniLogsVpcPrivateSubnet1RouteTableC2AD5B26",
@@ -1587,6 +1599,7 @@
    },
    "DependsOn": [
     "EksClusterKubectlReadyBarrier502B0E83",
+    "EKSClusterNodeGroupRoleB9BCBC3E",
     "UniLogsVpcIGW47EF4FCD",
     "UniLogsVpcPrivateSubnet1DefaultRouteFFA9F2D7",
     "UniLogsVpcPrivateSubnet1RouteTableC2AD5B26",
@@ -1638,6 +1651,7 @@
     "CodeHash": "62fa02efcaa700e1c247e1d3cc2aa0cd07a0808a9a3e3d2230e51f57a02233fb"
    },
    "DependsOn": [
+    "EKSClusterNodeGroupRoleB9BCBC3E",
     "UniLogsVpcIGW47EF4FCD",
     "UniLogsVpcPrivateSubnet1DefaultRouteFFA9F2D7",
     "UniLogsVpcPrivateSubnet1RouteTableC2AD5B26",
@@ -1697,6 +1711,7 @@
     "EksClusterEbsCsiServiceAccountmanifestEbsCsiServiceAccountServiceAccountResource1B2FECC8",
     "EksClusterEbsCsiServiceAccountRoleA65AD0A5",
     "EksClusterKubectlReadyBarrier502B0E83",
+    "EKSClusterNodeGroupRoleB9BCBC3E",
     "UniLogsVpcIGW47EF4FCD",
     "UniLogsVpcPrivateSubnet1DefaultRouteFFA9F2D7",
     "UniLogsVpcPrivateSubnet1RouteTableC2AD5B26",
@@ -1749,6 +1764,7 @@
    },
    "DependsOn": [
     "EksClusterKubectlReadyBarrier502B0E83",
+    "EKSClusterNodeGroupRoleB9BCBC3E",
     "UniLogsVpcIGW47EF4FCD",
     "UniLogsVpcPrivateSubnet1DefaultRouteFFA9F2D7",
     "UniLogsVpcPrivateSubnet1RouteTableC2AD5B26",
@@ -1802,6 +1818,7 @@
    "DependsOn": [
     "EksClusterKubectlReadyBarrier502B0E83",
     "EksClustermanifestKafkaNamespaceD04FC369",
+    "EKSClusterNodeGroupRoleB9BCBC3E",
     "UniLogsVpcIGW47EF4FCD",
     "UniLogsVpcPrivateSubnet1DefaultRouteFFA9F2D7",
     "UniLogsVpcPrivateSubnet1RouteTableC2AD5B26",
@@ -1831,7 +1848,7 @@
     "aws:cdk:path": "UnilogsCdkStack/EksCluster/manifest-KafkaScramSecret/Resource/Default"
    }
   },
-  "EksClusterchartKafka7CD3E408": {
+  "EksClusterchartkafka0A034996": {
    "Type": "Custom::AWSCDK-EKS-HelmChart",
    "Properties": {
     "ServiceToken": {
@@ -1849,17 +1866,19 @@
       "Arn"
      ]
     },
-    "Release": "unilogscdkstackeksclusterchartkafkae5e3e3ef",
+    "Release": "kafka",
     "Chart": "kafka",
-    "Values": "{\"volumePermissions\":{\"enabled\":true,\"image\":{\"registry\":\"docker.io\",\"repository\":\"bitnami/os-shell\",\"tag\":\"11-debian-11-r86\",\"pullPolicy\":\"IfNotPresent\"}},\"networkPolicy\":{\"enabled\":true,\"allowExternal\":false,\"ingressNSMatchLabels\":{\"app.kubernetes.io/name\":\"kafka\"}},\"replicaCount\":3,\"clusterId\":\"unilogs-kafka-cluster\",\"controller\":{\"quorumVoters\":\"unilogs-kafka-cluster@kafka-0.kafka-headless.kafka.svc.cluster.local:9093,kafka-1.kafka-headless.kafka.svc.cluster.local:9093,kafka-2.kafka-headless.kafka.svc.cluster.local:9093\"},\"kraft\":{\"enabled\":true},\"listenerSecurityProtocolMap\":\"CONTROLLER:SASL_SSL,INTERNAL:SASL_SSL,EXTERNAL:SASL_SSL,CLIENT:SASL_SSL\",\"listeners\":{\"external\":{\"protocol\":\"SASL_SSL\",\"containerPort\":9095},\"client\":{\"protocol\":\"SASL_SSL\",\"containerPort\":9092},\"controller\":{\"protocol\":\"SASL_SSL\",\"containerPort\":9093},\"interbroker\":{\"protocol\":\"SASL_SSL\",\"containerPort\":9094}},\"rbac\":{\"create\":true},\"sasl\":{\"existingSecret\":\"kafka-scram-credentials\",\"enabledMechanisms\":\"SCRAM-SHA-512\",\"interBrokerMechanism\":\"SCRAM-SHA-512\",\"controllerMechanism\":\"SCRAM-SHA-512\",\"client\":{\"users\":[\"vector-client\"]}},\"tls\":{\"type\":\"PEM\",\"authType\":\"required\",\"autoGenerated\":{\"enabled\":true},\"existingSecret\":\"\"},\"externalAccess\":{\"enabled\":true,\"autoDiscovery\":{\"enabled\":true},\"service\":{\"type\":\"LoadBalancer\",\"ports\":{\"external\":9095},\"annotations\":{\"service.beta.kubernetes.io/aws-load-balancer-type\":\"nlb\",\"service.beta.kubernetes.io/aws-load-balancer-scheme\":\"internet-facing\",\"service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled\":\"true\"}}},\"persistence\":{\"enabled\":true,\"size\":\"10Gi\",\"storageClass\":\"gp2\"},\"resources\":{\"requests\":{\"memory\":\"2Gi\",\"cpu\":\"1\"},\"limits\":{\"memory\":\"4Gi\",\"cpu\":\"2\"}}}",
+    "Values": "{\"volumePermissions\":{\"enabled\":true,\"image\":{\"registry\":\"docker.io\",\"repository\":\"bitnami/os-shell\",\"tag\":\"11-debian-11-r86\",\"pullPolicy\":\"IfNotPresent\"},\"resources\":{\"limits\":{\"cpu\":\"100m\",\"memory\":\"128Mi\"},\"requests\":{\"cpu\":\"100m\",\"memory\":\"128Mi\"}}},\"networkPolicy\":{\"enabled\":true,\"allowExternal\":false,\"ingressNSMatchLabels\":{\"app.kubernetes.io/name\":\"kafka\"}},\"replicaCount\":3,\"clusterId\":\"unilogs-kafka-cluster\",\"controller\":{\"persistence\":{\"storageClass\":\"gp2\",\"size\":\"10Gi\",\"accessModes\":[\"ReadWriteOnce\"]},\"quorumVoters\":\"unilogs-kafka-cluster@kafka-0.kafka-headless.kafka.svc.cluster.local:9093,kafka-1.kafka-headless.kafka.svc.cluster.local:9093,kafka-2.kafka-headless.kafka.svc.cluster.local:9093\"},\"broker\":{\"persistence\":{\"storageClass\":\"gp2\",\"size\":\"10Gi\",\"accessModes\":[\"ReadWriteOnce\"]}},\"kraft\":{\"enabled\":true},\"listenerSecurityProtocolMap\":\"CONTROLLER:SASL_SSL,INTERNAL:SASL_SSL,EXTERNAL:SASL_SSL,CLIENT:SASL_SSL\",\"listeners\":{\"external\":{\"protocol\":\"SASL_SSL\",\"containerPort\":9095},\"client\":{\"protocol\":\"SASL_SSL\",\"containerPort\":9092},\"controller\":{\"protocol\":\"SASL_SSL\",\"containerPort\":9093},\"interbroker\":{\"protocol\":\"SASL_SSL\",\"containerPort\":9094}},\"rbac\":{\"create\":true},\"sasl\":{\"existingSecret\":\"kafka-scram-credentials\",\"enabledMechanisms\":\"SCRAM-SHA-512\",\"interBrokerMechanism\":\"SCRAM-SHA-512\",\"controllerMechanism\":\"SCRAM-SHA-512\",\"client\":{\"users\":[\"vector-client\"]}},\"tls\":{\"type\":\"PEM\",\"authType\":\"required\",\"autoGenerated\":{\"enabled\":true},\"existingSecret\":\"\"},\"externalAccess\":{\"enabled\":true,\"autoDiscovery\":{\"enabled\":true},\"broker\":{\"service\":{\"type\":\"LoadBalancer\",\"ports\":{\"external\":9095},\"annotations\":{\"service.beta.kubernetes.io/aws-load-balancer-type\":\"nlb\",\"service.beta.kubernetes.io/aws-load-balancer-scheme\":\"internet-facing\",\"service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled\":\"true\"},\"loadBalancerIPs\":[]}},\"controller\":{\"service\":{\"type\":\"LoadBalancer\",\"ports\":{\"external\":9094},\"annotations\":{\"service.beta.kubernetes.io/aws-load-balancer-type\":\"nlb\"},\"loadBalancerIPs\":[\"\",\"\",\"\"]}}},\"persistence\":{\"enabled\":true,\"size\":\"10Gi\",\"storageClass\":\"gp2\",\"accessModes\":[\"ReadWriteOnce\"]},\"resources\":{\"requests\":{\"memory\":\"2Gi\",\"cpu\":\"1\"},\"limits\":{\"memory\":\"4Gi\",\"cpu\":\"2\"}}}",
     "Namespace": "kafka",
     "Repository": "https://charts.bitnami.com/bitnami",
     "CreateNamespace": true
    },
    "DependsOn": [
+    "EksClusterchartEbsCsiDriverHelm9ABBCC87",
     "EksClusterKubectlReadyBarrier502B0E83",
     "EksClustermanifestKafkaNamespaceD04FC369",
     "EksClustermanifestKafkaScramSecretB39E7DCC",
+    "EKSClusterNodeGroupRoleB9BCBC3E",
     "KafkaSecurityGroup4BEFFE40",
     "UniLogsVpcIGW47EF4FCD",
     "UniLogsVpcPrivateSubnet1DefaultRouteFFA9F2D7",
@@ -1887,7 +1906,7 @@
    "UpdateReplacePolicy": "Delete",
    "DeletionPolicy": "Delete",
    "Metadata": {
-    "aws:cdk:path": "UnilogsCdkStack/EksCluster/chart-Kafka/Resource/Default"
+    "aws:cdk:path": "UnilogsCdkStack/EksCluster/chart-kafka/Resource/Default"
    }
   },
   "EksClusterchartLokiScalable7403F59F": {
@@ -1941,6 +1960,7 @@
    "DependsOn": [
     "EksClusterchartEbsCsiDriverHelm9ABBCC87",
     "EksClusterKubectlReadyBarrier502B0E83",
+    "EKSClusterNodeGroupRoleB9BCBC3E",
     "LokiChunkBucketAutoDeleteObjectsCustomResource9232254F",
     "LokiChunkBucketPolicyE4DE0CF8",
     "LokiChunkBucket9C374191",
@@ -2018,6 +2038,7 @@
    "DependsOn": [
     "EksClusterchartLokiScalable7403F59F",
     "EksClusterKubectlReadyBarrier502B0E83",
+    "EKSClusterNodeGroupRoleB9BCBC3E",
     "UniLogsVpcIGW47EF4FCD",
     "UniLogsVpcPrivateSubnet1DefaultRouteFFA9F2D7",
     "UniLogsVpcPrivateSubnet1RouteTableC2AD5B26",
@@ -2088,9 +2109,10 @@
    },
    "DependsOn": [
     "EksClusterchartEbsCsiDriverHelm9ABBCC87",
-    "EksClusterchartKafka7CD3E408",
+    "EksClusterchartkafka0A034996",
     "EksClusterchartLokiScalable7403F59F",
     "EksClusterKubectlReadyBarrier502B0E83",
+    "EKSClusterNodeGroupRoleB9BCBC3E",
     "UniLogsVpcIGW47EF4FCD",
     "UniLogsVpcPrivateSubnet1DefaultRouteFFA9F2D7",
     "UniLogsVpcPrivateSubnet1RouteTableC2AD5B26",
@@ -2267,8 +2289,7 @@
        ]
       ]
      }
-    ],
-    "RoleName": "EKSClusterNodeGroupRole"
+    ]
    },
    "Metadata": {
     "aws:cdk:path": "UnilogsCdkStack/EKSClusterNodeGroupRole/Resource"
@@ -3065,7 +3086,7 @@
   "CDKMetadata": {
    "Type": "AWS::CDK::Metadata",
    "Properties": {
-    "Analytics": "v2:deflate64:H4sIAAAAAAAA/91Y3W/bNhD/W6rHQVZbZ8jaPE1xusxrYht2kIcFhkGTZ4cxRWr8cOIa/t93FCnZSZCgaZbC2IMh8Xh3PN797kNuZ+uPn37LPrwjt6ZF2aIl+DRbjyyhixRJkzXQdra+LOnVOinIXf7NJEfJL0maSGJPiYVbsqopxk0l2I6SMz53mliuZHKEYpIUcI/lYlV6wsBNBafJJn2GRfMlHpJsxptx2pnJy0EnDWKjig21kyXhgky54Hb1t5K1mmVJuyy+U870sVB0EdcFKYOSbtmXZ8RJep0cWe0gTXi5POw8YCfG8Lns4k7OmAZj+rKjId4POfwF9sKKyhDGek1k0P24M94bA/fDigClACD/NlTOwgWZCtjSt7TcGEV5paBh9i9fugP/2Do7jWD9z5E5I8Lsgc9fZ8b+WLInZgQUdqUFjXCpMRRqXFzlFsvwdQHSpiOgTqO9p1q5ErGFxsajGBiqedmoxsOFULe5EH1np8pJFtIlFoeunHt7hk5AVZwpQRsElxAoIbGokhKoV1nXdif5Pw6if6pwNoXlDXQ+fbuYu7ve2KTmYIIOB2uy3D9wna2PHV2APSYGrsZpWKBl0+qlt+02IKle1epHB5PzvJeffjmpdmZKUxiNzuobEGfVCQiw0J/e4FVMvaGhUEsiBgoBgjXXG221WqGSqcdEQE5OKfqoAeGeWFK5M7gneinINr56YPAjqcC+SQUppoxkSD8jK9CXoI2vmLAw2bojnEGY34PtMjDE1cJN8RqiEq1TMAjteIjBjDhhO6QkFINfo93Za8wQTqvsOlfMs+eD7iTvnUw6/d4f3VP05WCr8UzN51zOfW8kJb+vQWk/gdBrYIhcXe0xbpMKvehIgcRzIskc92rw9/DEucfh1i7fdHGz4HLEv0FTQu52VhgYroHtUrhZ7CxJweMMlJ+1J3efDieHvzbTEQZv/cSglCZY2kA0UxpaN1QCYtwwco29PlGDRyIvl8YSScGrrOX38A5V160vkea3Jsf4pV8RQb6QgsEA8RniHmumXnIKCHesgjbtlyC7rBPK0ECrJWcVJp0WDcib93H6J4iic010NSJgFVdyk3JSZGtviu/uxrgC2PHK36PUXFJeEhEP27YB5PECOd2p/ehHjyFW5Q73vq6G6y1tleu63EWUXahBfUSd3FfruFt1iVBwm72mOj+7ydj57qnfYcdr+XeOfu5KP9G3P3zU9hoPrX+7cL34sP+RyFwTH5GquDYueW30XoRnbACw049+DkrTF2+8OoX4Fn8ctiPLK53949Lj8OGF32dxOAn9NSTLhQq94UEOPSYzNrLYXvw4be5h7jH5rfW/IbnyVRzKNukQjHI4O9ZJ89QPpXASUMX38r/VL0Q6GvHAprpl+5k+rQZ9vLyf5LwMtnUc1OI3+l8mPMO/WPiCX0Kls5v0Y/bh3e/xj673YWJtCT9ztuIA2loetLOv4f3yoF3NozHCfgrJbsz7Zfsg+4x6bgznLY3Y5QVkw/D8F/U0SG1NEwAA"
+    "Analytics": "v2:deflate64:H4sIAAAAAAAA/91Y3W/bNhD/W6rHQVZbZ8jaPE1xusxrYht2kIcFhkGRtMOYIjV+OHEN/+87fkhyEiRomqUw9mBIPN4dj3e/+5C72ebjp9+yD+/Qre5gsuxwVmSbiUF4mQJptqG4m20uK3y1SUp0l3/TyVHyS5ImAplTZOgtWtcUbQtBTU+KOVtYhQyTIjkCMYFKeo/lYl05wsgWnOFkmz7DotgKDkm20+007c3F5aiXBrGJZwPtaIUYRwXjzKz/lqJWs6pwn8R3zIg65hIv47pEVVDSr4biDFmBr5MjoyxNE1atDnsP2JHWbCH6sJMToqjWQ9FTNN4PONwF9sIKbwghgyYy4H7Yme6NgfthRYBSAJB7G0tr6AUqOG3pLS3XWmLmFTTM7uVLf+QerbPTCNb/HJlzxPUe+Px1ZuyPJXtiRkBhXxiqAC41hkKNi6vcQBm+Lqkw6YRiq8DeUyVtBdgCY+NRhGqsWNWohsM5l7c550NrCmkFCekSi0NfLJw9Y8upL84YgQ2cCRooIbGwFIJip7Ku7VawfyyN/vHhbArLG+h8+nYxd3e9sU31wQwcTo3OcveAdbY5tnhJzTHS9GqahgVYVviXQdttqMBqXaufHMzO80F++uXE78ylwnQyOatvgKyRJ5RTQ4fFDVxF1xuKlnKF+EgCQKDmOqONkmtQUjhMBOTkGIOPGhDuiSXencE90UtBtvHVA4MfSQX2bcpRWRCUAf0Mram6pEq7ikmXOtv0uNUA83uwXQWGuFraAq7BvWidgkFox0OEzpHlpocqhCH4NdqtuYYMYdhn17kkjj0f9Wf54GTWGw7+6J+CL0etxjO5WDCxcL0RVey+BqncBIKvKQHkKr9HmEk8esGRHIjnSKAF7NXgH8CJC4fD1i7XdGGzZGLCvtGmhNztrCAwTFGyS2F6ubNEJYszUH7Wnd19Opwd/tpMRxC8zRODUppAaaO8mdLAurHkNMYNItfY6xI1eCTyMqENEpg6lbX8Ht7Bd936Eml+q3OIX/oVEOQKKdUQIDYH3EPNVCuGKcAdqqBJhxUVfdILZWik5IoRj0mreAPy5n2a/kl52btGyo8IUMWl2KYMldnGmeK6u9a2pOR47e5RKSYwqxCPh7VtAHicQI53aj/40WGI+Nxhztd+uG5p61zV5S6i7EKO6iPq5L7axF3fJULBbfaa6vzsJiHnu6d+hx2v5d85+rkr/UTf/vBR7TUeWv924XrxYf8jkYVCLiK+uDYueW30XobnnwLL9MUbrzaOtYBjtJ1RXundH5eehi8t+CCL00hoqCE7LmRoBg+S5jGZkImBfuLmZ30PZI/Jb63/DcneV3EK26ZjqqWFYbHOkqd+IAWtX5bfy/9WvxDpaMQDm+oe7Yb41E/2cHk3ujkZ6OMwmcWP8r90eIa/reAFPn0qa7bpx+zDu9/jP1vvw4ja4W7I7MSJs7M66GZfw/vlQdcPoDHCbuzIbvT7Vfcg+wx6bjRjHQXYZSXNxuH5LxYPyjA+EwAA"
    },
    "Metadata": {
     "aws:cdk:path": "UnilogsCdkStack/CDKMetadata/Default"
