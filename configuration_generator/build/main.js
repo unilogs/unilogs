@@ -2,69 +2,84 @@
 import prompts from 'prompts';
 import gradient from 'gradient-string';
 import { VectorConfiguration } from './lib/VectorConfiguration.js';
-import { ConsoleEncoding, ConsoleSink, KafkaSink, LokiSink, SinkType, safeAssertConsoleEncoding, } from './lib/Sink.js';
+import { KafkaSink, SinkType, } from './lib/Sink.js';
 import { ApacheTransform, PlainTextTransform, } from './lib/Transform.js';
 import { FileSource, SourceType } from './lib/Source.js';
 import { stringify } from 'yaml';
 import fs from 'fs';
 import logo from './lib/logo.js';
 import generateDockerfile from './lib/generateDockerfile.js';
-import { generateBuildImageCommand, generateRunImageCommand, } from './lib/generateDockerCommands.js';
+// import {
+//   generateBuildImageCommand,
+//   generateRunImageCommand,
+// } from './lib/generateDockerCommands.js';
 import buildAndRunShipper from './lib/buildAndRunShipper.js';
 import safeAssertString from './lib/safeAssertString.js';
-async function getMenuChoice() {
-    return await prompts({
-        type: 'select',
+// async function getPowerUserMenuChoice() {
+//   return await prompts({
+//     type: 'select',
+//     name: 'menuChoice',
+//     message: 'What do you want to do?',
+//     choices: [
+//       { title: 'Add source and transform', value: 'add_source_and_transform' },
+//       { title: 'Add sink', value: 'add_sink' },
+//       { title: 'Map source/transform to sink', value: 'map_to_sink' },
+//       { title: 'Display vector config', value: 'viewConfig' },
+//       { title: 'Save vector_shipper.yaml', value: 'saveYaml' },
+//       { title: 'Save Dockerfile', value: 'saveDockerfile' },
+//       { title: 'Docker build and run shipper', value: 'buildAndRun' },
+//       { title: 'Exit', value: 'exit' },
+//     ],
+//   });
+// }
+async function getSimpleMenuChoice() {
+    const menuChoice = await prompts({
+        type: 'autocomplete',
         name: 'menuChoice',
-        message: 'What do you want to do?',
+        message: 'Add at least one source, then run shipper',
         choices: [
-            { title: 'Add source and transform', value: 'add_source_and_transform' },
-            { title: 'Add sink', value: 'add_sink' },
-            { title: 'Map source/transform to sink', value: 'map_to_sink' },
-            { title: 'Display vector config', value: 'viewConfig' },
-            { title: 'Save vector_shipper.yaml', value: 'saveYaml' },
-            { title: 'Save Dockerfile', value: 'saveDockerfile' },
-            { title: 'Docker build and run shipper', value: 'buildAndRun' },
-            { title: 'Exit', value: 'exit' },
+            { title: 'Add log file source', value: 'add_file_source_and_transform' },
+            { title: 'Build and run shipper', value: 'add_sink_build_and_run' },
+            { title: 'Cancel and exit', value: 'exit' },
         ],
     });
+    safeAssertString(menuChoice);
+    return menuChoice;
 }
-async function mapTransformToSink(vectorConfiguration) {
-    const availableSinks = vectorConfiguration.getAllSinkNames();
-    const availableTransforms = vectorConfiguration.getAllTransformNames();
-    if (availableSinks.length < 1 || availableTransforms.length < 1)
-        return;
-    const { selectedTransforms } = await prompts({
-        type: 'multiselect',
-        name: 'selectedTransforms',
-        message: 'Select all transforms you want to map to a sink',
-        choices: availableTransforms.map((transformName) => {
-            return { title: transformName, value: transformName };
-        }),
-        instructions: false,
-        min: 1,
-        hint: '- Space to select, return to submit.',
-    });
-    safeAssertString(selectedTransforms);
-    const { selectedSink } = await prompts({
-        type: 'select',
-        name: 'selectedSink',
-        message: 'Select sink to map transforms to',
-        choices: availableSinks.map((sinkName) => {
-            return { title: sinkName, value: sinkName };
-        }),
-    });
-    safeAssertString(selectedSink);
-    const sinkToMapTo = vectorConfiguration.getSinkByName(selectedSink);
-    if (sinkToMapTo.length !== 1)
-        return;
-    for (const transformName of selectedTransforms) {
-        const transformToMap = vectorConfiguration.getTransformByName(transformName);
-        if (transformToMap.length !== 1)
-            return;
-        sinkToMapTo[0].addInput(transformToMap[0]);
-    }
-}
+// async function mapTransformToSink(vectorConfiguration: VectorConfiguration) {
+//   const availableSinks = vectorConfiguration.getAllSinkNames();
+//   const availableTransforms = vectorConfiguration.getAllTransformNames();
+//   if (availableSinks.length < 1 || availableTransforms.length < 1) return;
+//   const { selectedTransforms } = await prompts<string>({
+//     type: 'multiselect',
+//     name: 'selectedTransforms',
+//     message: 'Select all transforms you want to map to a sink',
+//     choices: availableTransforms.map((transformName) => {
+//       return { title: transformName, value: transformName };
+//     }),
+//     instructions: false,
+//     min: 1,
+//     hint: '- Space to select, return to submit.',
+//   });
+//   safeAssertString(selectedTransforms);
+//   const { selectedSink } = await prompts<string>({
+//     type: 'select',
+//     name: 'selectedSink',
+//     message: 'Select sink to map transforms to',
+//     choices: availableSinks.map((sinkName) => {
+//       return { title: sinkName, value: sinkName };
+//     }),
+//   });
+//   safeAssertString(selectedSink);
+//   const sinkToMapTo = vectorConfiguration.getSinkByName(selectedSink);
+//   if (sinkToMapTo.length !== 1) return;
+//   for (const transformName of selectedTransforms) {
+//     const transformToMap =
+//       vectorConfiguration.getTransformByName(transformName);
+//     if (transformToMap.length !== 1) return;
+//     sinkToMapTo[0].addInput(transformToMap[0]);
+//   }
+// }
 async function addInclude(include) {
     const { includeToAdd } = await prompts({
         type: 'text',
@@ -76,13 +91,7 @@ async function addInclude(include) {
         include.push(includeToAdd);
 }
 async function createSource(serviceName) {
-    const { sourceName } = await prompts({
-        type: 'text',
-        name: 'sourceName',
-        message: 'What would you like to call this source?',
-        initial: `${serviceName ? `${serviceName}_` : ''}file_source`,
-        validate: (input) => /^[a-zA-Z0-9\-_]+$/.test(input),
-    });
+    const sourceName = `${serviceName ? `${serviceName}_` : ''}file_source`;
     safeAssertString(sourceName);
     const include = [];
     await addInclude(include);
@@ -99,14 +108,7 @@ async function createTransform(inputSource, serviceName) {
         ],
     });
     safeAssertString(transformType);
-    const { transformName } = await prompts({
-        type: 'text',
-        name: 'transformName',
-        message: 'What would you like to call this transform?',
-        initial: `${serviceName}_${transformType}_transform`,
-        validate: (input) => /^[a-zA-Z0-9\-_]+$/.test(input),
-    });
-    safeAssertString(transformName);
+    const transformName = `${serviceName}_${transformType}_transform`;
     if (transformType === 'apache') {
         return new ApacheTransform({
             serviceName,
@@ -122,7 +124,20 @@ async function createTransform(inputSource, serviceName) {
         });
     }
 }
-async function addSourceAndTransform(vectorConfiguration) {
+// async function addSourceAndTransform(vectorConfiguration: VectorConfiguration) {
+//   const { serviceName } = await prompts<string>({
+//     type: 'text',
+//     name: 'serviceName',
+//     message: 'What is the service that generates these logs?',
+//     validate: (input: string) => /^[a-zA-Z0-9\-_]+$/.test(input),
+//   });
+//   safeAssertString(serviceName);
+//   const newSource = await createSource(serviceName);
+//   const newTransform = await createTransform(newSource, serviceName);
+//   vectorConfiguration.addSource(newSource);
+//   vectorConfiguration.addTransform(newTransform);
+// }
+async function simpleAddSourceAndTransform(vectorConfiguration) {
     const { serviceName } = await prompts({
         type: 'text',
         name: 'serviceName',
@@ -135,77 +150,70 @@ async function addSourceAndTransform(vectorConfiguration) {
     vectorConfiguration.addSource(newSource);
     vectorConfiguration.addTransform(newTransform);
 }
-async function createConsoleSink() {
-    const { sinkName } = await prompts({
-        type: 'text',
-        name: 'sinkName',
-        message: 'What would you like to call this sink?',
-        initial: 'console_sink',
-        validate: (input) => /^[a-zA-Z0-9\-_]+$/.test(input),
-    });
-    safeAssertString(sinkName);
-    const { encoding } = await prompts({
-        type: 'select',
-        name: 'encoding',
-        message: 'Which encoding would you like to use?',
-        choices: [
-            { title: 'JSON', value: ConsoleEncoding.Json },
-            { title: 'Logfmt', value: ConsoleEncoding.Logfmt },
-        ],
-    });
-    safeAssertConsoleEncoding(encoding);
-    return new ConsoleSink({
-        sinkName,
-        type: SinkType.Console,
-        encoding: { codec: encoding },
-        inputs: [],
-    });
-}
-async function createLokiSink() {
-    const { sinkName } = await prompts({
-        type: 'text',
-        name: 'sinkName',
-        message: 'What would you like to call this sink?',
-        initial: 'loki_sink',
-        validate: (input) => /^[a-zA-Z0-9\-_]+$/.test(input),
-    });
-    safeAssertString(sinkName);
-    const { endpoint } = await prompts({
-        type: 'text',
-        name: 'endpoint',
-        message: 'What is the endpoint?',
-    });
-    safeAssertString(endpoint);
-    const { path } = await prompts({
-        type: 'text',
-        name: 'path',
-        message: 'What is the path?',
-    });
-    safeAssertString(path);
-    const { authToken } = await prompts({
-        type: 'text',
-        name: 'authToken',
-        message: 'What is the auth token?',
-    });
-    safeAssertString(authToken);
-    return new LokiSink({
-        sinkName,
-        type: SinkType.Loki,
-        inputs: [],
-        endpoint,
-        path,
-        auth: { strategy: 'bearer', token: authToken },
-    });
-}
+// async function createConsoleSink(): Promise<ConsoleSink> {
+//   const { sinkName } = await prompts<string>({
+//     type: 'text',
+//     name: 'sinkName',
+//     message: 'What would you like to call this sink?',
+//     initial: 'console_sink',
+//     validate: (input: string) => /^[a-zA-Z0-9\-_]+$/.test(input),
+//   });
+//   safeAssertString(sinkName);
+//   const { encoding } = await prompts<string>({
+//     type: 'select',
+//     name: 'encoding',
+//     message: 'Which encoding would you like to use?',
+//     choices: [
+//       { title: 'JSON', value: ConsoleEncoding.Json },
+//       { title: 'Logfmt', value: ConsoleEncoding.Logfmt },
+//     ],
+//   });
+//   safeAssertConsoleEncoding(encoding);
+//   return new ConsoleSink({
+//     sinkName,
+//     type: SinkType.Console,
+//     encoding: { codec: encoding },
+//     inputs: [],
+//   });
+// }
+// async function createLokiSink(): Promise<LokiSink> {
+//   const { sinkName } = await prompts<string>({
+//     type: 'text',
+//     name: 'sinkName',
+//     message: 'What would you like to call this sink?',
+//     initial: 'loki_sink',
+//     validate: (input: string) => /^[a-zA-Z0-9\-_]+$/.test(input),
+//   });
+//   safeAssertString(sinkName);
+//   const { endpoint } = await prompts<string>({
+//     type: 'text',
+//     name: 'endpoint',
+//     message: 'What is the endpoint?',
+//   });
+//   safeAssertString(endpoint);
+//   const { path } = await prompts<string>({
+//     type: 'text',
+//     name: 'path',
+//     message: 'What is the path?',
+//   });
+//   safeAssertString(path);
+//   const { authToken } = await prompts<string>({
+//     type: 'text',
+//     name: 'authToken',
+//     message: 'What is the auth token?',
+//   });
+//   safeAssertString(authToken);
+//   return new LokiSink({
+//     sinkName,
+//     type: SinkType.Loki,
+//     inputs: [],
+//     endpoint,
+//     path,
+//     auth: { strategy: 'bearer', token: authToken },
+//   });
+// }
 async function createKafkaSink() {
-    const { sinkName } = await prompts({
-        type: 'text',
-        name: 'sinkName',
-        message: 'What would you like to call this sink?',
-        initial: 'kafka_sink',
-        validate: (input) => /^[a-zA-Z0-9\-_]+$/.test(input),
-    });
-    safeAssertString(sinkName);
+    const sinkName = 'kafka_sink';
     const { bootstrap_servers } = await prompts({
         type: 'text',
         name: 'bootstrap_servers',
@@ -221,7 +229,7 @@ async function createKafkaSink() {
     const { password } = await prompts({
         type: 'password',
         name: 'password',
-        message: 'SCRAM password'
+        message: 'SCRAM password',
     });
     safeAssertString(password);
     return new KafkaSink({
@@ -232,45 +240,62 @@ async function createKafkaSink() {
         sasl: { enabled: true, mechanism: 'SCRAM-SHA-512', username, password },
     });
 }
-async function addSink(vectorConfiguration) {
-    const { sinkType } = await prompts({
-        type: 'select',
-        name: 'sinkType',
-        message: 'Which sink type would you like to add?',
-        choices: [
-            { title: 'Console', value: SinkType.Console },
-            { title: 'Loki', value: SinkType.Loki },
-            { title: 'Kafka', value: SinkType.Kafka },
-        ],
-    });
-    if (sinkType === 'console') {
-        const sink = await createConsoleSink();
-        vectorConfiguration.addSink(sink);
-    }
-    else if (sinkType === 'loki') {
-        const sink = await createLokiSink();
-        vectorConfiguration.addSink(sink);
-    }
-    else if (sinkType === 'kafka') {
-        const sink = await createKafkaSink();
-        vectorConfiguration.addSink(sink);
-    }
-}
-async function viewConfig(vectorConfiguration) {
-    console.log(stringify(vectorConfiguration.objectify()));
-    await prompts({
-        type: 'confirm',
-        name: 'confirmContinue',
-        message: 'Enter to continue.',
-        instructions: false,
-        initial: true,
-    });
-}
+// async function addSink(vectorConfiguration: VectorConfiguration) {
+//   const { sinkType } = await prompts<string>({
+//     type: 'select',
+//     name: 'sinkType',
+//     message: 'Which sink type would you like to add?',
+//     choices: [
+//       { title: 'Console', value: SinkType.Console },
+//       { title: 'Loki', value: SinkType.Loki },
+//       { title: 'Kafka', value: SinkType.Kafka },
+//     ],
+//   });
+//   if (sinkType === 'console') {
+//     const sink = await createConsoleSink();
+//     vectorConfiguration.addSink(sink);
+//   } else if (sinkType === 'loki') {
+//     const sink = await createLokiSink();
+//     vectorConfiguration.addSink(sink);
+//   } else if (sinkType === 'kafka') {
+//     const sink = await createKafkaSink();
+//     vectorConfiguration.addSink(sink);
+//   }
+// }
+// async function viewConfig(vectorConfiguration: VectorConfiguration) {
+//   console.log(stringify(vectorConfiguration.objectify()));
+//   await prompts({
+//     type: 'confirm',
+//     name: 'confirmContinue',
+//     message: 'Enter to continue.',
+//     instructions: false,
+//     initial: true,
+//   });
+// }
 function saveYaml(vectorConfiguration) {
     fs.writeFileSync('vector-shipper.yaml', stringify(vectorConfiguration.objectify()));
 }
 function saveDockerfile(vectorConfiguration) {
     fs.writeFileSync('Dockerfile', generateDockerfile(vectorConfiguration));
+}
+async function addSinkBuildAndRun(vectorConfiguration) {
+    vectorConfiguration.addSink(await createKafkaSink());
+    const availableSinks = vectorConfiguration.getAllSinkNames();
+    const availableTransforms = vectorConfiguration.getAllTransformNames();
+    if (availableSinks.length !== 1 || availableTransforms.length < 1)
+        return;
+    const sinkToMapTo = vectorConfiguration.getSinkByName(availableSinks[0]);
+    if (sinkToMapTo.length !== 1)
+        return;
+    for (const transformName of availableTransforms) {
+        const transformToMap = vectorConfiguration.getTransformByName(transformName);
+        if (transformToMap.length !== 1)
+            return;
+        sinkToMapTo[0].addInput(transformToMap[0]);
+    }
+    saveYaml(vectorConfiguration);
+    saveDockerfile(vectorConfiguration);
+    buildAndRunShipper(vectorConfiguration);
 }
 async function main() {
     const vectorConfiguration = new VectorConfiguration();
@@ -278,28 +303,35 @@ async function main() {
     while (notDone) {
         console.clear();
         console.log(gradient(['aqua', 'purple']).multiline(logo));
-        const action = await getMenuChoice();
-        if (action.menuChoice === 'exit') {
+        const action = await getSimpleMenuChoice();
+        if (action.menuChoice === 'exit')
             notDone = false;
-            console.log(generateBuildImageCommand());
-            console.log(generateRunImageCommand(vectorConfiguration));
-        }
-        if (action.menuChoice === 'add_sink')
-            await addSink(vectorConfiguration);
-        if (action.menuChoice === 'viewConfig')
-            await viewConfig(vectorConfiguration);
-        if (action.menuChoice === 'add_source_and_transform')
-            await addSourceAndTransform(vectorConfiguration);
-        if (action.menuChoice === 'map_to_sink')
-            await mapTransformToSink(vectorConfiguration);
-        if (action.menuChoice === 'saveYaml')
-            saveYaml(vectorConfiguration);
-        if (action.menuChoice === 'saveDockerfile')
-            saveDockerfile(vectorConfiguration);
-        if (action.menuChoice === 'buildAndRun') {
+        if (action.menuChoice === 'add_file_source_and_transform')
+            await simpleAddSourceAndTransform(vectorConfiguration);
+        if (action.menuChoice === 'add_sink_build_and_run') {
+            await addSinkBuildAndRun(vectorConfiguration);
             notDone = false;
-            buildAndRunShipper(vectorConfiguration);
         }
+        // const action = await getPowerUserMenuChoice();
+        // if (action.menuChoice === 'exit') {
+        //   notDone = false;
+        //   console.log(generateBuildImageCommand());
+        //   console.log(generateRunImageCommand(vectorConfiguration));
+        // }
+        // if (action.menuChoice === 'add_sink') await addSink(vectorConfiguration);
+        // if (action.menuChoice === 'viewConfig')
+        //   await viewConfig(vectorConfiguration);
+        // if (action.menuChoice === 'add_source_and_transform')
+        //   await addSourceAndTransform(vectorConfiguration);
+        // if (action.menuChoice === 'map_to_sink')
+        //   await mapTransformToSink(vectorConfiguration);
+        // if (action.menuChoice === 'saveYaml') saveYaml(vectorConfiguration);
+        // if (action.menuChoice === 'saveDockerfile')
+        //   saveDockerfile(vectorConfiguration);
+        // if (action.menuChoice === 'buildAndRun') {
+        //   notDone = false;
+        //   buildAndRunShipper(vectorConfiguration);
+        // }
     }
 }
 void main();
