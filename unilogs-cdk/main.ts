@@ -38,10 +38,9 @@ async function main() {
     type: 'text',
     name: 'AWS_USER_NAME',
     message: 'deploying username',
-    initial: 'unilogsadmin',
   });
   child_process.spawnSync(
-    `PATH="${process.env.PATH}" && cdk bootstrap && cdk deploy --require-approval never`,
+    `PATH="${process.env.PATH}" && cdk bootstrap --verbose && cdk deploy --verbose --require-approval never`,
     {
       shell: true,
       stdio: 'inherit',
