@@ -1,7 +1,7 @@
 {
   "name": "logs",
   "version": "1.0.0",
-  "bin": "./build/main.js",
+  "bin": {"unilogs-shipper": "./build/main.js"},
   "main": "./build/main.js",
   "type": "module",
   "scripts": {

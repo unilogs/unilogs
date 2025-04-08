@@ -2,7 +2,14 @@
 import prompts from 'prompts';
 import gradient from 'gradient-string';
 import { VectorConfiguration } from './lib/VectorConfiguration.js';
-import { KafkaSink, SinkType, } from './lib/Sink.js';
+import { 
+// ConsoleEncoding,
+// ConsoleSink,
+KafkaSink, 
+// LokiSink,
+SinkType,
+// safeAssertConsoleEncoding,
+ } from './lib/Sink.js';
 import { ApacheTransform, PlainTextTransform, } from './lib/Transform.js';
 import { FileSource, SourceType } from './lib/Source.js';
 import { stringify } from 'yaml';
@@ -33,7 +40,7 @@ import safeAssertString from './lib/safeAssertString.js';
 //   });
 // }
 async function getSimpleMenuChoice() {
-    const menuChoice = await prompts({
+    const { menuChoice } = await prompts({
         type: 'autocomplete',
         name: 'menuChoice',
         message: 'Add at least one source, then run shipper',
@@ -304,11 +311,11 @@ async function main() {
         console.clear();
         console.log(gradient(['aqua', 'purple']).multiline(logo));
         const action = await getSimpleMenuChoice();
-        if (action.menuChoice === 'exit')
+        if (action === 'exit')
             notDone = false;
-        if (action.menuChoice === 'add_file_source_and_transform')
+        if (action === 'add_file_source_and_transform')
             await simpleAddSourceAndTransform(vectorConfiguration);
-        if (action.menuChoice === 'add_sink_build_and_run') {
+        if (action === 'add_sink_build_and_run') {
             await addSinkBuildAndRun(vectorConfiguration);
             notDone = false;
         }
