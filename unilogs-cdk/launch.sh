@@ -3,5 +3,6 @@ export AWS_SECRET_ACCESS_KEY="<you secret access key>"
 export AWS_DEFAULT_ACCOUNT="<your account number>"
 export AWS_DEFAULT_REGION="<your default region>"
 export USER_NAME="<deploying user's AWS IAM username>"
+export LETSENCRYPT_EMAIL="<your email>"
 
 cdk bootstrap && cdk deploy
