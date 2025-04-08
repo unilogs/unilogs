@@ -140,3 +140,4 @@ dist
 
 .env.keys
 cdk.out/
+eksctl/
