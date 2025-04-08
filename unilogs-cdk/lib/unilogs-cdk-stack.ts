@@ -476,59 +476,62 @@ export class UnilogsCdkStack extends cdk.Stack {
       namespace: 'vector',
       createNamespace: true,
       values: {
-        role: 'Agent',
+        role: "Agent",
         serviceAccount: {
           create: true,
-          name: 'vector-service-account',
+          name: "vector-service-account",
           annotations: {
-            'eks.amazonaws.com/role-arn': vectorRole.roleArn,
-          },
+            "eks.amazonaws.com/role-arn": vectorRole.roleArn 
+          }
         },
         customConfig: {
           sources: {
-            kafka: {
-              type: 'kafka',
-              bootstrap_servers: mskBrokers.getResponseField(
-                'BootstrapBrokerStringSaslIam'
-              ),
-              group_id: 'vector-consumer',
-              topics: ['app_logs_topic'],
-              sasl: {
-                mechanism: 'AWS_MSK_IAM',
-                oauthbearer_token_provider: 'aws',
-                region: this.region,
-              },
-              auto_offset_reset: 'earliest',
-            },
+            test_logs: {
+              type: "demo_logs",
+              format: "json",
+              lines: [
+                '{"timestamp": "1744065966131000000", "level": "INFO", "message": "Test message 1"}',
+                '{"timestamp": "1744065966131000000", "level": "ERROR", "message": "Test message 2"}',
+                '{"timestamp": "1744065966131000000", "level": "DEBUG", "message": "Test message 3"}'
+              ],
+              interval: 1
+            }
           },
           sinks: {
             loki: {
-              type: 'loki',
-              inputs: ['kafka'],
-              endpoint: 'http://loki-gateway.loki.svc.cluster.local',
+              type: "loki",
+              inputs: ["test_logs"],
+              endpoint: "http://loki-gateway.loki.svc.cluster.local/",
+              path: "/loki/api/v1/push",
               labels: {
-                unilogs: 'test_label',
-                agent: 'vector',
+                unilogs: "test_label",
+                agent: "vector"
               },
+              tenant_id: "default",
               encoding: {
-                codec: 'json',
+                codec: "json"
               },
-            },
-          },
+              auth: {
+                strategy: "basic",
+                password: "secret",
+                user: "admin"
+              }
+            }
+          }
         },
         service: {
           enabled: true,
-          type: 'ClusterIP',
+          type: "ClusterIP",
           ports: [
             {
-              name: 'vector',
+              name: "vector",
               port: 8686,
               targetPort: 8686,
-              protocol: 'TCP',
-            },
-          ],
-        },
-      },
+              protocol: "TCP"
+            }
+          ]
+        }
+      }
     });
 
     const vectorNamespace = cluster.addManifest('VectorNamespace', {
