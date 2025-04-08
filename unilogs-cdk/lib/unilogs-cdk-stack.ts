@@ -65,14 +65,14 @@ export class UnilogsCdkStack extends cdk.Stack {
       kafkaVersion: '3.6.0',
       numberOfBrokerNodes: 2,
       brokerNodeGroupInfo: {
-        instanceType: 'kafka.t3.small', // Cost optimized (originally m5.large)
+        instanceType: 'kafka.t3.small', // Cost optimized (originally m5.large), reduced for dev only
         clientSubnets: vpc.selectSubnets({
           subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS,
         }).subnetIds,
         securityGroups: [mskSecurityGroup.securityGroupId],
         storageInfo: {
           ebsStorageInfo: {
-            volumeSize: 20, // Reduced from 100GB
+            volumeSize: 20, // Reduced from 100GB for dev
           },
         },
       },
@@ -125,7 +125,7 @@ export class UnilogsCdkStack extends cdk.Stack {
 
     const deployingUser = iam.User.fromUserName(this, 'DeployingUser', process.env.AWS_USER_NAME!);
 
-    // enable all logging types, though maybe just leave AUDIT for production
+    // enable all logging types for dev, comment out others beyond AUDIT for production (matching AWS sample code)
     const clusterLogging = [
       eks.ClusterLoggingTypes.API,
       eks.ClusterLoggingTypes.AUTHENTICATOR,
@@ -139,7 +139,7 @@ export class UnilogsCdkStack extends cdk.Stack {
       version: eks.KubernetesVersion.V1_32,
       kubectlLayer: new KubectlLayer(this, 'kubectl'),
       clusterName: 'unilogs-cluster',
-      defaultCapacity: 0, // We'll add our own node groups
+      defaultCapacity: 0,
       authenticationMode: eks.AuthenticationMode.API_AND_CONFIG_MAP,
       clusterLogging: clusterLogging,
     });
@@ -147,12 +147,12 @@ export class UnilogsCdkStack extends cdk.Stack {
     // Add managed node groups
     cluster.addNodegroupCapacity('AppNodeGroup', {
       instanceTypes: [
-        new ec2.InstanceType('t3.medium'), // Smaller instance (originally m5.large)
+        new ec2.InstanceType('t3.large'), // Smaller instance (originally m5.large) for dev
       ],
-      minSize: 1, // Reduced from 2
-      maxSize: 2, // Reduced from 5
-      desiredSize: 1, // Reduced from 2
-      diskSize: 30, // Reduced from 50GB
+      minSize: 2,
+      maxSize: 5,
+      desiredSize: 2,
+      diskSize: 30, // reduced from 50 GB for dev
       amiType: eks.NodegroupAmiType.AL2_X86_64,
       subnets: { subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS },
       labels: {
@@ -181,26 +181,13 @@ export class UnilogsCdkStack extends cdk.Stack {
 
     // ---------------- EKS Add-ons ----------------------
 
-    // // prerequisite for add-ons reliant on pod identities, preserved in case we need it
-    // new eks.CfnAddon(this, 'PodIdentityAgentAddon', {
-    //   addonName: 'eks-pod-identity-agent',
-    //   clusterName: cluster.clusterName,
-    //   configurationValues: JSON.stringify({
-    //     agent: {
-    //       additionalArgs: {
-    //         '-b': '169.254.170.23' // specify IPv4 address only, disables IPv6 for cluster compatibility
-    //       }
-    //     }
-    //   }),
-    // });
-
     // enable metrics, at least for dev
     new eks.CfnAddon(this, 'addonMetricsServer', {
       addonName: 'metrics-server',
       clusterName: cluster.clusterName,
     });
 
-    // // driver needed to provision PVCs - patching role into its service account
+    // driver needed to provision PVCs - patching role into its service account
     const ebsCsiServiceAccount = cluster.addServiceAccount('EbsCsiServiceAccount', {
       name: 'ebs-csi-controller-sa',
       namespace: 'kube-system', // default for this add-on, other things may expect it
@@ -328,18 +315,15 @@ export class UnilogsCdkStack extends cdk.Stack {
         },
         deploymentMode: 'SimpleScalable',
         backend: {
-          replicas: 1, // Reduced from 2
-
-          persistence: { enabled: true, storageClass: 'gp2', size: '1Gi' },
+          autoscaling: { enabled: true }, // 2-6 pods
+          persistence: { enabled: true, storageClass: 'gp2', size: '1Gi' }, // reduced from 10GB for dev
         },
         read: {
-          replicas: 1, // Reduced from 2
-          // read shouldn't need persistence
-          // persistence: { enabled: true, storageClass: 'gp2', size: '1Gi' },
+          autoscaling: { enabled: true }, // 2-6 pods
         },
         write: {
-          replicas: 1, // Reduced from 3
-          persistence: { enabled: true, storageClass: 'gp2', size: '1Gi' },
+          autoscaling: { enabled: true }, // 2-6 pods
+          persistence: { enabled: true, storageClass: 'gp2', size: '1Gi' }, // reduced from 10GB for dev
         },
         minio: {
           enabled: false,
@@ -449,6 +433,7 @@ export class UnilogsCdkStack extends cdk.Stack {
             'eks.amazonaws.com/role-arn': grafanaRole.roleArn,
           },
         },
+        autoscaling: { enabled: true }, // 1-5 pods
       },
     });
     // grafanaChart.node.addDependency(lokiGatewayService); wanna remove lokiGatewayService, probably need a new dependancy so grafana does not initialize before loki?
