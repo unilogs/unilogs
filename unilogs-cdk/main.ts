@@ -40,7 +40,7 @@ async function main() {
     message: 'deploying username',
   });
   child_process.spawnSync(
-    `PATH="${process.env.PATH}" && cdk bootstrap --verbose && cdk deploy --verbose --require-approval never`,
+    `PATH="${process.env.PATH}" && cdk bootstrap --verbose && cdk deploy --verbose --require-approval never`, // verbose flags for dev only
     {
       shell: true,
       stdio: 'inherit',
