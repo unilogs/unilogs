@@ -2,7 +2,7 @@
 
 Step 1: run `npm install`
 
-Step 2: run `npx ts-node main.ts` (or `npm run build:deploy` to test deployment using build output) and fill in your details (you can skip the session token if you're not using one)
+Step 2: run `npm run dev` (or `npm run build:deploy` to test deployment using build output) and fill in your details (you can skip the session token if you're not using one)
 
 # Original README Information
 

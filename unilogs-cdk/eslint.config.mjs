@@ -33,9 +33,10 @@ export default tseslint.config({
   ignores: [
     'node_modules/',
     'test/',
-    'dist/**',
     'cdk.out/',
     '**/coverage/**',
-    'jest.config.ts'
+    '**/*.config.ts',
+    '**/*.d.ts',
+    '**/*.js'
   ],
 });

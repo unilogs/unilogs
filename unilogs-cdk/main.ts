@@ -19,7 +19,7 @@ async function main() {
   const { AWS_SESSION_TOKEN } = await prompts<string>({
     type: 'text',
     name: 'AWS_SESSION_TOKEN',
-    message: 'AWS session token',
+    message: 'AWS session token (optional)',
     validate: (input: string) => /^[\S]*$/.test(input),
   });
   const { AWS_DEFAULT_ACCOUNT } = await prompts<string>({
