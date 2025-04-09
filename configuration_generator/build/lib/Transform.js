@@ -1,9 +1,4 @@
-import { TransformSource } from './TransformSource.js';
-export var TransformSourceOption;
-(function (TransformSourceOption) {
-    TransformSourceOption["Apache"] = "apache_template";
-    TransformSourceOption["PlainText"] = "plaintext_template";
-})(TransformSourceOption || (TransformSourceOption = {}));
+import { TransformSource, TransformSourceOption } from './TransformSource.js';
 class BaseTransform {
     constructor(props) {
         this.transformName = props.transformName;
@@ -27,14 +22,42 @@ class BaseTransform {
 export class ApacheTransform extends BaseTransform {
     constructor(props) {
         super(props);
-        const apacheSource = new TransformSource(TransformSourceOption.Apache, props.serviceName);
-        super.setSource(apacheSource.render());
+        const source = new TransformSource(TransformSourceOption.Apache, props.serviceName);
+        super.setSource(source.render());
+    }
+}
+export class ClfTransform extends BaseTransform {
+    constructor(props) {
+        super(props);
+        const source = new TransformSource(TransformSourceOption.CLF, props.serviceName);
+        super.setSource(source.render());
+    }
+}
+export class LinuxAuthorizationTransform extends BaseTransform {
+    constructor(props) {
+        super(props);
+        const source = new TransformSource(TransformSourceOption.LinuxAuthorization, props.serviceName);
+        super.setSource(source.render());
+    }
+}
+export class LogfmtTransform extends BaseTransform {
+    constructor(props) {
+        super(props);
+        const source = new TransformSource(TransformSourceOption.Logfmt, props.serviceName);
+        super.setSource(source.render());
     }
 }
 export class PlainTextTransform extends BaseTransform {
     constructor(props) {
         super(props);
-        const plaintextSource = new TransformSource(TransformSourceOption.PlainText, props.serviceName);
-        super.setSource(plaintextSource.render());
+        const source = new TransformSource(TransformSourceOption.PlainText, props.serviceName);
+        super.setSource(source.render());
+    }
+}
+export class SyslogTransform extends BaseTransform {
+    constructor(props) {
+        super(props);
+        const source = new TransformSource(TransformSourceOption.Syslog, props.serviceName);
+        super.setSource(source.render());
     }
 }

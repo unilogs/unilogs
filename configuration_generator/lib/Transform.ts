@@ -1,27 +1,18 @@
 import { Source } from './Source.js';
-import { TransformSource } from './TransformSource.js';
+import { TransformSource, TransformSourceOption } from './TransformSource.js';
 
-export enum TransformSourceOption {
-  Apache = 'apache_template',
-  PlainText = 'plaintext_template',
-}
-
-interface BaseTransformProps {
+interface TransformProps {
   transformName: string;
   serviceName: string;
   inputs: Source[];
 }
 
-export interface ApacheTransformProps extends BaseTransformProps {}
-
-export interface PlaintextTransformProps extends BaseTransformProps {}
-
 class BaseTransform {
-  readonly transformName: BaseTransformProps['transformName'];
-  private inputs: BaseTransformProps['inputs'];
+  readonly transformName: TransformProps['transformName'];
+  private inputs: TransformProps['inputs'];
   private source: string;
 
-  constructor(props: BaseTransformProps) {
+  constructor(props: TransformProps) {
     this.transformName = props.transformName;
     this.inputs = props.inputs;
     this.source = '';
@@ -45,25 +36,75 @@ class BaseTransform {
 }
 
 export class ApacheTransform extends BaseTransform {
-  constructor(props: ApacheTransformProps) {
+  constructor(props: TransformProps) {
     super(props);
-    const apacheSource = new TransformSource(
+    const source = new TransformSource(
       TransformSourceOption.Apache,
       props.serviceName
     );
-    super.setSource(apacheSource.render());
+    super.setSource(source.render());
+  }
+}
+
+export class ClfTransform extends BaseTransform {
+  constructor(props: TransformProps) {
+    super(props);
+    const source = new TransformSource(
+      TransformSourceOption.CLF,
+      props.serviceName
+    );
+    super.setSource(source.render());
+  }
+}
+
+export class LinuxAuthorizationTransform extends BaseTransform {
+  constructor(props: TransformProps) {
+    super(props);
+    const source = new TransformSource(
+      TransformSourceOption.LinuxAuthorization,
+      props.serviceName
+    );
+    super.setSource(source.render());
+  }
+}
+
+export class LogfmtTransform extends BaseTransform {
+  constructor(props: TransformProps) {
+    super(props);
+    const source = new TransformSource(
+      TransformSourceOption.Logfmt,
+      props.serviceName
+    );
+    super.setSource(source.render());
   }
 }
 
 export class PlainTextTransform extends BaseTransform {
-  constructor(props: PlaintextTransformProps) {
+  constructor(props: TransformProps) {
     super(props);
-    const plaintextSource = new TransformSource(
+    const source = new TransformSource(
       TransformSourceOption.PlainText,
       props.serviceName
     );
-    super.setSource(plaintextSource.render());
+    super.setSource(source.render());
   }
 }
 
-export type Transform = ApacheTransform | PlainTextTransform;
+export class SyslogTransform extends BaseTransform {
+  constructor(props: TransformProps) {
+    super(props);
+    const source = new TransformSource(
+      TransformSourceOption.Syslog,
+      props.serviceName
+    );
+    super.setSource(source.render());
+  }
+}
+
+export type Transform =
+  | ApacheTransform
+  | ClfTransform
+  | LinuxAuthorizationTransform
+  | LogfmtTransform
+  | PlainTextTransform
+  | SyslogTransform;

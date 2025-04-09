@@ -1,7 +1,9 @@
 {
   "name": "logs",
   "version": "1.0.0",
-  "bin": {"unilogs-shipper": "./build/main.js"},
+  "bin": {
+    "unilogs-shipper": "./build/main.js"
+  },
   "main": "./build/main.js",
   "type": "module",
   "scripts": {
@@ -15,6 +17,8 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@types/dockerode": "^3.3.37",
+    "dockerode": "^4.0.5",
     "gradient-string": "^3.0.0",
     "hash-sum": "^2.0.0",
     "mustache": "^4.2.0",

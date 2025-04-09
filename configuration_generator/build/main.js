@@ -10,7 +10,7 @@ KafkaSink,
 SinkType,
 // safeAssertConsoleEncoding,
  } from './lib/Sink.js';
-import { ApacheTransform, PlainTextTransform, } from './lib/Transform.js';
+import { ApacheTransform, ClfTransform, LinuxAuthorizationTransform, LogfmtTransform, PlainTextTransform, SyslogTransform, } from './lib/Transform.js';
 import { FileSource, SourceType } from './lib/Source.js';
 import { stringify } from 'yaml';
 import fs from 'fs';
@@ -111,7 +111,10 @@ async function createTransform(inputSource, serviceName) {
         message: 'Select log format',
         choices: [
             { title: 'Apache', value: 'apache' },
-            { title: 'PlainText', value: 'plaintext' },
+            { title: 'Common Log Format (CLF)', value: 'clf' },
+            { title: 'Linux Authorization', value: 'linux_authorization' },
+            { title: 'Logfmt', value: 'logfmt' },
+            { title: 'Syslog', value: 'syslog' },
         ],
     });
     safeAssertString(transformType);
@@ -121,6 +124,34 @@ async function createTransform(inputSource, serviceName) {
             serviceName,
             inputs: [inputSource],
             transformName,
+        });
+    }
+    else if (transformType === 'clf') {
+        return new ClfTransform({
+            serviceName,
+            inputs: [inputSource],
+            transformName
+        });
+    }
+    else if (transformType === 'linux_authorization') {
+        return new LinuxAuthorizationTransform({
+            serviceName,
+            inputs: [inputSource],
+            transformName
+        });
+    }
+    else if (transformType === 'logfmt') {
+        return new LogfmtTransform({
+            serviceName,
+            inputs: [inputSource],
+            transformName
+        });
+    }
+    else if (transformType === 'syslog') {
+        return new SyslogTransform({
+            serviceName,
+            inputs: [inputSource],
+            transformName
         });
     }
     else {
