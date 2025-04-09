@@ -336,8 +336,8 @@ export class UnilogsCdkStack extends cdk.Stack {
                   'internet-facing',
                 'service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled':
                   'true',
-                'service.beta.kubernetes.io/aws-load-balancer-name':
-                  'unilogs-kafka-broker-lb',
+                'service.beta.kubernetes.io/aws-load-balancer-additional-resource-tags':
+                  'name=unilogs-kafka-broker-lb',
               },
             },
           },
@@ -349,8 +349,8 @@ export class UnilogsCdkStack extends cdk.Stack {
               },
               annotations: {
                 'service.beta.kubernetes.io/aws-load-balancer-type': 'nlb',
-                'service.beta.kubernetes.io/aws-load-balancer-name':
-                  'unilogs-kafka-controller-lb',
+                'service.beta.kubernetes.io/aws-load-balancer-additional-resource-tags':
+                  'name=unilogs-kafka-controller-lb',
               },
             },
           },
