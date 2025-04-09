@@ -396,7 +396,7 @@ export class UnilogsCdkStack extends cdk.Stack {
       values: {
         adminUser: 'admin',
         adminPassword: process.env.GRAFANA_ADMIN_PASSWORD || 'admin',
-        persistence: { enabled: true, storageClassName: 'gp2', size: '10Gi' },
+        persistence: { enabled: true, storageClassName: 'gp2', size: '1Gi' }, // reduced from 10Gi
         datasources: {
           'datasources.yaml': {
             apiVersion: 1,
@@ -428,7 +428,6 @@ export class UnilogsCdkStack extends cdk.Stack {
         },
         serviceAccount: {
           create: true,
-          name: 'grafana-service-account',
           annotations: {
             'eks.amazonaws.com/role-arn': grafanaRole.roleArn,
           },
@@ -488,23 +487,35 @@ export class UnilogsCdkStack extends cdk.Stack {
           sources: {
             test_logs: {
               type: "demo_logs",
-              format: "json",
+              format: "shuffle", // changed from `json` because `json` was not using `lines`, and it was instead generating random json logs
               lines: [
-                '{"timestamp": "1744065966131000000", "level": "INFO", "message": "Test message 1"}',
-                '{"timestamp": "1744065966131000000", "level": "ERROR", "message": "Test message 2"}',
-                '{"timestamp": "1744065966131000000", "level": "DEBUG", "message": "Test message 3"}'
-              ],
+                '{"timestamp": "2025-04-07T18:46:06.131Z", "level": "INFO", "message": "Test message 1", "unilogs_service_label":"123"}',
+                '{"timestamp": "2025-04-07T18:46:06.131Z", "level": "ERROR", "message": "Test message 2", "unilogs_service_label":"abc"}',
+                '{"timestamp": "2025-04-07T18:46:06.131Z", "level": "DEBUG", "message": "Test message 3", "unilogs_service_label":"xyz"}'
+            ],
               interval: 1
+            }
+          },
+          transforms: {
+            parsed_logs: {
+              type: "remap",
+              inputs: ["test_logs"],
+              source: `
+              .message = parse_json!(.message) 
+              .timestamp = parse_timestamp!(.message.timestamp, format: "%Y-%m-%dT%H:%M:%S.%fZ")
+              .level = .message.level
+              .inferred_label = .message.unilogs_service_label
+              `.trim()
             }
           },
           sinks: {
             loki: {
               type: "loki",
-              inputs: ["test_logs"],
+              inputs: ["parsed_logs"],
               endpoint: "http://loki-gateway.loki.svc.cluster.local/",
               path: "/loki/api/v1/push",
               labels: {
-                unilogs: "test_label",
+                unilogs_test_label: '{{`{{ inferred_label }}`}}',
                 agent: "vector"
               },
               tenant_id: "default",
@@ -516,6 +527,13 @@ export class UnilogsCdkStack extends cdk.Stack {
                 password: "secret",
                 user: "admin"
               }
+            },
+            console: {
+              type:'console',
+              inputs: ["test_logs", "parsed_logs"],
+              encoding: {
+                codec:'json'
+              }
             }
           }
         },
@@ -525,7 +543,7 @@ export class UnilogsCdkStack extends cdk.Stack {
           ports: [
             {
               name: "vector",
-              port: 8686,
+              port: 8686, 
               targetPort: 8686,
               protocol: "TCP"
             }
@@ -569,6 +587,7 @@ export class UnilogsCdkStack extends cdk.Stack {
     cluster.node.addDependency(mskSecurityGroup);
     vectorChart.node.addDependency(
       mskCluster,
+      lokiChart,
       // lokiGatewayService,
       grafanaChart,
       mskBrokers
