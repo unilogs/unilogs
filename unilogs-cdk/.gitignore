@@ -7,6 +7,7 @@ bootstrap.sh
 deploy.sh
 destroy.sh
 launch.sh
+diff.sh
 
 # CDK asset staging directory
 .cdk.staging

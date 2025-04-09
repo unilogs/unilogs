@@ -208,6 +208,7 @@ export class UnilogsCdkStack extends cdk.Stack {
 
     const kafkaChart = cluster.addHelmChart('kafka', {
       release: 'kafka',
+      version: '32.1.3',
       chart: 'kafka',
       repository: 'https://charts.bitnami.com/bitnami',
       namespace: 'kafka',
@@ -232,19 +233,12 @@ export class UnilogsCdkStack extends cdk.Stack {
           },
         },
 
-        networkPolicy: {
-          enabled: true,
-          allowExternal: false,
-          ingressNSMatchLabels: {
-            'app.kubernetes.io/name': 'kafka',
-          },
-        },
-
         // Cluster configuration
         replicaCount: 3, // Minimum 3 nodes for KRaft
         clusterId: 'unilogs-kafka-cluster',
 
         controller: {
+          automountServiceAccountToken: true,
           persistence: {
             storageClass: 'gp2',
             size: '10Gi', // Can be different from controllers
@@ -260,15 +254,12 @@ export class UnilogsCdkStack extends cdk.Stack {
         },
 
         broker: {
+          automountServiceAccountToken: true,
           persistence: {
             storageClass: 'gp2',
             size: '10Gi', // Can be different from controllers
             accessModes: ['ReadWriteOnce'],
           },
-        },
-
-        kraft: {
-          enabled: true, // Explicitly enable KRaft mode
         },
 
         // Listener configuration
@@ -291,9 +282,6 @@ export class UnilogsCdkStack extends cdk.Stack {
             protocol: 'SASL_SSL',
             containerPort: 9094,
           },
-        },
-        rbac: {
-          create: true,
         },
 
         // Security configuration
@@ -318,6 +306,18 @@ export class UnilogsCdkStack extends cdk.Stack {
           existingSecret: '', // Clear this if it was set
         },
 
+        defaultInitContainers: {
+          autoDiscovery: {
+            enabled: true,
+          },
+        },
+        serviceAccount: {
+          create: true,
+        },
+        rbac: {
+          create: true,
+        },
+
         // External access
         externalAccess: {
           enabled: true,
@@ -337,8 +337,6 @@ export class UnilogsCdkStack extends cdk.Stack {
                 'service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled':
                   'true',
               },
-              // Add loadBalancerIPs or loadBalancerNames
-              loadBalancerIPs: [], // Empty array for auto-assignment
             },
           },
           controller: {
@@ -350,8 +348,6 @@ export class UnilogsCdkStack extends cdk.Stack {
               annotations: {
                 'service.beta.kubernetes.io/aws-load-balancer-type': 'nlb',
               },
-              // Add loadBalancerIPs or loadBalancerNames
-              loadBalancerIPs: ['', '', ''],
             },
           },
         },
