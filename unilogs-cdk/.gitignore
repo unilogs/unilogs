@@ -6,6 +6,7 @@ node_modules
 bootstrap.sh
 deploy.sh
 destroy.sh
+examine-cluster.sh
 
 # CDK asset staging directory
 .cdk.staging
