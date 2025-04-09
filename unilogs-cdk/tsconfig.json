@@ -21,7 +21,6 @@
     "inlineSources": true,
     "experimentalDecorators": true,
     "strictPropertyInitialization": false,
-    "outDir": "dist/bin/",
     "typeRoots": [
       "./node_modules/@types"
     ]
@@ -29,7 +28,6 @@
   "exclude": [
     "node_modules/",
     "cdk.out/",
-    "dist/",
     "**/*.config.*",
     "coverage/"
   ]

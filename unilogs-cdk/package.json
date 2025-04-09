@@ -2,11 +2,11 @@
   "name": "unilogs-cdk",
   "version": "0.1.0",
   "bin": {
-    "unilogs": "./dist/bin/main.js"
+    "unilogs": "main.js"
   },
   "scripts": {
-    "start": "node dist/bin/main.js",
-    "dev": "npx ts-node ./main.ts",
+    "start": "node main.js",
+    "dev": "npx ts-node main.ts",
     "lint": "eslint .",
     "build": "tsc",
     "build:watch": "tsc -w",
