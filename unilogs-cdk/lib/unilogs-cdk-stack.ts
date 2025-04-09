@@ -247,7 +247,7 @@ export class UnilogsCdkStack extends cdk.Stack {
           sasl: {
             enabled: true,
             existingSecret: 'kafka-scram-credentials',
-            passwordKey: 'controller-password'
+            passwordKey: 'controller-password',
           },
           quorumVoters:
             'unilogs-kafka-cluster@kafka-0.kafka-headless.kafka.svc.cluster.local:9093,kafka-1.kafka-headless.kafka.svc.cluster.local:9093,kafka-2.kafka-headless.kafka.svc.cluster.local:9093',
@@ -293,8 +293,8 @@ export class UnilogsCdkStack extends cdk.Stack {
           client: {
             users: ['vector-client'],
           },
-          interBrokerUser: 'inter_broker_user',       // Add this
-          controllerUser: 'controller_user',          // Add this
+          interBrokerUser: 'inter_broker_user', // Add this
+          controllerUser: 'controller_user', // Add this
         },
 
         tls: {
@@ -336,6 +336,8 @@ export class UnilogsCdkStack extends cdk.Stack {
                   'internet-facing',
                 'service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled':
                   'true',
+                'service.beta.kubernetes.io/aws-load-balancer-name':
+                  'unilogs-kafka-broker-lb',
               },
             },
           },
@@ -347,6 +349,8 @@ export class UnilogsCdkStack extends cdk.Stack {
               },
               annotations: {
                 'service.beta.kubernetes.io/aws-load-balancer-type': 'nlb',
+                'service.beta.kubernetes.io/aws-load-balancer-name':
+                  'unilogs-kafka-controller-lb',
               },
             },
           },
@@ -499,6 +503,10 @@ export class UnilogsCdkStack extends cdk.Stack {
             type: 'LoadBalancer',
             port: 3100, // Explicitly set port
             targetPort: 3100,
+            annotations: {
+              'service.beta.kubernetes.io/aws-load-balancer-name':
+                'unilogs-loki-gateway-lb',
+            },
           },
           basicAuth: {
             enabled: true,
@@ -566,6 +574,8 @@ export class UnilogsCdkStack extends cdk.Stack {
           type: 'LoadBalancer',
           annotations: {
             'service.beta.kubernetes.io/aws-load-balancer-type': 'nlb',
+            'service.beta.kubernetes.io/aws-load-balancer-name':
+              'unilogs-grafana-lb',
           },
         },
         serviceAccount: {
