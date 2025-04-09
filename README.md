@@ -6,5 +6,6 @@
 
 # Dev purposes:
 
-- `aws eks update-kubeconfig --region region-code --name my-cluster`
+- `aws eks update-kubeconfig --region region-code --name unilogs-cluster`
 - `eksctl create addon --name aws-ebs-csi-driver --cluster unilogs-cluster --region region-code`
+- `kubectl exec -it <pod_name> --namespace <namespace> -- /bin/sh`

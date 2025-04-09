@@ -15,7 +15,7 @@ transforms:
       . = parse_json!(.message)
       .timestamp = parse_timestamp!(.timestamp, format: "%Y-%m-%dT%H:%M:%S.%fZ")
       .test_label = .uni_logs_label
-      
+  
 sinks:
   loki:
     type: loki
