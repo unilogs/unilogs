@@ -19,7 +19,7 @@ async function main() {
   const { AWS_SESSION_TOKEN } = await prompts<string>({
     type: 'text',
     name: 'AWS_SESSION_TOKEN',
-    message: 'AWS session token',
+    message: 'AWS session token (optional)',
     validate: (input: string) => /^[\S]*$/.test(input),
   });
   const { AWS_DEFAULT_ACCOUNT } = await prompts<string>({
@@ -38,10 +38,9 @@ async function main() {
     type: 'text',
     name: 'AWS_USER_NAME',
     message: 'deploying username',
-    initial: 'unilogsadmin',
   });
   child_process.spawnSync(
-    `PATH="${process.env.PATH}" && cdk bootstrap && cdk deploy --require-approval never`,
+    `PATH="${process.env.PATH}" && cdk bootstrap --verbose && cdk deploy --verbose --require-approval never`, // verbose flags for dev only
     {
       shell: true,
       stdio: 'inherit',
