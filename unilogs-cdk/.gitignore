@@ -8,6 +8,7 @@ deploy.sh
 destroy.sh
 launch.sh
 diff.sh
+examine-cluster.sh
 
 # CDK asset staging directory
 .cdk.staging
