@@ -299,9 +299,9 @@ async function createKafkaSink(): Promise<KafkaSink> {
     type: SinkType.Kafka,
     inputs: [],
     bootstrap_servers,
-    sasl: username
-      ? { enabled: true, mechanism: 'SCRAM-SHA-512', username, password }
-      : undefined,
+    // sasl: username
+    //   ? { enabled: true, mechanism: 'SCRAM-SHA-512', username, password }
+    //   : undefined,
   });
 }
 
