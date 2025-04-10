@@ -1,4 +1,3 @@
-// import { Source, Transform } from './vector-types.js';
 import { Sink } from './Sink.js';
 import { Source, SourceType } from './Source.js';
 import { Transform } from './Transform.js';
@@ -64,7 +63,7 @@ export class VectorConfiguration {
 
     const mySinks: Record<
       string,
-      Record<string, string | string[] | Record<string, string | string[]>>
+      Record<string, string | string[] | Record<string, string | string[] | boolean>>
     > = {};
     for (const sink of this.sinks) {
       mySinks[sink.sinkName] = sink.getObjectBody();
