@@ -45,7 +45,13 @@ export class LokiSink extends BaseSink {
             ...super.getObjectBody(),
             endpoint: this.endpoint,
             path: this.path,
-            auth: { strategy: this.auth.strategy, token: this.auth.token },
+            auth: this.auth.strategy === 'bearer'
+                ? { strategy: this.auth.strategy, token: this.auth.token }
+                : {
+                    strategy: this.auth.strategy,
+                    username: this.auth.username,
+                    password: this.auth.password,
+                },
         };
         return returnBody;
     }
@@ -64,12 +70,14 @@ export class KafkaSink extends BaseSink {
             bootstrap_servers: this.bootstrap_servers,
             topic: this.topic,
             encoding: this.encoding,
-            sasl: {
-                enabled: this.sasl.enabled,
-                mechanism: this.sasl.mechanism,
-                username: this.sasl.username,
-                password: this.sasl.password,
-            },
+            sasl: this.sasl === undefined
+                ? { enabled: false }
+                : {
+                    enabled: this.sasl.enabled,
+                    mechanism: this.sasl.mechanism,
+                    username: this.sasl.username,
+                    password: this.sasl.password,
+                },
         };
         return returnBody;
     }

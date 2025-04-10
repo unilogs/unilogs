@@ -63,7 +63,7 @@ export class VectorConfiguration {
 
     const mySinks: Record<
       string,
-      Record<string, string | string[] | Record<string, string | string[] | boolean>>
+      Record<string, string | string[] | Record<string, string | string[] | boolean | undefined>>
     > = {};
     for (const sink of this.sinks) {
       mySinks[sink.sinkName] = sink.getObjectBody();

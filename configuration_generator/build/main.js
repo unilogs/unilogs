@@ -22,6 +22,9 @@ import generateDockerfile from './lib/generateDockerfile.js';
 // } from './lib/generateDockerCommands.js';
 import buildAndRunShipper from './lib/buildAndRunShipper.js';
 import safeAssertString from './lib/safeAssertString.js';
+import getContainerIdByName from './lib/getContainerIdByName.js';
+const IMAGE_NAME = 'unilogs-shipper';
+const CONTAINER_NAME = 'unilogs-shipper';
 // async function getPowerUserMenuChoice() {
 //   return await prompts({
 //     type: 'select',
@@ -130,28 +133,28 @@ async function createTransform(inputSource, serviceName) {
         return new ClfTransform({
             serviceName,
             inputs: [inputSource],
-            transformName
+            transformName,
         });
     }
     else if (transformType === 'linux_authorization') {
         return new LinuxAuthorizationTransform({
             serviceName,
             inputs: [inputSource],
-            transformName
+            transformName,
         });
     }
     else if (transformType === 'logfmt') {
         return new LogfmtTransform({
             serviceName,
             inputs: [inputSource],
-            transformName
+            transformName,
         });
     }
     else if (transformType === 'syslog') {
         return new SyslogTransform({
             serviceName,
             inputs: [inputSource],
-            transformName
+            transformName,
         });
     }
     else {
@@ -275,7 +278,9 @@ async function createKafkaSink() {
         type: SinkType.Kafka,
         inputs: [],
         bootstrap_servers,
-        sasl: { enabled: true, mechanism: 'SCRAM-SHA-512', username, password },
+        sasl: username
+            ? { enabled: true, mechanism: 'SCRAM-SHA-512', username, password }
+            : undefined,
     });
 }
 // async function addSink(vectorConfiguration: VectorConfiguration) {
@@ -333,11 +338,16 @@ async function addSinkBuildAndRun(vectorConfiguration) {
     }
     saveYaml(vectorConfiguration);
     saveDockerfile(vectorConfiguration);
-    buildAndRunShipper(vectorConfiguration);
+    buildAndRunShipper(vectorConfiguration, CONTAINER_NAME, IMAGE_NAME);
 }
 async function main() {
     const vectorConfiguration = new VectorConfiguration();
     let notDone = true;
+    if ((await getContainerIdByName(CONTAINER_NAME)) !== '') {
+        console.log(`A container named ${CONTAINER_NAME} is already running.`);
+        console.log('Please delete it and then try again.');
+        notDone = false;
+    }
     while (notDone) {
         console.clear();
         console.log(gradient(['aqua', 'purple']).multiline(logo));
