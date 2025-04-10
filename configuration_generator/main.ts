@@ -150,25 +150,25 @@ async function createTransform(
     return new ClfTransform({
       serviceName,
       inputs: [inputSource],
-      transformName
+      transformName,
     });
   } else if (transformType === 'linux_authorization') {
     return new LinuxAuthorizationTransform({
       serviceName,
       inputs: [inputSource],
-      transformName
+      transformName,
     });
   } else if (transformType === 'logfmt') {
     return new LogfmtTransform({
       serviceName,
       inputs: [inputSource],
-      transformName
+      transformName,
     });
   } else if (transformType === 'syslog') {
     return new SyslogTransform({
       serviceName,
       inputs: [inputSource],
-      transformName
+      transformName,
     });
   } else {
     return new PlainTextTransform({
@@ -299,7 +299,9 @@ async function createKafkaSink(): Promise<KafkaSink> {
     type: SinkType.Kafka,
     inputs: [],
     bootstrap_servers,
-    sasl: { enabled: true, mechanism: 'SCRAM-SHA-512', username, password },
+    // sasl: username
+    //   ? { enabled: true, mechanism: 'SCRAM-SHA-512', username, password }
+    //   : undefined,
   });
 }
 
@@ -370,7 +372,7 @@ async function addSinkBuildAndRun(vectorConfiguration: VectorConfiguration) {
 async function main() {
   const vectorConfiguration = new VectorConfiguration();
   let notDone = true;
-  if (await getContainerIdByName(CONTAINER_NAME) !== '') {
+  if ((await getContainerIdByName(CONTAINER_NAME)) !== '') {
     console.log(`A container named ${CONTAINER_NAME} is already running.`);
     console.log('Please delete it and then try again.');
     notDone = false;

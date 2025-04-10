@@ -5,10 +5,18 @@ export enum SinkType {
   Loki = 'loki',
   Kafka = 'kafka',
 }
-export interface LokiSinkAuthProps {
+interface LokiSinkBasicAuthProps {
+  strategy: 'basic';
+  username: string;
+  password: string;
+}
+interface LokiSinkBearerAuthProps {
   strategy: 'bearer';
   token: string;
 }
+export type LokiSinkAuthProps =
+  | LokiSinkBasicAuthProps
+  | LokiSinkBearerAuthProps;
 
 interface BaseSinkProps {
   sinkName: string;
@@ -32,7 +40,7 @@ interface KafkaSinkSaslConfig {
 export interface KafkaSinkProps extends BaseSinkProps {
   type: SinkType.Kafka;
   bootstrap_servers: string;
-  sasl: KafkaSinkSaslConfig;
+  sasl?: KafkaSinkSaslConfig;
 }
 
 export enum ConsoleEncoding {
@@ -96,7 +104,14 @@ export class LokiSink extends BaseSink {
       ...super.getObjectBody(),
       endpoint: this.endpoint,
       path: this.path,
-      auth: { strategy: this.auth.strategy, token: this.auth.token },
+      auth:
+        this.auth.strategy === 'bearer'
+          ? { strategy: this.auth.strategy, token: this.auth.token }
+          : {
+              strategy: this.auth.strategy,
+              username: this.auth.username,
+              password: this.auth.password,
+            },
     };
     return returnBody;
   }
@@ -106,7 +121,7 @@ export class KafkaSink extends BaseSink {
   private bootstrap_servers: KafkaSinkProps['bootstrap_servers'];
   private topic: 'app_logs_topic';
   private encoding: { codec: 'json' };
-  private sasl: KafkaSinkSaslConfig;
+  private sasl: KafkaSinkSaslConfig | undefined;
 
   constructor(props: KafkaSinkProps) {
     super(props);
@@ -122,12 +137,15 @@ export class KafkaSink extends BaseSink {
       bootstrap_servers: this.bootstrap_servers,
       topic: this.topic,
       encoding: this.encoding,
-      sasl: {
-        enabled: this.sasl.enabled,
-        mechanism: this.sasl.mechanism,
-        username: this.sasl.username,
-        password: this.sasl.password,
-      },
+      sasl:
+        this.sasl === undefined
+          ? { enabled: false }
+          : {
+              enabled: this.sasl.enabled,
+              mechanism: this.sasl.mechanism,
+              username: this.sasl.username,
+              password: this.sasl.password,
+            },
     };
     return returnBody;
   }
