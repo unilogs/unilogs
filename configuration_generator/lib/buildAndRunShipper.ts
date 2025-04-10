@@ -5,11 +5,20 @@ import {
   generateRunImageCommand,
 } from './generateDockerCommands.js';
 
-function buildAndRunShipper(vectorConfiguration: VectorConfiguration) {
-  child_process.execSync(generateBuildImageCommand(), { stdio: 'inherit' });
-  child_process.execSync(generateRunImageCommand(vectorConfiguration), {
+function buildAndRunShipper(
+  vectorConfiguration: VectorConfiguration,
+  containerName: string,
+  imageName: string
+) {
+  child_process.execSync(generateBuildImageCommand(imageName), {
     stdio: 'inherit',
   });
+  child_process.execSync(
+    generateRunImageCommand(vectorConfiguration, containerName, imageName),
+    {
+      stdio: 'inherit',
+    }
+  );
 }
 
 export default buildAndRunShipper;

@@ -13,7 +13,11 @@ import {
 } from './lib/Sink.js';
 import {
   ApacheTransform,
+  ClfTransform,
+  LinuxAuthorizationTransform,
+  LogfmtTransform,
   PlainTextTransform,
+  SyslogTransform,
   Transform,
 } from './lib/Transform.js';
 import { FileSource, Source, SourceType } from './lib/Source.js';
@@ -27,6 +31,10 @@ import generateDockerfile from './lib/generateDockerfile.js';
 // } from './lib/generateDockerCommands.js';
 import buildAndRunShipper from './lib/buildAndRunShipper.js';
 import safeAssertString from './lib/safeAssertString.js';
+import getContainerIdByName from './lib/getContainerIdByName.js';
+
+const IMAGE_NAME = 'unilogs-shipper';
+const CONTAINER_NAME = 'unilogs-shipper';
 
 // async function getPowerUserMenuChoice() {
 //   return await prompts({
@@ -124,7 +132,10 @@ async function createTransform(
     message: 'Select log format',
     choices: [
       { title: 'Apache', value: 'apache' },
-      { title: 'PlainText', value: 'plaintext' },
+      { title: 'Common Log Format (CLF)', value: 'clf' },
+      { title: 'Linux Authorization', value: 'linux_authorization' },
+      { title: 'Logfmt', value: 'logfmt' },
+      { title: 'Syslog', value: 'syslog' },
     ],
   });
   safeAssertString(transformType);
@@ -134,6 +145,30 @@ async function createTransform(
       serviceName,
       inputs: [inputSource],
       transformName,
+    });
+  } else if (transformType === 'clf') {
+    return new ClfTransform({
+      serviceName,
+      inputs: [inputSource],
+      transformName
+    });
+  } else if (transformType === 'linux_authorization') {
+    return new LinuxAuthorizationTransform({
+      serviceName,
+      inputs: [inputSource],
+      transformName
+    });
+  } else if (transformType === 'logfmt') {
+    return new LogfmtTransform({
+      serviceName,
+      inputs: [inputSource],
+      transformName
+    });
+  } else if (transformType === 'syslog') {
+    return new SyslogTransform({
+      serviceName,
+      inputs: [inputSource],
+      transformName
     });
   } else {
     return new PlainTextTransform({
@@ -315,7 +350,7 @@ function saveDockerfile(vectorConfiguration: VectorConfiguration) {
 
 async function addSinkBuildAndRun(vectorConfiguration: VectorConfiguration) {
   vectorConfiguration.addSink(await createKafkaSink());
-  
+
   const availableSinks = vectorConfiguration.getAllSinkNames();
   const availableTransforms = vectorConfiguration.getAllTransformNames();
   if (availableSinks.length !== 1 || availableTransforms.length < 1) return;
@@ -329,14 +364,17 @@ async function addSinkBuildAndRun(vectorConfiguration: VectorConfiguration) {
   }
   saveYaml(vectorConfiguration);
   saveDockerfile(vectorConfiguration);
-  buildAndRunShipper(vectorConfiguration);
+  buildAndRunShipper(vectorConfiguration, CONTAINER_NAME, IMAGE_NAME);
 }
-
 
 async function main() {
   const vectorConfiguration = new VectorConfiguration();
   let notDone = true;
-
+  if (await getContainerIdByName(CONTAINER_NAME) !== '') {
+    console.log(`A container named ${CONTAINER_NAME} is already running.`);
+    console.log('Please delete it and then try again.');
+    notDone = false;
+  }
   while (notDone) {
     console.clear();
     console.log(gradient(['aqua', 'purple']).multiline(logo));
