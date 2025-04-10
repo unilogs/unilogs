@@ -332,7 +332,7 @@ export class UnilogsCdkStack extends cdk.Stack {
         },
         gateway: {
           service: {
-            type: 'LoadBalancer'
+            type: 'LoadBalancer' // should probably be ClusterIp
           },
           basicAuth: {
             enabled: true,
@@ -503,10 +503,11 @@ export class UnilogsCdkStack extends cdk.Stack {
               type: "remap",
               inputs: ["test_logs"],
               source: `
-              .message = parse_json!(.message) 
-              .timestamp = parse_timestamp!(.message.timestamp, format: "%Y-%m-%dT%H:%M:%S.%fZ")
-              .level = .message.level
-              .inferred_label = .message.unilogs_service_label
+                .message_parsed = parse_json!(.message)
+                .timestamp = parse_timestamp!(.message_parsed.timestamp, format: "%Y-%m-%dT%H:%M:%S.%fZ")
+                .message = .message_parsed.message
+                .level = .message_parsed.level
+                .inferred_label = .message_parsed.unilogs_service_label
               `.trim()
             }
           },
