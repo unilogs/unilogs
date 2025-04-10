@@ -423,8 +423,6 @@ export class UnilogsCdkStack extends cdk.Stack {
         gateway: {
           service: {
             type: 'LoadBalancer',
-            port: 3100, // Explicitly set port
-            targetPort: 3100,
           },
           basicAuth: {
             enabled: true,
@@ -554,18 +552,34 @@ export class UnilogsCdkStack extends cdk.Stack {
               // REMOVED SASL CONFIGURATION
             },
           },
+          transforms: {
+            parsed_logs: {
+              type: "remap",
+              inputs: ["kafka"],
+              source: `
+                .inferred_label = .unilogs_service_label
+              `.trim()
+            }
+          },
           sinks: {
             loki: {
-              type: 'loki',
-              inputs: ['kafka'],
-              endpoint: 'http://loki-gateway.loki.svc.cluster.local:3100',
+              type: "loki",
+              inputs: ["parsed_logs"],
+              endpoint: "http://loki-gateway.loki.svc.cluster.local/",
+              path: "/loki/api/v1/push",
               labels: {
-                unilogs: 'test_label',
-                agent: 'vector',
+                unilogs_test_label: '{{`{{ inferred_label }}`}}',
+                agent: "vector"
               },
+              tenant_id: "default",
               encoding: {
-                codec: 'json',
+                codec: "json"
               },
+              auth: {
+                strategy: "basic",
+                password: "secret",
+                user: "admin"
+              }
             },
           },
         },

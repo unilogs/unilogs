@@ -1,10 +1,10 @@
-data_dir: "/Users/davidpark/Desktop/unilogs/vector_data"
+data_dir: '/home/jitte/unilogs/vector_data'
 
 sources:
   app_logs:
     type: file
     include:
-      - /Users/davidpark/Desktop/unilogs/apacheLogger/logs/app.log
+      - /home/jitte/unilogs/apacheLogger/logs/app.log
 
 # transforms:
 #   parse_logs:
@@ -36,7 +36,7 @@ sinks:
     type: kafka
     inputs:
       - app_logs
-    bootstrap_servers: "a24e9507739ac44c4b636e7ee7761fe0-5395abb278e54483.elb.us-west-2.amazonaws.com:9094, a7fff562e669e4190a57b8aa11937f27-a1e52383e5ecf813.elb.us-west-2.amazonaws.com:9094, ac94bd83e76574c07823d4319c39efd9-f6bd955bcebee994.elb.us-west-2.amazonaws.com:9094"
+    bootstrap_servers: 'ae971b6add8cb415b9a34a171460ba63-e2a8d73bb390ca80.elb.eu-north-1.amazonaws.com:9094, a03628e95a6c84befad88eef9d46e510-bdeef45fa2e90902.elb.eu-north-1.amazonaws.com:9094, abb45bd944cd34938b4e893f3fbf1bc5-ecd76e406a55d039.elb.eu-north-1.amazonaws.com:9094'
     topic: app_logs_topic
     encoding:
       codec: json
