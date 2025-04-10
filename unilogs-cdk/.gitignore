@@ -12,3 +12,5 @@ diff.sh
 # CDK asset staging directory
 .cdk.staging
 cdk.out
+cdk.out-west1
+cdk.out-west2
