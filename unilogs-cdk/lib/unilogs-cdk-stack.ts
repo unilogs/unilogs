@@ -349,33 +349,7 @@ export class UnilogsCdkStack extends cdk.Stack {
         },
       },
     });
-
-    // Custom Gateway Service with NLB
-    // const lokiGatewayService = cluster.addManifest('LokiGatewayService', {
-    //   apiVersion: 'v1',
-    //   kind: 'Service',
-    //   metadata: {
-    //     name: 'loki-gateway',
-    //     namespace: 'loki',
-    //     labels: { app: 'loki', component: 'gateway' },
-    //     annotations: {
-    //       'service.beta.kubernetes.io/aws-load-balancer-type': 'nlb',
-    //       'service.beta.kubernetes.io/aws-load-balancer-healthcheck-healthy-threshold':
-    //         '2',
-    //       'service.beta.kubernetes.io/aws-load-balancer-healthcheck-unhealthy-threshold':
-    //         '2',
-    //       'service.beta.kubernetes.io/aws-load-balancer-healthcheck-interval':
-    //         '10',
-    //     },
-    //   },
-    //   spec: {
-    //     type: 'LoadBalancer',
-    //     ports: [{ port: 80, targetPort: 80, protocol: 'TCP' }],
-    //     selector: { app: 'loki', component: 'gateway' },
-    //   },
-    // });
-    // lokiGatewayService.node.addDependency(lokiChart);
-
+    
     // ==================== GRAFANA UI DEPLOYMENT ====================
     const grafanaCondition = createConditionJson(
       'GrafanaCondition',
@@ -437,8 +411,6 @@ export class UnilogsCdkStack extends cdk.Stack {
         autoscaling: { enabled: true }, // 1-5 pods
       },
     });
-    // grafanaChart.node.addDependency(lokiGatewayService); wanna remove lokiGatewayService, probably need a new dependancy so grafana does not initialize before loki?
-    // not sure if I can add dependancies like this, but it's worth a try as it seems how vector gets a dependancy on grafana
     grafanaChart.node.addDependency(lokiChart);
 
     // ==================== VECTOR CONSUMER DEPLOYMENT ====================
