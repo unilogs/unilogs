@@ -12,19 +12,35 @@ sources:
 #     inputs:
 #       - app_logs
 #     source: |
-#       match = find(.message, r'\[(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d+Z)\]')
-#       if match != null &&
+#       # Parse Apache combined with ISO-8601 timestamp
+#       parsed, err = parse_apache_log(
+#         .message,
+#         "combined",
+#         "%Y-%m-%dT%H:%M:%S.%fZ"
+#       )
+
+#       if err != null {
+#         log("Failed to parse log line: " + string!(err), level: "error")
+#       } else {
+#         . = merge(., parsed)
+
+#         if .path == "/" {
+#           .level = "info"
+#         } else {
+#           .level = split(.path, "/")[1] ?? "unknown"
+#         }
+#       }
 
 sinks:
   kafka:
     type: kafka
     inputs:
       - app_logs
-    bootstrap_servers: "ac8badb5bb03245d4bd023e74951faae-e5a554883e4ff7f3.elb.us-west-2.amazonaws.com:9094, a4056d3f900b24eb0887998c2d4cf455-fb762e058384a2f0.elb.us-west-2.amazonaws.com:9094, adc4c629d3b91467c86f8526e265b07b-f05f36391db9f61d.elb.us-west-2.amazonaws.com:9094"
+    bootstrap_servers: "a24e9507739ac44c4b636e7ee7761fe0-5395abb278e54483.elb.us-west-2.amazonaws.com:9094, a7fff562e669e4190a57b8aa11937f27-a1e52383e5ecf813.elb.us-west-2.amazonaws.com:9094, ac94bd83e76574c07823d4319c39efd9-f6bd955bcebee994.elb.us-west-2.amazonaws.com:9094"
     topic: app_logs_topic
     encoding:
       codec: json
-  
+
   console:
     type: console
     inputs:
