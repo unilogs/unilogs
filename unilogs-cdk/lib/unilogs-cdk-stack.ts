@@ -422,7 +422,7 @@ export class UnilogsCdkStack extends cdk.Stack {
         },
         gateway: {
           service: {
-            type: 'LoadBalancer',
+            type: 'ClusterIP',
           },
           basicAuth: {
             enabled: true,
