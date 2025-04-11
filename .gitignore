@@ -142,3 +142,4 @@ dist
 cdk.out/
 apacheLogger/vector-shipper-my-copy.yaml
 vector_data/
+eksctl/
