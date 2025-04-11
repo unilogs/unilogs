@@ -9,7 +9,7 @@ test("UniLogs Stack creates 2 S3 Buckets for Loki", () => {
       grafanaPassword: 'test-only-password',
     }
   });
-  const stack = new UnilogsCdkStack(app, "UniLogsTestStack"); // causes error... needs review
+  const stack = new UnilogsCdkStack(app, "UniLogsTestStack");
   const template = Template.fromStack(stack);
 
   template.resourceCountIs("AWS::S3::Bucket", 2);
