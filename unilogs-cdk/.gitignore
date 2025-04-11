@@ -9,6 +9,7 @@ destroy.sh
 launch.sh
 diff.sh
 examine-cluster.sh
+vector_data
 
 # CDK asset staging directory
 .cdk.staging
