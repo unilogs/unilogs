@@ -1,5 +1,8 @@
 import child_process from 'child_process';
 import prompts from 'prompts';
+import Credentials from './lib/Credentials';
+import { getLoadBalancerUrls } from './lib/getLoadBalancerUrls';
+import safeAssertString from './lib/safeAssertString';
 
 async function main() {
   const { AWS_ACCESS_KEY_ID } = await prompts<string>({
@@ -39,6 +42,12 @@ async function main() {
     name: 'AWS_USER_NAME',
     message: 'deploying username',
   });
+  safeAssertString(AWS_ACCESS_KEY_ID);
+  safeAssertString(AWS_SECRET_ACCESS_KEY);
+  safeAssertString(AWS_SESSION_TOKEN);
+  safeAssertString(AWS_DEFAULT_ACCOUNT);
+  safeAssertString(AWS_DEFAULT_REGION);
+  safeAssertString(AWS_USER_NAME);
   child_process.spawnSync(
     `PATH="${process.env.PATH}" && cdk bootstrap --verbose && cdk deploy --verbose --require-approval never`, // verbose flags for dev only
     {
@@ -55,6 +64,15 @@ async function main() {
       },
     }
   );
+
+  const awsCredentials = new Credentials(
+    AWS_ACCESS_KEY_ID,
+    AWS_SECRET_ACCESS_KEY,
+    AWS_SESSION_TOKEN,
+    AWS_DEFAULT_ACCOUNT
+  );
+  
+  await getLoadBalancerUrls(awsCredentials);
 }
 
-main();
+void main();
