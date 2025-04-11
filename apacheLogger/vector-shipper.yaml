@@ -36,10 +36,15 @@ sinks:
     type: kafka
     inputs:
       - app_logs
-    bootstrap_servers: "a24e9507739ac44c4b636e7ee7761fe0-5395abb278e54483.elb.us-west-2.amazonaws.com:9094, a7fff562e669e4190a57b8aa11937f27-a1e52383e5ecf813.elb.us-west-2.amazonaws.com:9094, ac94bd83e76574c07823d4319c39efd9-f6bd955bcebee994.elb.us-west-2.amazonaws.com:9094"
+    bootstrap_servers: "a8d7a712dbdb04bfc8a9ee788c1bf473-1543872393.us-west-1.elb.amazonaws.com:9094, af82c2fd49641402dabb29f3f0940d2b-1252711838.us-west-1.elb.amazonaws.com:9094, a7486a3a27fa042bcb780ec356e97d1e-1952032441.us-west-1.elb.amazonaws.com:9094"
     topic: app_logs_topic
     encoding:
       codec: json
+    sasl:
+      enabled: true
+      username: "vector-user"
+      password: "vector-password" # Ensure this EXACTLY matches the password in CDK/Helm
+      mechanism: "PLAIN"
 
   console:
     type: console

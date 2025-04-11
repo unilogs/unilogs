@@ -1,12 +1,12 @@
 import * as cdk from 'aws-cdk-lib';
-import { CfnJson,
+import {
+  CfnJson,
   aws_ec2 as ec2,
   aws_iam as iam,
   aws_eks as eks,
   aws_s3 as s3,
 } from 'aws-cdk-lib';
 import { KubectlV32Layer as KubectlLayer } from '@aws-cdk/lambda-layer-kubectl-v32';
-
 
 export class UnilogsCdkStack extends cdk.Stack {
   constructor(scope: cdk.App, id: string, props?: cdk.StackProps) {
@@ -61,7 +61,6 @@ export class UnilogsCdkStack extends cdk.Stack {
       ec2.Port.allTcp(),
       'Allow internal VPC traffic'
     );
-
 
     // Allow all traffic (for testing purposes only)
     kafkaSecurityGroup.addIngressRule(
@@ -170,18 +169,13 @@ export class UnilogsCdkStack extends cdk.Stack {
     });
 
     // ==================== KAFKA ON EKS ====================
-    const kafkaNamespace = cluster.addManifest('KafkaNamespace', {
-      apiVersion: 'v1',
-      kind: 'Namespace',
-      metadata: { name: 'kafka' }, // Explicitly create namespace
-    });
-
     const kafkaChart = cluster.addHelmChart('kafka', {
       release: 'kafka',
       version: '32.1.3',
       chart: 'kafka',
       repository: 'https://charts.bitnami.com/bitnami',
       namespace: 'kafka',
+      createNamespace: true,
       values: {
         // Cluster configuration
         replicaCount: 3,
@@ -194,7 +188,6 @@ export class UnilogsCdkStack extends cdk.Stack {
             size: '10Gi',
             accessModes: ['ReadWriteOnce'],
           },
-          // REMOVED SASL CONFIGURATION
         },
 
         broker: {
@@ -221,18 +214,19 @@ export class UnilogsCdkStack extends cdk.Stack {
             containerPort: 9094,
           },
           external: {
-            protocol: 'PLAINTEXT',
+            // Listener for external clients
+            protocol: 'SASL_PLAINTEXT', // Use SASL without TLS encryption
             containerPort: 9095,
-          }
+          },
         },
 
-        // REMOVED ALL SECURITY CONFIGURATION
         sasl: {
-          enabled: false, // Disable SASL entirely
-        },
-
-        tls: {
-          enabled: false, // Disable TLS entirely
+          // Define allowed mechanisms for clients connecting via SASL listeners
+          enabledMechanisms: 'PLAIN,SCRAM-SHA-256,SCRAM-SHA-512', // Include PLAIN
+          client: {
+            users: ['vector-user'],
+            passwords: ['vector-password'], // Ensure this matches Vector's config
+          },
         },
 
         defaultInitContainers: {
@@ -250,9 +244,6 @@ export class UnilogsCdkStack extends cdk.Stack {
         // External access remains the same
         externalAccess: {
           enabled: true,
-          autoDiscovery: {
-            enabled: true,
-          },
           broker: {
             service: {
               type: 'LoadBalancer',
@@ -265,17 +256,6 @@ export class UnilogsCdkStack extends cdk.Stack {
                   'internet-facing',
                 'service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled':
                   'true',
-              },
-            },
-          },
-          controller: {
-            service: {
-              type: 'LoadBalancer',
-              containerPorts: {
-                external: 9094,
-              },
-              annotations: {
-                'service.beta.kubernetes.io/aws-load-balancer-type': 'nlb',
               },
             },
           },
@@ -422,9 +402,7 @@ export class UnilogsCdkStack extends cdk.Stack {
         },
         gateway: {
           service: {
-            type: 'LoadBalancer',
-            port: 3100, // Explicitly set port
-            targetPort: 3100,
+            type: 'ClusterIP',
           },
           basicAuth: {
             enabled: true,
@@ -551,20 +529,35 @@ export class UnilogsCdkStack extends cdk.Stack {
               bootstrap_servers: 'kafka.kafka.svc.cluster.local:9092',
               topics: ['app_logs_topic'],
               group_id: 'vector-consumer',
-              // REMOVED SASL CONFIGURATION
+            },
+          },
+          transforms: {
+            parsed_logs: {
+              type: 'remap',
+              inputs: ['kafka'],
+              source: `
+                .inferred_label = .unilogs_service_label
+              `.trim(),
             },
           },
           sinks: {
             loki: {
               type: 'loki',
-              inputs: ['kafka'],
-              endpoint: 'http://loki-gateway.loki.svc.cluster.local:3100',
+              inputs: ['parsed_logs'],
+              endpoint: 'http://loki-gateway.loki.svc.cluster.local/',
+              path: '/loki/api/v1/push',
               labels: {
-                unilogs: 'test_label',
+                unilogs_test_label: '{{`{{ inferred_label }}`}}',
                 agent: 'vector',
               },
+              tenant_id: 'default',
               encoding: {
                 codec: 'json',
+              },
+              auth: {
+                strategy: 'basic',
+                password: 'secret',
+                user: 'admin',
               },
             },
           },
@@ -580,13 +573,7 @@ export class UnilogsCdkStack extends cdk.Stack {
       ebsCsiDriver
     );
     vectorChart.node.addDependency(lokiChart, kafkaChart, ebsCsiDriver);
-    kafkaChart.node.addDependency(
-      kafkaSecurityGroup,
-      // scramSecret,
-      kafkaNamespace,
-      ebsCsiDriver
-    );
-    // scramSecret.node.addDependency(kafkaNamespace);
+    kafkaChart.node.addDependency(kafkaSecurityGroup, ebsCsiDriver);
     cluster.node.addDependency(vpc, nodeGroupRole);
     ebsCsiDriver.node.addDependency(ebsCsiServiceAccount);
 

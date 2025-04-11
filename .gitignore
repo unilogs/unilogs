@@ -140,3 +140,5 @@ dist
 
 .env.keys
 cdk.out/
+eksctl/
+vector_data/
