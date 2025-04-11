@@ -188,7 +188,6 @@ export class UnilogsCdkStack extends cdk.Stack {
             size: '10Gi',
             accessModes: ['ReadWriteOnce'],
           },
-          // REMOVED SASL CONFIGURATION
         },
 
         broker: {
@@ -221,20 +220,13 @@ export class UnilogsCdkStack extends cdk.Stack {
           },
         },
 
-        // REMOVED ALL SECURITY CONFIGURATION
         sasl: {
           // Define allowed mechanisms for clients connecting via SASL listeners
           enabledMechanisms: 'PLAIN,SCRAM-SHA-256,SCRAM-SHA-512', // Include PLAIN
-          // Define users/passwords for the CLIENT listener (or external if specifically configured)
-          // NOTE: The Bitnami chart applies sasl.client credentials primarily to the listener named 'CLIENT' or if SASL is enabled there.
-          // Since your external listener uses SASL_PLAINTEXT, Kafka needs these credentials configured.
           client: {
             users: ['vector-user'],
             passwords: ['vector-password'], // Ensure this matches Vector's config
           },
-          // You might need inter-broker/controller credentials if those listeners use SASL too
-          // interBrokerMechanism: "PLAIN", // if listeners.interbroker.protocol uses SASL
-          // controllerMechanism: "PLAIN",  // if listeners.controller.protocol uses SASL
         },
 
         defaultInitContainers: {
@@ -537,7 +529,6 @@ export class UnilogsCdkStack extends cdk.Stack {
               bootstrap_servers: 'kafka.kafka.svc.cluster.local:9092',
               topics: ['app_logs_topic'],
               group_id: 'vector-consumer',
-              // REMOVED SASL CONFIGURATION
             },
           },
           transforms: {
