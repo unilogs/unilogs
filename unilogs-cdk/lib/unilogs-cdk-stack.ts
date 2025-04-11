@@ -292,6 +292,18 @@ export class UnilogsCdkStack extends cdk.Stack {
             cpu: '2',
           },
         },
+        provisioning: {
+          enabled: true,
+          automountServiceAccountToken: true,
+          numPartitions: 3,
+          replicationFactor: 3,
+          topics: [
+            { name: 'app_logs_topic' },
+          ],
+          serviceAccount: {
+            automountServiceAccountToken: true,
+          },
+        },
       },
     });
 
@@ -515,7 +527,8 @@ export class UnilogsCdkStack extends cdk.Stack {
       namespace: 'vector',
       createNamespace: true,
       values: {
-        role: 'Agent',
+        role: 'Aggregator',
+        autoscaling: { enabled: true }, // 1-10 pods
         service: {
           // Add this section
           enabled: true,

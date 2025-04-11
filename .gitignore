@@ -140,5 +140,6 @@ dist
 
 .env.keys
 cdk.out/
-eksctl/
+apacheLogger/vector-shipper-my-copy.yaml
 vector_data/
+eksctl/
