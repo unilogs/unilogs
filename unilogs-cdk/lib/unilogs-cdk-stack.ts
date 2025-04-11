@@ -71,10 +71,15 @@ export class UnilogsCdkStack extends cdk.Stack {
 
     // ==================== EKS CLUSTER ====================
 
+    const awsUserName = this.node.tryGetContext('awsUserName') as string || process.env.AWS_USER_NAME;
+    if (!awsUserName) {
+      throw new Error('AWS_USER_NAME must be provided via context or environment variable');
+    }
+
     const deployingUser = iam.User.fromUserName(
       this,
       'DeployingUser',
-      process.env.AWS_USER_NAME!
+      awsUserName
     );
 
     // enable all logging types for dev, comment out others beyond AUDIT for production (matching AWS sample code)
@@ -434,6 +439,10 @@ export class UnilogsCdkStack extends cdk.Stack {
       ),
     });
 
+    const grafanaAdminPassword = this.node.tryGetContext('grafanaAdminPassword') as string
+      || process.env.GRAFANA_ADMIN_PASSWORD 
+      || 'admin';
+
     const grafanaChart = cluster.addHelmChart('Grafana', {
       chart: 'grafana',
       repository: 'https://grafana.github.io/helm-charts',
@@ -441,7 +450,7 @@ export class UnilogsCdkStack extends cdk.Stack {
       createNamespace: true,
       values: {
         adminUser: 'admin',
-        adminPassword: process.env.GRAFANA_ADMIN_PASSWORD || 'admin',
+        adminPassword: grafanaAdminPassword,
         persistence: { enabled: true, storageClassName: 'gp2', size: '10Gi' },
         datasources: {
           'datasources.yaml': {
