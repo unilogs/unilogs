@@ -1,10 +1,10 @@
-data_dir: '/home/jitte/unilogs/vector_data'
+data_dir: "/Users/davidpark/Desktop/unilogs/vector_data"
 
 sources:
   app_logs:
     type: file
     include:
-      - /home/jitte/unilogs/apacheLogger/logs/app.log
+      - /Users/davidpark/Desktop/unilogs/apacheLogger/logs/app.log
 
 # transforms:
 #   parse_logs:
@@ -36,10 +36,15 @@ sinks:
     type: kafka
     inputs:
       - app_logs
-    bootstrap_servers: 'ae971b6add8cb415b9a34a171460ba63-e2a8d73bb390ca80.elb.eu-north-1.amazonaws.com:9094, a03628e95a6c84befad88eef9d46e510-bdeef45fa2e90902.elb.eu-north-1.amazonaws.com:9094, abb45bd944cd34938b4e893f3fbf1bc5-ecd76e406a55d039.elb.eu-north-1.amazonaws.com:9094'
+    bootstrap_servers: "a8d7a712dbdb04bfc8a9ee788c1bf473-1543872393.us-west-1.elb.amazonaws.com:9094, af82c2fd49641402dabb29f3f0940d2b-1252711838.us-west-1.elb.amazonaws.com:9094, a7486a3a27fa042bcb780ec356e97d1e-1952032441.us-west-1.elb.amazonaws.com:9094"
     topic: app_logs_topic
     encoding:
       codec: json
+    sasl:
+      enabled: true
+      username: "vector-user"
+      password: "vector-password" # Ensure this EXACTLY matches the password in CDK/Helm
+      mechanism: "PLAIN"
 
   console:
     type: console
