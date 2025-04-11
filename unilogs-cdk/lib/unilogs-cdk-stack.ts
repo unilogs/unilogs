@@ -280,6 +280,18 @@ export class UnilogsCdkStack extends cdk.Stack {
             cpu: '2',
           },
         },
+        provisioning: {
+          enabled: true,
+          automountServiceAccountToken: true,
+          numPartitions: 3,
+          replicationFactor: 3,
+          topics: [
+            { name: 'app_logs_topic' },
+          ],
+          serviceAccount: {
+            automountServiceAccountToken: true,
+          },
+        },
       },
     });
 
