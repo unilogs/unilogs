@@ -525,7 +525,8 @@ export class UnilogsCdkStack extends cdk.Stack {
       namespace: 'vector',
       createNamespace: true,
       values: {
-        role: 'Agent',
+        role: 'Aggregator',
+        autoscaling: { enabled: true }, // 1-10 pods
         service: {
           // Add this section
           enabled: true,
