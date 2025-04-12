@@ -1,10 +1,10 @@
-data_dir: '/Users/davidpark/Desktop/unilogs/vector_data'
+data_dir: '/home/jitte/unilogs/vector_data'
 
 sources:
   app_logs:
     type: file
     include:
-      - /Users/davidpark/Desktop/unilogs/apacheLogger/logs/app.log
+      - /home/jitte/unilogs/apacheLogger/logs/app.log
 
 # transforms:
 #   parse_logs:
@@ -36,7 +36,7 @@ sinks:
     type: kafka
     inputs:
       - app_logs
-    bootstrap_servers: 'a2744c23e678c4bba94f5a06185ffded-d9e5eea33464db77.elb.us-west-1.amazonaws.com:9095, a4d2a238671b44ac7b67a2500fc84495-04bb6b10bb70e713.elb.us-west-1.amazonaws.com:9095, a1fc15605dd4d46c7b5abf6b34aa329a-e76b2ffbad17a278.elb.us-west-1.amazonaws.com:9095'
+    bootstrap_servers: 'a384f668f62bb46afa02ab68e0ed166f-e257db0dc24b6af1.elb.eu-north-1.amazonaws.com:9095, a90c2fa84df0d42238f2e139cfd1b56e-f4eaf0072ebaf778.elb.eu-north-1.amazonaws.com:9095, a37f391aabedf422e8e67cf7911cbe4c-4e9984b71dc485db.elb.eu-north-1.amazonaws.com:9095'
     topic: app_logs_topic
     encoding:
       codec: json
@@ -47,7 +47,7 @@ sinks:
       mechanism: 'PLAIN'
     tls:
       enabled: true
-      ca_file: '/Users/davidpark/ca.crt'
+      ca_file: '/home/jitte/unilogs/apacheLogger/ca.crt'
       verify_hostname: false # <-- ADD THIS TEMPORARILY
 
   console:
