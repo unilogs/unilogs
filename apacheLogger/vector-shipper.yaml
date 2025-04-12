@@ -1,10 +1,10 @@
-data_dir: "/Users/davidpark/Desktop/unilogs/vector_data"
+data_dir: '/home/jitte/unilogs/vector_data'
 
 sources:
   app_logs:
     type: file
     include:
-      - /Users/davidpark/Desktop/unilogs/apacheLogger/logs/app.log
+      - /home/jitte/unilogs/apacheLogger/logs/app.log
 
 # transforms:
 #   parse_logs:
@@ -36,15 +36,19 @@ sinks:
     type: kafka
     inputs:
       - app_logs
-    bootstrap_servers: "a8d7a712dbdb04bfc8a9ee788c1bf473-1543872393.us-west-1.elb.amazonaws.com:9094, af82c2fd49641402dabb29f3f0940d2b-1252711838.us-west-1.elb.amazonaws.com:9094, a7486a3a27fa042bcb780ec356e97d1e-1952032441.us-west-1.elb.amazonaws.com:9094"
+    bootstrap_servers: 'a384f668f62bb46afa02ab68e0ed166f-e257db0dc24b6af1.elb.eu-north-1.amazonaws.com:9095, a90c2fa84df0d42238f2e139cfd1b56e-f4eaf0072ebaf778.elb.eu-north-1.amazonaws.com:9095, a37f391aabedf422e8e67cf7911cbe4c-4e9984b71dc485db.elb.eu-north-1.amazonaws.com:9095'
     topic: app_logs_topic
     encoding:
       codec: json
     sasl:
       enabled: true
-      username: "vector-user"
-      password: "vector-password" # Ensure this EXACTLY matches the password in CDK/Helm
-      mechanism: "PLAIN"
+      username: 'vector-user'
+      password: 'vector-password' # Ensure this EXACTLY matches the password in CDK/Helm
+      mechanism: 'PLAIN'
+    tls:
+      enabled: true
+      ca_file: '/home/jitte/unilogs/apacheLogger/ca.crt'
+      verify_hostname: false # <-- ADD THIS TEMPORARILY
 
   console:
     type: console
