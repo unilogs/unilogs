@@ -1,7 +1,7 @@
 import child_process from 'child_process';
 import prompts from 'prompts';
 import Credentials from './lib/Credentials';
-import { getLoadBalancerUrls } from './lib/getLoadBalancerUrls';
+import consoleLogLbUrls from './lib/consoleLogLbUrls';
 import safeAssertString from './lib/safeAssertString';
 
 async function main() {
@@ -72,7 +72,7 @@ async function main() {
     AWS_DEFAULT_ACCOUNT
   );
   
-  await getLoadBalancerUrls(awsCredentials);
+  void consoleLogLbUrls(awsCredentials);
 }
 
 void main();
