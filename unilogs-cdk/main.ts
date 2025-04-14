@@ -49,7 +49,7 @@ async function main() {
   safeAssertString(AWS_DEFAULT_REGION);
   safeAssertString(AWS_USER_NAME);
   child_process.spawnSync(
-    `PATH="${process.env.PATH}" && cdk bootstrap --verbose && cdk deploy --verbose --require-approval never`, // verbose flags for dev only
+    `PATH="${process.env.PATH}" && cdk bootstrap && cdk deploy --require-approval never`,
     {
       shell: true,
       stdio: 'inherit',
