@@ -1,0 +1,63 @@
+{
+  "$metadata": {
+    "httpStatusCode": 200,
+    "requestId": "8b062380-be4a-48d3-8307-c709fe7a3c41",
+    "attempts": 1,
+    "totalRetryDelay": 0
+  },
+  "cluster": {
+    "accessConfig": { "authenticationMode": "API_AND_CONFIG_MAP" },
+    "arn": "arn:aws:eks:us-east-2:654654623371:cluster/unilogs-cluster",
+    "certificateAuthority": {
+      "data": "LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSURCVENDQWUyZ0F3SUJBZ0lJZXJVcmlkUGZUL293RFFZSktvWklodmNOQVFFTEJRQXdGVEVUTUJFR0ExVUUKQXhNS2EzVmlaWEp1WlhSbGN6QWVGdzB5TlRBME1URXhOek01TUROYUZ3MHpOVEEwTURreE56UTBNRE5hTUJVeApFekFSQmdOVkJBTVRDbXQxWW1WeWJtVjBaWE13Z2dFaU1BMEdDU3FHU0liM0RRRUJBUVVBQTRJQkR3QXdnZ0VLCkFvSUJBUURCbVlwOFlHemVybTA4QkpVSlFaVHpxQnpRQ3pCL3RSVXZoUjZ1cXkwZWNaS0xHMWFGOU1kaVhIL08KVTUzdFJNNGpqR2pyNzRJRm5jZ2grWXZPRFF4VGFGMnFkeHBOSU5COUJjeHZ1MEpKcS9CV3BOVDFYWFBZUzkyZwpPaC9WTHFPU1pibndvaTZPdWZVK3JZUkM0cisyY1phZG1LcFpWc0RBSStJWld5TUpJQmRVM3F6UFAwNWlFRW4vClNUUDVsUjJrQlF6RWNzbnd0N3hjYTgray82NjRFYXFORjhNYTdvWWdjVHVKdldYa3Mvdy9FS0ljVUExUFBIWkUKT1dqZ2diM0xvMUN0WktzZktxNWtjeHpockZMVjVKRmM2amJxT0E5L0RWdWtDU2ZFb05HdUtvazk1Z0FWVnlaTgpMSTBKMnhSWHd3blNaMUVwdHZ6UnBMN05pRzdQQWdNQkFBR2pXVEJYTUE0R0ExVWREd0VCL3dRRUF3SUNwREFQCkJnTlZIUk1CQWY4RUJUQURBUUgvTUIwR0ExVWREZ1FXQkJSOEdHMGlZVUFqNVNIejN0WFV0UE1kZk41NTN6QVYKQmdOVkhSRUVEakFNZ2dwcmRXSmxjbTVsZEdWek1BMEdDU3FHU0liM0RRRUJDd1VBQTRJQkFRQ1RpNDlJcmhKbApOVFEvYm4zcXY0TU5nSHdacjZnZWJmVVJsdXdlNG42UzlHNGdFbHBKY2FZbHRtS3A4TDhHOE9vcytUUCtDc1d1Cml0SzlISURucXBJOUFWMVJnMzFQMnhxZkVqZ0hzdGpGMnQvcFFwV1htRWZCL1hLdXd6SlJZbkkzNW5pWnlBYzcKZWYxams5alI1S3NPdlVZWDR3MlFuL3hLOXdtMVhoNmZnR3BJdkw0RjEvUkJxRXZpSFJqVFhobG9JY3lLb29CNgpUY0w3L1l3MWp2NWhkTkZVR3VzUWNGd0c2bk5JWjZiY1JpUjNTNGt2bjZPNzEyS3BleXZRdlo4b2ZhQkorUWM5CllQZUd6dFVmeGl6ODB5MHNRUlBzT1JEVmludWtUREtuNUdWeENZYTRaOXIrZmM1Qnpvc0JERmE0RHV5ZEZtZ1IKSExuOFZ1ZXRXRjBrCi0tLS0tRU5EIENFUlRJRklDQVRFLS0tLS0K",
+    },
+    "createdAt": "2025-04-11T17:39:49.827Z",
+    "endpoint": "https://32C98D68818559EB99F29EA90977A3C2.gr7.us-east-2.eks.amazonaws.com",
+    "health": { "issues": [] },
+    "identity": {
+      "oidc": {
+        "issuer": "https://oidc.eks.us-east-2.amazonaws.com/id/32C98D68818559EB99F29EA90977A3C2"
+      }
+    },
+    "kubernetesNetworkConfig": {
+      "serviceIpv4Cidr": "172.20.0.0/16",
+      "ipFamily": "ipv4",
+      "elasticLoadBalancing": { "enabled": false }
+    },
+    "logging": {
+      "clusterLogging": [
+        {
+          "types": [
+            "api",
+            "audit",
+            "authenticator",
+            "controllerManager",
+            "scheduler"
+          ],
+          "enabled": true
+        }
+      ]
+    },
+    "name": "unilogs-cluster",
+    "platformVersion": "eks.6",
+    "resourcesVpcConfig": {
+      "subnetIds": [
+        "subnet-0a3e3c25580a97275",
+        "subnet-06170ec52e09a6856",
+        "subnet-0a13a0a3d99c7683b",
+        "subnet-065f29b7ed2868e72"
+      ],
+      "securityGroupIds": ["sg-0381cf05a96ec2491"],
+      "clusterSecurityGroupId": "sg-0eb61a7c62dd71958",
+      "vpcId": "vpc-0c3141fc083b9acfd",
+      "endpointPublicAccess": true,
+      "endpointPrivateAccess": true,
+      "publicAccessCidrs": ["0.0.0.0/0"]
+    },
+    "roleArn": "arn:aws:iam::654654623371:role/UnilogsCdkStack-EksClusterRoleC84B376F-pT4nkD9JbQze",
+    "status": "ACTIVE",
+    "tags": {},
+    "upgradePolicy": { "supportType": "EXTENDED" },
+    "version": "1.32"
+  }
+}
