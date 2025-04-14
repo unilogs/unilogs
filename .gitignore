@@ -140,5 +140,10 @@ dist
 
 .env.keys
 cdk.out/
+apacheLogger/vector-shipper-my-copy.yaml
+checkpoints.json
 eksctl/
+
 vector_data/
+apacheLogger/vector-shipper-my-copy.yaml
+ca.crt

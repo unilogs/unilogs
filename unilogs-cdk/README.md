@@ -1,5 +1,13 @@
 # How to test deployment
 
+## Jest testing
+
+A small test suite is available to ensure core components of the stack would still be there before spending time on a full deploy where a deployment error and rollback can take a long time.
+
+Run `npm test` to check if stack is ready for deployment.
+
+## Full/manual testing
+
 Step 1: run `npm install`
 
 Step 2: run `npm run dev` (or `npm run build:deploy` to test deployment using build output) and fill in your details (you can skip the session token if you're not using one)
