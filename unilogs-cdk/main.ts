@@ -73,7 +73,7 @@ async function main() {
   safeAssertString(GRAFANA_ADMIN_USERNAME);
   safeAssertString(GRAFANA_ADMIN_PASSWORD);
   child_process.spawnSync(
-    `PATH="${process.env.PATH}" && cdk bootstrap --output cdk.out-west2 && cdk deploy --require-approval never --output cdk.out-west2`,
+    `PATH="${process.env.PATH}" && cdk bootstrap && cdk deploy --require-approval never`,
     {
       shell: true,
       stdio: 'inherit',
