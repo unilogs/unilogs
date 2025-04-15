@@ -1,8 +1,9 @@
 import * as dotenv from 'dotenv';
 import { EKSClient, DescribeClusterCommand } from '@aws-sdk/client-eks';
+// import { Buffer } from 'buffer';
 import fetch from 'node-fetch';
-import { Buffer } from 'buffer';
 import safeAssertString from './utils/safeAssertString';
+import https from 'https';
 // import { decode } from 'punycode';
 
 dotenv.config();
@@ -58,6 +59,7 @@ const secretName = 'kafka-tls';
 
 async function main() {
   const eks = new EKSClient({ region });
+  // const { default: fetch } = await import('node-fetch');
 
   // ---- Get cluster info (API server + CA) ----
   const clusterResp = await eks.send(
@@ -68,35 +70,35 @@ async function main() {
     throw new Error('Could not retrieve cluster info');
   }
 
-  const apiServer = cluster.endpoint;
+  // const apiServer = cluster.endpoint;
   // const caCert = Buffer.from(
   //   cluster.certificateAuthority.data,
   //   'base64'
   // ).toString('utf-8');
   // const token = await getKubernetesToken(clusterName);
-  const token = "k8s-aws-v1.aHR0cHM6Ly9zdHMudXMtZWFzdC0yLmFtYXpvbmF3cy5jb20vP0FjdGlvbj1HZXRDYWxsZXJJZGVudGl0eSZWZXJzaW9uPTIwMTEtMDYtMTUmWC1BbXotQWxnb3JpdGhtPUFXUzQtSE1BQy1TSEEyNTYmWC1BbXotQ3JlZGVudGlhbD1BS0lBWlEzRFVaMkY2Rko3RzdFRiUyRjIwMjUwNDE0JTJGdXMtZWFzdC0yJTJGc3RzJTJGYXdzNF9yZXF1ZXN0JlgtQW16LURhdGU9MjAyNTA0MTRUMTgyMDU4WiZYLUFtei1FeHBpcmVzPTYwJlgtQW16LVNpZ25lZEhlYWRlcnM9aG9zdCUzQngtazhzLWF3cy1pZCZYLUFtei1TaWduYXR1cmU9NTM5MTEzNDUyMzM4M2U2MmFjYzE4MWIwZTZjN2QzNTYyOWFhZDMzZjY1NTYwODllY2FkYTdlYzk3MzNlMDU0Mg";
+  const token = "k8s-aws-v1.aHR0cHM6Ly9zdHMudXMtZWFzdC0yLmFtYXpvbmF3cy5jb20vP0FjdGlvbj1HZXRDYWxsZXJJZGVudGl0eSZWZXJzaW9uPTIwMTEtMDYtMTUmWC1BbXotQWxnb3JpdGhtPUFXUzQtSE1BQy1TSEEyNTYmWC1BbXotQ3JlZGVudGlhbD1BS0lBWlEzRFVaMkY2Rko3RzdFRiUyRjIwMjUwNDE1JTJGdXMtZWFzdC0yJTJGc3RzJTJGYXdzNF9yZXF1ZXN0JlgtQW16LURhdGU9MjAyNTA0MTVUMDIzNzQwWiZYLUFtei1FeHBpcmVzPTYwJlgtQW16LVNpZ25lZEhlYWRlcnM9aG9zdCUzQngtazhzLWF3cy1pZCZYLUFtei1TaWduYXR1cmU9NWIxZGQ4MjBlZmVlZDk1MDJiMzY3MTM0NDcxNGY4NTZlMzdhMjZlM2M0ODYzYTU5NDg5ZDUwYzY1YWM1MjZhYw";
 
   // ---- Query the Kubernetes API for the Secret ----
-  const secretUrl = `${apiServer}/api/v1/namespaces/${namespace}/secrets/${secretName}`;
+  const secretUrl = `https://32C98D68818559EB99F29EA90977A3C2.gr7.us-east-2.eks.amazonaws.com/api/v1/namespaces/${namespace}/secrets/${secretName}`;
   const res = await fetch(secretUrl, {
     method: 'GET',
     headers: {
       Authorization: `Bearer ${token}`,
     },
     // In production, verify with the CA cert properly
-    agent: new (await import('https')).Agent({ rejectUnauthorized: false }),
+    agent: new https.Agent({ rejectUnauthorized: false }),
   });
 
   if (!res.ok) {
     throw new Error(`Failed to get secret: ${res.status} ${res.statusText}`);
   }
-
-  const json = await res.json() as {data: {'ca.cert': string}};
-  if (typeof json !== 'object' || json === null) throw new Error('Unexpected json');
-  const encodedCert = json.data['ca.cert'];
-  const decodedCert = Buffer.from(encodedCert, 'base64');
-console.log(encodedCert);
-console.log(decodedCert);
+  console.log(res);
+//   const json = await res.json() as {data: {'ca.cert': string}};
+//   if (typeof json !== 'object' || json === null) throw new Error('Unexpected json');
+//   const encodedCert = json.data['ca.cert'];
+//   const decodedCert = Buffer.from(encodedCert, 'base64');
+// console.log(encodedCert);
+// console.log(decodedCert);
   // ---- Write to file ----
   // const fs = await import('fs/promises');
   // await fs.writeFile(`./${fieldName.replace('.', '_')}`, decodedCert);
