@@ -610,26 +610,5 @@ export class UnilogsCdkStack extends cdk.Stack {
     kafkaChart.node.addDependency(kafkaSecurityGroup, ebsCsiDriver);
     cluster.node.addDependency(vpc, nodeGroupRole);
     ebsCsiDriver.node.addDependency(ebsCsiServiceAccount);
-
-    // ==================== OUTPUTS ====================
-    new cdk.CfnOutput(this, 'ClusterName', { value: cluster.clusterName });
-    new cdk.CfnOutput(this, 'VpcId', { value: vpc.vpcId });
-    new cdk.CfnOutput(this, 'KafkaTestCommand', {
-      value:
-        'kubectl exec -n kafka kafka-0 -- kafka-topics.sh --list --bootstrap-server localhost:9092',
-    });
-    new cdk.CfnOutput(this, 'LokiGatewayEndpoint', {
-      value: `http://loki-gateway.loki.svc.cluster.local`,
-    });
-    new cdk.CfnOutput(this, 'LokiGatewayExternalCommand', {
-      value:
-        'kubectl get svc loki-gateway -n loki -o jsonpath="{.status.loadBalancer.ingress[0].hostname}"',
-    });
-    new cdk.CfnOutput(this, 'GrafanaURLCommand', {
-      value: `kubectl get svc -n grafana grafana -o jsonpath='{.status.loadBalancer.ingress[0].hostname}'`,
-    });
-    new cdk.CfnOutput(this, 'VectorTestCommand', {
-      value: 'kubectl logs -n vector -l app.kubernetes.io/instance=vector',
-    });
   }
 }
