@@ -79,26 +79,36 @@ export class UnilogsCdkStack extends cdk.Stack {
       );
     }
 
+    const grafanaAdminUsername =
+      (this.node.tryGetContext('grafanaAdminUsername') as string) ||
+      process.env.GRAFANA_ADMIN_USERNAME;
+    if (!grafanaAdminUsername) {
+      throw new Error(
+        'Grafana Admin Username must be provided via context (-c grafanaAdminUsername=...) or environment variable (GRAFANA_ADMIN_USERNAME)'
+      );
+    }
+
     const grafanaAdminPassword =
       (this.node.tryGetContext('grafanaAdminPassword') as string) ||
-      process.env.GRAFANA_ADMIN_PASSWORD || // Check env var
-      'admin'; // Default if context and env var are missing
+      process.env.GRAFANA_ADMIN_PASSWORD;
+    if (!grafanaAdminPassword) {
+      throw new Error(
+        'Grafana Admin Password must be provided via context (-c grafanaAdminPassword=...) or environment variable (GRAFANA_ADMIN_PASSWORD)'
+      );
+    }
 
-    // ---> MODIFIED: Retrieve Kafka SASL credentials (Context OR Environment Variable)
     const kafkaSaslUsername =
       (this.node.tryGetContext('kafkaSaslUsername') as string) ||
       process.env.KAFKA_SASL_USERNAME; // Check env var KAFKA_SASL_USERNAME
-
-    const kafkaSaslPassword =
-      (this.node.tryGetContext('kafkaSaslPassword') as string) ||
-      process.env.KAFKA_SASL_PASSWORD; // Check env var KAFKA_SASL_PASSWORD
-
-    // ---> MODIFIED: Validate Kafka SASL credentials (ensure one source provided value)
     if (!kafkaSaslUsername) {
       throw new Error(
         'Kafka SASL username must be provided via context (-c kafkaSaslUsername=...) or environment variable (KAFKA_SASL_USERNAME)'
       );
     }
+
+    const kafkaSaslPassword =
+      (this.node.tryGetContext('kafkaSaslPassword') as string) ||
+      process.env.KAFKA_SASL_PASSWORD; // Check env var KAFKA_SASL_PASSWORD
     if (!kafkaSaslPassword) {
       throw new Error(
         'Kafka SASL password must be provided via context (-c kafkaSaslPassword=...) or environment variable (KAFKA_SASL_PASSWORD)'
@@ -496,7 +506,7 @@ export class UnilogsCdkStack extends cdk.Stack {
       namespace: 'grafana',
       createNamespace: true,
       values: {
-        adminUser: 'admin',
+        adminUser: grafanaAdminUsername,
         adminPassword: grafanaAdminPassword,
         persistence: { enabled: true, storageClassName: 'gp2', size: '10Gi' },
         datasources: {
