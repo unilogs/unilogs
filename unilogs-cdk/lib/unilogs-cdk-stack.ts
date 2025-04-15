@@ -570,7 +570,9 @@ export class UnilogsCdkStack extends cdk.Stack {
               type: 'remap',
               inputs: ['kafka'],
               source: `
-                .inferred_label = .unilogs_service_label
+                . = parse_json!(.message)
+                inferred_label = .unilogs_service_label
+                .timestamp = parse_timestamp!(.timestamp, format: "%Y-%m-%dT%H:%M:%S.%3fZ")
               `.trim(),
             },
           },
@@ -581,8 +583,9 @@ export class UnilogsCdkStack extends cdk.Stack {
               endpoint: 'http://loki-gateway.loki.svc.cluster.local/',
               path: '/loki/api/v1/push',
               labels: {
-                unilogs_test_label: '{{`{{ inferred_label }}`}}',
+                service_name: '{{`{{ inferred_label }}`}}',
                 agent: 'vector',
+                level: '{{`({{ .level }})`}}'
               },
               tenant_id: 'default',
               encoding: {
@@ -594,6 +597,13 @@ export class UnilogsCdkStack extends cdk.Stack {
                 user: 'admin',
               },
             },
+            console: {
+              type: 'console',
+              inputs: ['parsed_logs'],
+              encoding: {
+                codec: 'json'
+              }
+            }
           },
         },
       },
