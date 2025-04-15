@@ -271,7 +271,7 @@ export class UnilogsCdkStack extends cdk.Stack {
         },
 
         sasl: {
-          enabledMechanisms: 'PLAIN,SCRAM-SHA-256,SCRAM-SHA-512',
+          enabledMechanisms: 'PLAIN',
           client: {
             users: [kafkaSaslUsername], // Use the variable from context
             passwords: [kafkaSaslPassword], // Use the variable from context
