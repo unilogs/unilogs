@@ -571,8 +571,7 @@ export class UnilogsCdkStack extends cdk.Stack {
               inputs: ['kafka'],
               source: `
                 . = parse_json!(.message)
-                inferred_label = .unilogs_service_label
-                .timestamp = parse_timestamp!(.timestamp, format: "%Y-%m-%dT%H:%M:%S.%3fZ")
+                .timestamp = to_unix_timestamp(parse_timestamp!(.timestamp, format: "%Y-%m-%dT%H:%M:%S.%3fZ"), unit: "nanoseconds")
               `.trim(),
             },
           },
@@ -583,9 +582,9 @@ export class UnilogsCdkStack extends cdk.Stack {
               endpoint: 'http://loki-gateway.loki.svc.cluster.local/',
               path: '/loki/api/v1/push',
               labels: {
-                service_name: '{{`{{ inferred_label }}`}}',
+                service_name: '{{`{{ .unilogs_service_label }}`}}',
+                level: '{{`{{ .level }}`}}',
                 agent: 'vector',
-                level: '{{`({{ .level }})`}}'
               },
               tenant_id: 'default',
               encoding: {
