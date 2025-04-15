@@ -6,37 +6,38 @@ sources:
     include:
       - /Users/davidpark/Desktop/unilogs/apacheLogger/logs/app.log
 
-# transforms:
-#   parse_logs:
-#     type: remap
-#     inputs:
-#       - app_logs
-#     source: |
-#       # Parse Apache combined with ISO-8601 timestamp
-#       parsed, err = parse_apache_log(
-#         .message,
-#         "combined",
-#         "%Y-%m-%dT%H:%M:%S.%fZ"
-#       )
+transforms:
+  parse_logs:
+    type: remap
+    inputs:
+      - app_logs
+    source: |
+      # Parse Apache combined with ISO-8601 timestamp
+      parsed, err = parse_apache_log(
+        .message,
+        "combined",
+        "%Y-%m-%dT%H:%M:%S.%3fZ"
+      )
 
-#       if err != null {
-#         log("Failed to parse log line: " + string!(err), level: "error")
-#       } else {
-#         . = merge(., parsed)
+      if err != null {
+        log("Failed to parse log line: " + string!(err), level: "error")
+      } else {
+        . = merge(., parsed)
+        .unilogs_service_label = "test"
 
-#         if .path == "/" {
-#           .level = "info"
-#         } else {
-#           .level = split(.path, "/")[1] ?? "unknown"
-#         }
-#       }
+        if .path == "/" {
+          .level = "info"
+        } else {
+          .level = split(.path, "/")[1] ?? "unknown"
+        }
+      }
 
 sinks:
   kafka:
     type: kafka
     inputs:
-      - app_logs
-    bootstrap_servers: "a5119cfa1ba2c403398679c3c26cf456-342d08f06c0727eb.elb.us-west-2.amazonaws.com:9095,a1a856de16cec4fe4a94d87bf3fa1323-3af4cf90b1c58acd.elb.us-west-2.amazonaws.com:9095,a769a6479331b42d2b5e9d4681f0496f-60dd516e688847ef.elb.us-west-2.amazonaws.com:9095"
+      - parse_logs
+    bootstrap_servers: 'a181c5b3980e5414ea51da70abf44b39-c85da5ba1220a4a8.elb.eu-north-1.amazonaws.com:9095, a87911897e8eb48d097666f49422f02c-ba1dda181e731ea1.elb.eu-north-1.amazonaws.com:9095, af107ac24d2ea4897aafb411040bc17b-8c932a319f00a76b.elb.eu-north-1.amazonaws.com:9095'
     topic: app_logs_topic
     encoding:
       codec: json
@@ -53,6 +54,6 @@ sinks:
   console:
     type: console
     inputs:
-      - app_logs
+      - parse_logs
     encoding:
       codec: json
