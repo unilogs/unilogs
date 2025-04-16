@@ -294,14 +294,17 @@ async function createKafkaSink(): Promise<KafkaSink> {
     message: 'SCRAM password',
   });
   safeAssertString(password);
+  
+  console.log(password, username);
+
   return new KafkaSink({
     sinkName,
     type: SinkType.Kafka,
     inputs: [],
     bootstrap_servers,
-    // sasl: username
-    //   ? { enabled: true, mechanism: 'SCRAM-SHA-512', username, password }
-    //   : undefined,
+    sasl: username && password
+      ? { enabled: true, mechanism: 'plain', username, password }
+      : undefined,
   });
 }
 

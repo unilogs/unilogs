@@ -33,7 +33,7 @@ export interface LokiSinkProps extends BaseSinkProps {
 
 interface KafkaSinkSaslConfig {
   enabled: boolean;
-  mechanism: 'SCRAM-SHA-256' | 'SCRAM-SHA-512';
+  mechanism: 'SCRAM-SHA-256' | 'SCRAM-SHA-512' | 'plain';
   password: string;
   username: string;
 }
