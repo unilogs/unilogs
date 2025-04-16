@@ -282,6 +282,12 @@ async function createKafkaSink(): Promise<KafkaSink> {
     message: 'What are the bootstrap servers?',
   });
   safeAssertString(bootstrap_servers);
+  const { caCrt } = await prompts<string>({
+    type: 'text',
+    name: 'caCrt',
+    message: 'What is the ca crt string?',
+  });
+  safeAssertString(caCrt);
   const { username } = await prompts<string>({
     type: 'text',
     name: 'username',
@@ -299,9 +305,10 @@ async function createKafkaSink(): Promise<KafkaSink> {
     type: SinkType.Kafka,
     inputs: [],
     bootstrap_servers,
-    // sasl: username
-    //   ? { enabled: true, mechanism: 'SCRAM-SHA-512', username, password }
-    //   : undefined,
+    sasl: username
+      ? { enabled: true, mechanism: 'PLAIN', username, password }
+      : undefined,
+    tls: caCrt ? { enabled: true, ca_file: caCrt, verify_certificate: false } : undefined,
   });
 }
 
