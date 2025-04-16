@@ -34,13 +34,33 @@ async function main() {
   const { AWS_DEFAULT_REGION } = await prompts<string>({
     type: 'text',
     name: 'AWS_DEFAULT_REGION',
-    message: 'region',
+    message: 'AWS Region',
     validate: (input: string) => /^[a-z0-9-]+$/.test(input),
   });
   const { AWS_USER_NAME } = await prompts<string>({
     type: 'text',
     name: 'AWS_USER_NAME',
-    message: 'deploying username',
+    message: 'Deploying Username',
+  });
+  const { KAFKA_SASL_USERNAME } = await prompts<string>({
+    type: 'text',
+    name: 'KAFKA_SASL_USERNAME',
+    message: 'Kafka Sasl Username',
+  });
+  const { KAFKA_SASL_PASSWORD } = await prompts<string>({
+    type: 'text',
+    name: 'KAFKA_SASL_PASSWORD',
+    message: 'Kafka Sasl Password',
+  });
+  const { GRAFANA_ADMIN_USERNAME } = await prompts<string>({
+    type: 'text',
+    name: 'GRAFANA_ADMIN_USERNAME',
+    message: 'Grafana Admin Username',
+  });
+  const { GRAFANA_ADMIN_PASSWORD } = await prompts<string>({
+    type: 'text',
+    name: 'GRAFANA_ADMIN_PASSWORD',
+    message: 'Grafana Admin Password',
   });
   safeAssertString(AWS_ACCESS_KEY_ID);
   safeAssertString(AWS_SECRET_ACCESS_KEY);
@@ -48,6 +68,10 @@ async function main() {
   safeAssertString(AWS_DEFAULT_ACCOUNT);
   safeAssertString(AWS_DEFAULT_REGION);
   safeAssertString(AWS_USER_NAME);
+  safeAssertString(KAFKA_SASL_USERNAME);
+  safeAssertString(KAFKA_SASL_PASSWORD);
+  safeAssertString(GRAFANA_ADMIN_USERNAME);
+  safeAssertString(GRAFANA_ADMIN_PASSWORD);
   child_process.spawnSync(
     `PATH="${process.env.PATH}" && cdk bootstrap && cdk deploy --require-approval never`,
     {
@@ -61,6 +85,10 @@ async function main() {
         AWS_DEFAULT_ACCOUNT,
         AWS_DEFAULT_REGION,
         AWS_USER_NAME,
+        KAFKA_SASL_USERNAME,
+        KAFKA_SASL_PASSWORD,
+        GRAFANA_ADMIN_USERNAME,
+        GRAFANA_ADMIN_PASSWORD
       },
     }
   );
@@ -71,7 +99,7 @@ async function main() {
     AWS_SESSION_TOKEN,
     AWS_DEFAULT_ACCOUNT
   );
-  
+
   void consoleLogLbUrls(awsCredentials);
 }
 
