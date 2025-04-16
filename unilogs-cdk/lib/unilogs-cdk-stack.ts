@@ -70,35 +70,45 @@ export class UnilogsCdkStack extends cdk.Stack {
     );
 
     // ==================== CONTEXT & ENVIRONMENT VARIABLES ====================
-    const awsUserName = process.env.AWS_USER_NAME;
+    const awsUserName =
+      (this.node.tryGetContext('awsUserName') as string) ||
+      process.env.AWS_USER_NAME;
     if (!awsUserName) {
       throw new Error(
         'AWS Username must be provided via environment variable (AWS_USER_NAME)'
       );
     }
 
-    const grafanaAdminUsername = process.env.GRAFANA_ADMIN_USERNAME;
+    const grafanaAdminUsername =
+      (this.node.tryGetContext('grafanaAdminUsername') as string) ||
+      process.env.GRAFANA_ADMIN_USERNAME;
     if (!grafanaAdminUsername) {
       throw new Error(
         'Grafana Admin Username must be provided via environment variable (GRAFANA_ADMIN_USERNAME)'
       );
     }
 
-    const grafanaAdminPassword = process.env.GRAFANA_ADMIN_PASSWORD;
+    const grafanaAdminPassword =
+      (this.node.tryGetContext('grafanaAdminPassword') as string) ||
+      process.env.GRAFANA_ADMIN_PASSWORD;
     if (!grafanaAdminPassword) {
       throw new Error(
         'Grafana Admin Password must be provided via environment variable (GRAFANA_ADMIN_PASSWORD)'
       );
     }
 
-    const kafkaSaslUsername = process.env.KAFKA_SASL_USERNAME;
+    const kafkaSaslUsername =
+      (this.node.tryGetContext('kafkaSaslUsername') as string) ||
+      process.env.KAFKA_SASL_USERNAME;
     if (!kafkaSaslUsername) {
       throw new Error(
         'Kafka SASL username must be provided via environment variable (KAFKA_SASL_USERNAME)'
       );
     }
 
-    const kafkaSaslPassword = process.env.KAFKA_SASL_PASSWORD;
+    const kafkaSaslPassword =
+      (this.node.tryGetContext('kafkaSaslPassword') as string) ||
+      process.env.KAFKA_SASL_PASSWORD;
     if (!kafkaSaslPassword) {
       throw new Error(
         'Kafka SASL password must be provided via environment variable (KAFKA_SASL_PASSWORD)'
