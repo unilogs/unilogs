@@ -43,6 +43,7 @@ async function main(clusterName: string) {
     agent: new https.Agent({ca: caCert})
   });
   const body = await res.json() as {data: {'ca.crt': string}};
+  console.log(body.data['ca.crt']);
   console.log(Buffer.from(body.data['ca.crt'], 'base64').toString('utf8')); 
 }
 void main('unilogs-cluster');

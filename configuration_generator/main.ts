@@ -308,7 +308,13 @@ async function createKafkaSink(): Promise<KafkaSink> {
     sasl: username
       ? { enabled: true, mechanism: 'PLAIN', username, password }
       : undefined,
-    tls: caCrt ? { enabled: true, ca_file: caCrt, verify_certificate: false } : undefined,
+    tls: caCrt
+      ? {
+          enabled: true,
+          ca_file: Buffer.from(caCrt, 'base64').toString('utf8'),
+          verify_certificate: false,
+        }
+      : undefined,
   });
 }
 
