@@ -30,8 +30,11 @@
     "@aws-sdk/client-kafka": "^3.782.0",
     "@aws-sdk/client-secrets-manager": "^3.787.0",
     "@aws-sdk/signature-v4": "^3.370.0",
+    "@types/crypto-js": "^4.2.2",
     "aws-cdk-lib": "^2.187.0",
+    "aws-eks-token": "^1.0.5",
     "constructs": "^10.4.2",
+    "crypto-js": "^4.2.0",
     "dotenv": "^16.5.0",
     "node-fetch": "^2.7.0",
     "prompts": "^2.4.2"

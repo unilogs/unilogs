@@ -2,7 +2,6 @@ import * as dotenv from 'dotenv';
 import { EKSClient, DescribeClusterCommand } from '@aws-sdk/client-eks';
 import { AwsCredentialIdentity } from '@smithy/types';
 import safeAssertString from './utils/safeAssertString';
-import {ListSecretsCommand, SecretsManagerClient} from '@aws-sdk/client-secrets-manager';
 
 // import fetch from "node-fetch";
 // import { Buffer } from "buffer";
@@ -35,17 +34,14 @@ async function main() {
     new DescribeClusterCommand({ name: clusterName })
   );
   console.log(JSON.stringify(clusterData));
-  // const token =
-  //   'k8s-aws-v1.' +
-  //   Buffer.from(clusterData.cluster?.certificateAuthority?.data ?? '')
-  //     .toString('base64')
-  //     .replace(/=+$/, '')
-  //     .replace(/\+/g, '-')
-  //     .replace(/\//g, '_');
-  // console.log(token);
-  const secretsManagerClient = new SecretsManagerClient({credentials, region: process.env.AWS_region});
-  const secret = secretsManagerClient.send(new ListSecretsCommand());
-  console.log(JSON.stringify(secret));
+  const token =
+    'k8s-aws-v1.' +
+    Buffer.from(clusterData.cluster?.certificateAuthority?.data ?? '')
+      .toString('base64')
+      .replace(/=+$/, '')
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_');
+  console.log(token);
 }
 void main();
 // async function getKubernetesToken(clusterName: string): Promise<string> {
