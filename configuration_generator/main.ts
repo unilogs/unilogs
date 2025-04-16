@@ -300,6 +300,9 @@ async function createKafkaSink(): Promise<KafkaSink> {
     message: 'SCRAM password',
   });
   safeAssertString(password);
+  
+  console.log(password, username);
+
   return new KafkaSink({
     sinkName,
     type: SinkType.Kafka,
