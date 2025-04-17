@@ -32,9 +32,11 @@
   },
   "dependencies": {
     "@aws-cdk/lambda-layer-kubectl-v32": "^2.1.0",
+    "@aws-sdk/client-eks": "^3.790.0",
     "@aws-sdk/client-elastic-load-balancing-v2": "^3.787.0",
     "aws-cdk": "^2.1007.0",
     "aws-cdk-lib": "^2.188.0",
+    "aws-eks-token": "^1.0.5",
     "prompts": "^2.4.2"
   }
 }
