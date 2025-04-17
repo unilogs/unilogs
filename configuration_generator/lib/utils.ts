@@ -26,7 +26,7 @@ export function writeDockerCommand(command: string) {
 }
 
 export function readDockerCommand(): string {
-  const data =  fs.readFileSync('./dockerCommand.json', 'utf8')
+  const data =  fs.readFileSync('./dockerCommand.json', 'utf8');
   const obj: unknown = JSON.parse(data);
 
   if (obj && typeof obj === 'object' && 'command' in obj && typeof obj.command === 'string') {
