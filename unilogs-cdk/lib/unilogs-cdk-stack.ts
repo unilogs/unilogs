@@ -571,6 +571,16 @@ export class UnilogsCdkStack extends cdk.Stack {
       values: {
         role: 'Aggregator',
         autoscaling: { enabled: true }, // 1-10 pods
+        resources: {
+          requests: {
+            cpu: '200m',
+            memory: '256Mi'
+          },
+          limits: {
+            cpu: '200m',
+            memory: '256Mi'
+          },
+        },
         service: {
           // Add this section
           enabled: true,
