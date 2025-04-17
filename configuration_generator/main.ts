@@ -32,6 +32,8 @@ import generateDockerfile from './lib/generateDockerfile.js';
 import buildAndRunShipper from './lib/buildAndRunShipper.js';
 import safeAssertString from './lib/safeAssertString.js';
 import getContainerIdByName from './lib/getContainerIdByName.js';
+import deleteContainerAndImage from './lib/deleteContainerAndImage.js';
+// import rebuildImageAndContainer from './lib/rebuildShipper.js';
 
 const IMAGE_NAME = 'unilogs-shipper';
 const CONTAINER_NAME = 'unilogs-shipper';
@@ -62,6 +64,20 @@ async function getSimpleMenuChoice() {
     choices: [
       { title: 'Add log file source', value: 'add_file_source_and_transform' },
       { title: 'Build and run shipper', value: 'add_sink_build_and_run' },
+      { title: 'Cancel and exit', value: 'exit' },
+    ],
+  });
+  safeAssertString(menuChoice);
+  return menuChoice;
+}
+
+async function getRestartPrompt() {
+  const { menuChoice } = await prompts<string>({
+    type: 'autocomplete',
+    name: 'menuChoice',
+    message: 'We have detected that an instance of Unilogs Shipper already running on this system, would you like to delete it and rebuild it? (This will also take into affect anychanges made within vector shipper)',
+    choices: [
+      { title: 'Delete and rebuild the shipper', value: 'rebuild' },
       { title: 'Cancel and exit', value: 'exit' },
     ],
   });
@@ -303,7 +319,7 @@ async function createKafkaSink(): Promise<KafkaSink> {
     inputs: [],
     bootstrap_servers,
     sasl: username && password
-      ? { enabled: true, mechanism: 'plain', username, password }
+      ? { enabled: true, mechanism: 'PLAIN', username, password }
       : undefined,
   });
 }
@@ -375,14 +391,20 @@ async function addSinkBuildAndRun(vectorConfiguration: VectorConfiguration) {
 async function main() {
   const vectorConfiguration = new VectorConfiguration();
   let notDone = true;
+  console.clear();
+  console.log(gradient(['aqua', 'purple']).multiline(logo));
+
   if ((await getContainerIdByName(CONTAINER_NAME)) !== '') {
-    console.log(`A container named ${CONTAINER_NAME} is already running.`);
-    console.log('Please delete it and then try again.');
+    const rebuild = await getRestartPrompt();
+    if (rebuild === 'rebuild') {
+      deleteContainerAndImage(CONTAINER_NAME, IMAGE_NAME);
+      // rebuildImageAndContainer(CONTAINER_NAME, IMAGE_NAME);
+    }
+
     notDone = false;
+    console.log('Quitting the unilogs configuration generator!');
   }
   while (notDone) {
-    console.clear();
-    console.log(gradient(['aqua', 'purple']).multiline(logo));
     const action = await getSimpleMenuChoice();
     if (action === 'exit') notDone = false;
     if (action === 'add_file_source_and_transform')
