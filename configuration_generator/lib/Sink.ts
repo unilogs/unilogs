@@ -30,10 +30,14 @@ export interface LokiSinkProps extends BaseSinkProps {
   path: string;
   auth: LokiSinkAuthProps;
 }
-
+interface KafkaSinkTlsConfig {
+  enabled: boolean;
+  ca_file: string;
+  verify_certificate: boolean;
+}
 interface KafkaSinkSaslConfig {
   enabled: boolean;
-  mechanism: 'SCRAM-SHA-256' | 'SCRAM-SHA-512';
+  mechanism: 'PLAIN' | 'SCRAM-SHA-256' | 'SCRAM-SHA-512';
   password: string;
   username: string;
 }
@@ -41,6 +45,7 @@ export interface KafkaSinkProps extends BaseSinkProps {
   type: SinkType.Kafka;
   bootstrap_servers: string;
   sasl?: KafkaSinkSaslConfig;
+  tls?: KafkaSinkTlsConfig;
 }
 
 export enum ConsoleEncoding {
@@ -122,6 +127,7 @@ export class KafkaSink extends BaseSink {
   private topic: 'app_logs_topic';
   private encoding: { codec: 'json' };
   private sasl: KafkaSinkSaslConfig | undefined;
+  private tls: KafkaSinkTlsConfig | undefined;
 
   constructor(props: KafkaSinkProps) {
     super(props);
@@ -129,6 +135,7 @@ export class KafkaSink extends BaseSink {
     this.topic = 'app_logs_topic';
     this.encoding = { codec: 'json' };
     this.sasl = props.sasl;
+    this.tls = props.tls;
   }
 
   getObjectBody() {
@@ -145,6 +152,14 @@ export class KafkaSink extends BaseSink {
               mechanism: this.sasl.mechanism,
               username: this.sasl.username,
               password: this.sasl.password,
+            },
+      tls:
+        this.tls === undefined
+          ? { enabled: false }
+          : {
+              enabled: this.tls.enabled,
+              ca_file: this.tls.ca_file,
+              verify_certificate: this.tls.verify_certificate,
             },
     };
     return returnBody;
