@@ -4,11 +4,12 @@ import safeAssertString from './utils/safeAssertString';
 import { EKSClient, DescribeClusterCommand } from '@aws-sdk/client-eks';
 import fetch from "node-fetch";
 import https from 'https';
+import EKSTokenGenerator from './getEksToken';
 dotenv.config();
-import EKSToken from 'aws-eks-token';
+// import EKSToken from 'aws-eks-token';
 
 async function main(clusterName: string) {
-  const token = await EKSToken.renew(clusterName);
+  // const token = await EKSToken.renew(clusterName);
 
   safeAssertString(process.env.AWS_ACCESS_KEY_ID);
   safeAssertString(process.env.AWS_SECRET_ACCESS_KEY);
@@ -22,6 +23,8 @@ async function main(clusterName: string) {
     sessionToken: process.env.AWS_SESSION_TOKEN,
     accountId: process.env.AWS_ACCOUNT,
   };
+  const eksTokenGenerator = new EKSTokenGenerator(credentials,'unilogs-cluster', process.env.AWS_REGION);
+  const token = eksTokenGenerator.generate();
 
   const eksClient = new EKSClient({ credentials });
   const clusterData = await eksClient.send(

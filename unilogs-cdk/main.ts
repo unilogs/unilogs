@@ -2,6 +2,7 @@ import child_process from 'child_process';
 import prompts from 'prompts';
 import Credentials from './lib/Credentials';
 import consoleLogLbUrls from './lib/consoleLogLbUrls';
+import consoleLogKafkaCert from './lib/consoleLogKafkaCert';
 import safeAssertString from './lib/safeAssertString';
 
 async function main() {
@@ -88,7 +89,7 @@ async function main() {
         KAFKA_SASL_USERNAME,
         KAFKA_SASL_PASSWORD,
         GRAFANA_ADMIN_USERNAME,
-        GRAFANA_ADMIN_PASSWORD
+        GRAFANA_ADMIN_PASSWORD,
       },
     }
   );
@@ -101,6 +102,12 @@ async function main() {
   );
 
   void consoleLogLbUrls(awsCredentials);
+  console.log();
+  void consoleLogKafkaCert(
+    'unilogs-cluster',
+    awsCredentials,
+    AWS_DEFAULT_REGION
+  );
 }
 
 void main();
