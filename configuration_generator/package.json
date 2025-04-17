@@ -19,6 +19,7 @@
   "dependencies": {
     "@types/dockerode": "^3.3.37",
     "dockerode": "^4.0.5",
+    "fs": "^0.0.1-security",
     "gradient-string": "^3.0.0",
     "hash-sum": "^2.0.0",
     "mustache": "^4.2.0",

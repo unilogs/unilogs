@@ -33,7 +33,7 @@ import buildAndRunShipper from './lib/buildAndRunShipper.js';
 import safeAssertString from './lib/safeAssertString.js';
 import getContainerIdByName from './lib/getContainerIdByName.js';
 import deleteContainerAndImage from './lib/deleteContainerAndImage.js';
-// import rebuildImageAndContainer from './lib/rebuildShipper.js';
+import rebuildImageAndContainer from './lib/rebuildImageAndContainer.js';
 
 const IMAGE_NAME = 'unilogs-shipper';
 const CONTAINER_NAME = 'unilogs-shipper';
@@ -410,8 +410,11 @@ async function main() {
   if ((await getContainerIdByName(CONTAINER_NAME)) !== '') {
     const rebuild = await getRestartPrompt();
     if (rebuild === 'rebuild') {
+      console.log('--- Destroying the current container and image');
       deleteContainerAndImage(CONTAINER_NAME, IMAGE_NAME);
-      // rebuildImageAndContainer(CONTAINER_NAME, IMAGE_NAME);
+      console.log('--- Succesfully deleted the previous image and container', '--- Rebuilding the image and the container now.');
+      rebuildImageAndContainer(IMAGE_NAME);
+      console.log('Rebuilt docker image and container!');
     }
 
     notDone = false;

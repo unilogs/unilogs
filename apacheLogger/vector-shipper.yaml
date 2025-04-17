@@ -37,7 +37,7 @@ sinks:
     type: kafka
     inputs:
       - parse_logs
-    bootstrap_servers: 'a9d097ca1663947739ecb5da7b170793-59b06c4dfac2a21e.elb.eu-north-1.amazonaws.com:9095, ad88153877f6f481aaf7ef2ffb6bfec8-50bcc10389580e6d.elb.eu-north-1.amazonaws.com:9095, ab63145c59c5346f4b6ab128b57c614a-072dd64b4e5ce015.elb.eu-north-1.amazonaws.com:9095'
+    bootstrap_servers: 'a58b54e386a0149288553908e5a32306-7d7edb010e8264b3.elb.eu-north-1.amazonaws.com:9095, a32b2eaad791947f6b448ccbbc4513e9-727ec516e00c38e5.elb.eu-north-1.amazonaws.com:9095, a6626a98dd9594266b13e01045a26a8f-ea0cde6914be4839.elb.eu-north-1.amazonaws.com:9095'
     topic: app_logs_topic
     encoding:
       codec: json
