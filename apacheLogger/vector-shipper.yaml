@@ -23,7 +23,7 @@ transforms:
         log("Failed to parse log line: " + string!(err), level: "error")
       } else {
         . = merge(., parsed)
-        .unilogs_service_label = "test"
+        .unilogs_service_label = "apacheLogger"
 
         if .path == "/" {
           .level = "info"
@@ -37,7 +37,7 @@ sinks:
     type: kafka
     inputs:
       - parse_logs
-    bootstrap_servers: 'a181c5b3980e5414ea51da70abf44b39-c85da5ba1220a4a8.elb.eu-north-1.amazonaws.com:9095, a87911897e8eb48d097666f49422f02c-ba1dda181e731ea1.elb.eu-north-1.amazonaws.com:9095, af107ac24d2ea4897aafb411040bc17b-8c932a319f00a76b.elb.eu-north-1.amazonaws.com:9095'
+    bootstrap_servers: 'a9d097ca1663947739ecb5da7b170793-59b06c4dfac2a21e.elb.eu-north-1.amazonaws.com:9095, ad88153877f6f481aaf7ef2ffb6bfec8-50bcc10389580e6d.elb.eu-north-1.amazonaws.com:9095, ab63145c59c5346f4b6ab128b57c614a-072dd64b4e5ce015.elb.eu-north-1.amazonaws.com:9095'
     topic: app_logs_topic
     encoding:
       codec: json
