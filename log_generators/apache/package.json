@@ -13,6 +13,7 @@
     "enabled": "^2.0.0",
     "fecha": "^4.2.3",
     "fn.name": "^1.1.0",
+    "fs": "^0.0.1-security",
     "inherits": "^2.0.4",
     "is-arrayish": "^0.3.2",
     "is-stream": "^2.0.1",
