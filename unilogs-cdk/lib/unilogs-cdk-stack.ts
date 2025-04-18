@@ -378,11 +378,10 @@ export class UnilogsCdkStack extends cdk.Stack {
       'loki:loki-service-account'
     );
     const lokiRole = new iam.Role(this, 'LokiRole', {
-      assumedBy: new iam.WebIdentityPrincipal(
+      assumedBy: new iam.FederatedPrincipal(
         cluster.openIdConnectProvider.openIdConnectProviderArn,
-        {
-          StringEquals: lokiCondition,
-        }
+        {StringEquals: lokiCondition},
+        'sts:AssumeRoleWithWebIdentity'
       ),
       inlinePolicies: {
         lokiS3Access: new iam.PolicyDocument({
@@ -429,11 +428,16 @@ export class UnilogsCdkStack extends cdk.Stack {
               },
             ],
           },
-          storage_config: {
-            aws: {
+          storage: {
+            type: 's3',
+            bucketNames: {
+              chunks: lokiChunkBucket.bucketName,
+              ruler: lokiRulerBucket.bucketName,
+            },
+            s3: {
               region: this.region,
-              s3: lokiChunkBucket.bucketName,
-              s3forcepathstyle: false,
+              s3ForcePathStyle: false,
+              insecure: false,
             },
           },
           ingester: {
