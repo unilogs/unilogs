@@ -158,7 +158,7 @@ export class UnilogsCdkStack extends cdk.Stack {
         new ec2.InstanceType('t3.large'), // Smaller instance (originally m5.large) for dev
       ],
       minSize: 2,
-      maxSize: 5,
+      maxSize: 50, // large maximum to avoid any limitation due to insufficient resources
       desiredSize: 2,
       diskSize: 30, // reduced from 50 GB for dev
       amiType: eks.NodegroupAmiType.AL2_X86_64,
