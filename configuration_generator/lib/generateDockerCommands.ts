@@ -1,4 +1,4 @@
-import { getInternalDir, getLocalDir } from './pathUtils.js';
+import { getInternalDir, getLocalDir } from './utils.js';
 import { VectorConfiguration } from './VectorConfiguration.js';
 
 const IMAGE_NAME = 'unilogs-shipper';

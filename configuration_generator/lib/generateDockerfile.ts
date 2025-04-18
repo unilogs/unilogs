@@ -1,5 +1,5 @@
 import { VectorConfiguration } from './VectorConfiguration.js';
-import { getInternalDir } from './pathUtils.js';
+import { getInternalDir } from './utils.js';
 
 const dockerfile = [
   'FROM timberio/vector:latest-distroless-static',
