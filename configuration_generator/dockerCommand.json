@@ -1,0 +1,1 @@
+{"command":"docker run -v /home/jitte/unilogs/apacheLogger/logs:/logs_8f9aec20 --name unilogs-shipper -d unilogs-shipper:latest"}

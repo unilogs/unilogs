@@ -1,5 +1,7 @@
 # unilogs
 
+- `npm run build:deploy`
+
 ## Dev purposes:
 
 - `aws eks update-kubeconfig --region region-code --name unilogs-cluster`
