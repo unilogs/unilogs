@@ -27,6 +27,7 @@
     "@aws-sdk/client-cloudformation": "^3.782.0",
     "@aws-sdk/client-eks": "^3.782.0",
     "@aws-sdk/client-elastic-load-balancing-v2": "^3.782.0",
+    "@aws-sdk/client-iam": "^3.787.0",
     "@aws-sdk/client-kafka": "^3.782.0",
     "@aws-sdk/client-secrets-manager": "^3.787.0",
     "@aws-sdk/signature-v4": "^3.370.0",

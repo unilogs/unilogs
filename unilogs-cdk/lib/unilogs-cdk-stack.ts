@@ -115,12 +115,13 @@ export class UnilogsCdkStack extends cdk.Stack {
       );
     }
 
+    const deployingUserArn =
+      (this.node.tryGetContext('deployingUserArn') as string) ||
+      process.env.DEPLOYING_USER_ARN;
+    if (!deployingUserArn) throw new Error('Could not get deploying user ARN');
     // ==================== EKS CLUSTER ====================
-    const deployingUser = iam.User.fromUserName(
-      this,
-      'DeployingUser',
-      awsUserName
-    );
+    const userAdmin = iam.User.fromUserName(this, 'UserAdmin', awsUserName);
+    const deployingUser = iam.User.fromUserArn(this, 'DeployingUser', deployingUserArn);
 
     // enable all logging types for dev, comment out others beyond AUDIT for production (matching AWS sample code)
     const clusterLogging = [
@@ -171,9 +172,14 @@ export class UnilogsCdkStack extends cdk.Stack {
     });
 
     // Explicitly map the IAM user
+    cluster.awsAuth.addUserMapping(userAdmin, {
+      groups: ['system:masters'],
+      username: 'userAdmin',
+    });
+
     cluster.awsAuth.addUserMapping(deployingUser, {
       groups: ['system:masters'],
-      username: 'deployingUserAdmin',
+      username: 'deployingUser'
     });
 
     // ==================== EKS ADD ONS ====================
@@ -380,7 +386,7 @@ export class UnilogsCdkStack extends cdk.Stack {
     const lokiRole = new iam.Role(this, 'LokiRole', {
       assumedBy: new iam.FederatedPrincipal(
         cluster.openIdConnectProvider.openIdConnectProviderArn,
-        {StringEquals: lokiCondition},
+        { StringEquals: lokiCondition },
         'sts:AssumeRoleWithWebIdentity'
       ),
       inlinePolicies: {

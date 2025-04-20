@@ -4,6 +4,7 @@ import Credentials from './lib/Credentials';
 import consoleLogLbUrls from './lib/consoleLogLbUrls';
 import consoleLogKafkaCert from './lib/consoleLogKafkaCert';
 import safeAssertString from './lib/safeAssertString';
+import { IAMClient, GetUserCommand } from '@aws-sdk/client-iam';
 
 async function main() {
   const { AWS_ACCESS_KEY_ID } = await prompts<string>({
@@ -73,6 +74,21 @@ async function main() {
   safeAssertString(KAFKA_SASL_PASSWORD);
   safeAssertString(GRAFANA_ADMIN_USERNAME);
   safeAssertString(GRAFANA_ADMIN_PASSWORD);
+  const awsCredentials = new Credentials(
+    AWS_ACCESS_KEY_ID,
+    AWS_SECRET_ACCESS_KEY,
+    AWS_SESSION_TOKEN,
+    AWS_DEFAULT_ACCOUNT
+  );
+  
+  // Get the actual deploying user arn to grant access to the cluster.
+  const iamClient = new IAMClient({credentials: awsCredentials});
+  const user = await iamClient.send(new GetUserCommand());
+  const DEPLOYING_USER_ARN = user.User?.Arn ?? '';
+  if (/root$/.test(DEPLOYING_USER_ARN)) throw new Error('Cannot deploy as root.');
+
+
+
   child_process.spawnSync(
     `PATH="${process.env.PATH}" && cdk bootstrap && cdk deploy --require-approval never`,
     {
@@ -90,19 +106,14 @@ async function main() {
         KAFKA_SASL_PASSWORD,
         GRAFANA_ADMIN_USERNAME,
         GRAFANA_ADMIN_PASSWORD,
+        DEPLOYING_USER_ARN,
       },
     }
   );
 
-  const awsCredentials = new Credentials(
-    AWS_ACCESS_KEY_ID,
-    AWS_SECRET_ACCESS_KEY,
-    AWS_SESSION_TOKEN,
-    AWS_DEFAULT_ACCOUNT
-  );
 
   void consoleLogLbUrls(awsCredentials);
-  console.log();
+  console.log('\n');
   void consoleLogKafkaCert(
     'unilogs-cluster',
     awsCredentials,
