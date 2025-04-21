@@ -1,0 +1,11 @@
+parsed, err = parse_logfmt(.message)
+
+# Handle errors (e.g., if the log line doesn't match the pattern)
+if err != null {
+  log("Failed to parse log line: " + string!(err), level: "error")
+} else {
+  # Merge the parsed fields into the event
+  . = merge(., parsed)
+
+  .unilogs_service_label = "[[service]]"
+}
