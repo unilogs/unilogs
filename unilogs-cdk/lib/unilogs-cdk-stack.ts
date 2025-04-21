@@ -14,7 +14,8 @@ export class UnilogsCdkStack extends cdk.Stack {
 
     // Helper function for IAM conditions
     const createConditionJson = (id: string, serviceAccount: string) => {
-      const issuerUrl = cluster.clusterOpenIdConnectIssuerUrl;
+      // const issuerUrl = cluster.clusterOpenIdConnectIssuerUrl;
+      const issuerUrl = cluster.openIdConnectProvider.openIdConnectProviderIssuer;
       if (!issuerUrl) {
         throw new Error('Cluster OIDC issuer URL is not available');
       }
