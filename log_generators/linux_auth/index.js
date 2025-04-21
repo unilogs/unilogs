@@ -30,7 +30,7 @@ function logRandomEvents() {
   const fingerprints = ['SHA256:foobar', 'SHA256:xyz123', 'SHA256:abc456'];
   const ttys = ['pts/0', 'pts/1', 'tty1'];
 
-  const now = new Date(Date.now() - Math.floor(Math.random() * 5 * 60 * 1000)); // Random within past 5 min
+  const now = new Date(Date.now() - 1.8 * 0.1 * 10 ** 6);
   const logTimestamp = now
     .toLocaleString('en-US', {
       month: 'short',
@@ -74,4 +74,4 @@ function logRandomEvents() {
 
 setInterval(() => {
   logRandomEvents();
-}, 100);
+}, 20);
