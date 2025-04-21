@@ -1,8 +1,9 @@
 {
-  "name": "unilogs-cdk",
+  "name": "@unilogs/unilogs-platform",
   "version": "0.1.0",
+  "type": "module",
   "bin": {
-    "unilogs": "main.js"
+    "unilogs-platform": "main.js"
   },
   "scripts": {
     "start": "node main.js",
