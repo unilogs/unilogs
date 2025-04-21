@@ -1,10 +1,25 @@
 {
   "name": "@unilogs/unilogs-platform",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "type": "module",
   "bin": {
     "unilogs-platform": "main.js"
   },
+  "author": "Unilogs SWE Team",
+  "contributors": [
+    {
+      "name": "Alex Stout"
+    },
+    {
+      "name": "David Park"
+    },
+    {
+      "name": "John Tamer"
+    },
+    {
+      "name": "Nathan Gross"
+    }
+  ],
   "scripts": {
     "start": "node main.js",
     "dev": "npx ts-node main.ts",
@@ -43,5 +58,13 @@
     "dayjs": "^1.11.13",
     "node-fetch": "^2.7.0",
     "prompts": "^2.4.2"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/unilogs/unilogs.git"
+  },
+  "bugs": {
+    "url": "https://github.com/unilogs/unilogs/issues"
+  },
+  "homepage": "https://github.com/unilogs/unilogs#readme"
 }
