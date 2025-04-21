@@ -1,7 +1,6 @@
 {
   "name": "@unilogs/unilogs-platform",
   "version": "0.1.1",
-  "type": "module",
   "bin": {
     "unilogs-platform": "main.js"
   },
