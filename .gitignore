@@ -147,3 +147,5 @@ eksctl/
 vector_data/
 apacheLogger/vector-shipper-my-copy.yaml
 ca.crt
+dockerCommand.json
+Dockerfile
