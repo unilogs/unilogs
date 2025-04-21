@@ -129,4 +129,4 @@ function logRandomEvents(message) {
 
 setInterval(() => {
   logRandomEvents('Random event logged');
-}, 2000);
+}, 20);
