@@ -385,7 +385,7 @@ async function main() {
   }
   while (notDone) {
     console.clear();
-    console.log(gradient(['aqua', 'purple']).multiline(logo));
+    console.log(gradient(['#75CFE8', '#2D2372']).multiline(logo));
     const action = await getSimpleMenuChoice();
     if (action === 'exit') notDone = false;
     if (action === 'add_file_source_and_transform')
