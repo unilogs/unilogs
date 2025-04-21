@@ -79,17 +79,6 @@ export class LogfmtTransform extends BaseTransform {
   }
 }
 
-export class PlainTextTransform extends BaseTransform {
-  constructor(props: TransformProps) {
-    super(props);
-    const source = new TransformSource(
-      TransformSourceOption.PlainText,
-      props.serviceName
-    );
-    super.setSource(source.render());
-  }
-}
-
 export class SyslogTransform extends BaseTransform {
   constructor(props: TransformProps) {
     super(props);
@@ -106,5 +95,4 @@ export type Transform =
   | ClfTransform
   | LinuxAuthorizationTransform
   | LogfmtTransform
-  | PlainTextTransform
   | SyslogTransform;

@@ -16,7 +16,6 @@ import {
   ClfTransform,
   LinuxAuthorizationTransform,
   LogfmtTransform,
-  PlainTextTransform,
   SyslogTransform,
   Transform,
 } from './lib/Transform.js';
@@ -164,14 +163,8 @@ async function createTransform(
       inputs: [inputSource],
       transformName,
     });
-  } else if (transformType === 'syslog') {
-    return new SyslogTransform({
-      serviceName,
-      inputs: [inputSource],
-      transformName,
-    });
   } else {
-    return new PlainTextTransform({
+    return new SyslogTransform({
       serviceName,
       inputs: [inputSource],
       transformName,
