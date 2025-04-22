@@ -11,7 +11,41 @@ function getRandomInt(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-function logRandomEvents(message) {
+function getRandomIP() {
+  return Array.from({ length: 4 }, () => getRandomInt(0, 255)).join('.');
+}
+
+function formatCLFDate(date) {
+  const pad = (n) => (n < 10 ? '0' + n : n);
+  const day = pad(date.getDate());
+  const month = [
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
+  ][date.getMonth()];
+  const year = date.getFullYear();
+  const hour = pad(date.getHours());
+  const min = pad(date.getMinutes()) - 30; // does 30 minutes earlier if current minutes > 30, otherwise, breaks
+  const sec = pad(date.getSeconds());
+
+  const offset = -date.getTimezoneOffset();
+  const sign = offset >= 0 ? '+' : '-';
+  const offsetHours = pad(Math.floor(Math.abs(offset) / 60));
+  const offsetMinutes = pad(Math.abs(offset) % 60);
+
+  return `${day}/${month}/${year}:${hour}:${min}:${sec} ${sign}${offsetHours}${offsetMinutes}`;
+}
+
+function logCLF() {
   const logger = winston.createLogger({
     level: 'debug',
     transports: [
@@ -29,43 +63,27 @@ function logRandomEvents(message) {
     ],
   });
 
-  const levels = ['info', 'warn', 'error', 'debug'];
-  const level = getRandomElement(levels);
-  const services = ['auth', 'api', 'db', 'web', 'payment', 'notification'];
-  const service = getRandomElement(services);
-  const timestamp = new Date(Date.now() - 1.8 * 10 ** 6).toISOString();
+  const ip = getRandomIP();
+  const ident = getRandomElement(['-', 'bob', 'sally', 'john']);
+  const authuser = getRandomElement(['-', 'frank', 'alice', 'doe']);
+  const date = formatCLFDate(new Date());
+  const method = getRandomElement(['GET', 'POST', 'PUT', 'DELETE']);
+  const resource = getRandomElement([
+    '/index.html',
+    '/api/data',
+    '/login',
+    '/logout',
+    '/img/logo.png',
+  ]);
+  const protocol = 'HTTP/1.0';
+  const status = getRandomElement([200, 201, 301, 400, 403, 404, 500]);
+  const size = getRandomInt(100, 5000);
 
-  let logLine = '';
+  const logLine = `${ip} ${ident} ${authuser} [${date}] "${method} ${resource} ${protocol}" ${status} ${size}`;
 
-  switch (level) {
-    case 'info':
-      logLine = `time="${timestamp}" level=info service=${service} message="${message}" status=200 latency=${getRandomInt(
-        50,
-        150
-      )}ms`;
-      break;
-    case 'warn':
-      logLine = `time="${timestamp}" level=warn service=${service} endpoint="/warn" method=GET status=404 retry=${
-        Math.random() > 0.5
-      }`;
-      break;
-    case 'error':
-      logLine = `time="${timestamp}" level=error service=${service} error="operation failed" duration=${getRandomInt(
-        10,
-        100
-      )}ms`;
-      break;
-    case 'debug':
-      logLine = `time="${timestamp}" level=debug service=${service} debug_id=${getRandomInt(
-        1000,
-        9999
-      )} message="${message}"`;
-      break;
-  }
-
-  logger.log({ level, message: logLine });
+  logger.log({ level: 'info', message: logLine });
 }
 
 setInterval(() => {
-  logRandomEvents('Random event logged');
-}, 20);
+  logCLF();
+}, 1000);
