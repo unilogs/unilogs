@@ -16,7 +16,6 @@ import {
   ClfTransform,
   LinuxAuthorizationTransform,
   LogfmtTransform,
-  PlainTextTransform,
   SyslogTransform,
   Transform,
 } from './lib/Transform.js';
@@ -164,14 +163,8 @@ async function createTransform(
       inputs: [inputSource],
       transformName,
     });
-  } else if (transformType === 'syslog') {
-    return new SyslogTransform({
-      serviceName,
-      inputs: [inputSource],
-      transformName,
-    });
   } else {
-    return new PlainTextTransform({
+    return new SyslogTransform({
       serviceName,
       inputs: [inputSource],
       transformName,
@@ -392,7 +385,7 @@ async function main() {
   }
   while (notDone) {
     console.clear();
-    console.log(gradient(['aqua', 'purple']).multiline(logo));
+    console.log(gradient(['#75CFE8', '#2D2372']).multiline(logo));
     const action = await getSimpleMenuChoice();
     if (action === 'exit') notDone = false;
     if (action === 'add_file_source_and_transform')

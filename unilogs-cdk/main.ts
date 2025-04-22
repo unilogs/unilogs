@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 import child_process from 'child_process';
 import prompts from 'prompts';
 import Credentials from './lib/Credentials';

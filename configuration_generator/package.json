@@ -1,8 +1,8 @@
 {
-  "name": "logs",
-  "version": "1.0.0",
+  "name": "@unilogs/unilogs-shipper",
+  "version": "0.1.5",
   "bin": {
-    "unilogs-shipper": "./build/main.js"
+    "unilogs-shipper": "build/main.js"
   },
   "main": "./build/main.js",
   "type": "module",
@@ -10,12 +10,27 @@
     "start": "node ./build/main.js",
     "tsc": "tsc",
     "dev": "node --loader ts-node/esm ./main.ts",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "build": "tsc"
   },
   "keywords": [],
-  "author": "",
+  "author": "Unilogs SWE Team",
+  "contributors": [
+    {
+      "name": "Alex Stout"
+    },
+    {
+      "name": "David Park"
+    },
+    {
+      "name": "John Tamer"
+    },
+    {
+      "name": "Nathan Gross"
+    }
+  ],
   "license": "ISC",
-  "description": "",
+  "description": "Easily configure and run a Vector shipper for the Unilogs log aggregation platform",
   "dependencies": {
     "@types/dockerode": "^3.3.37",
     "dockerode": "^4.0.5",
@@ -36,5 +51,16 @@
     "ts-node": "^10.9.2",
     "typescript": "^5.8.2",
     "typescript-eslint": "^8.28.0"
-  }
+  },
+  "directories": {
+    "lib": "lib"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/unilogs/unilogs.git"
+  },
+  "bugs": {
+    "url": "https://github.com/unilogs/unilogs/issues"
+  },
+  "homepage": "https://github.com/unilogs/unilogs#readme"
 }

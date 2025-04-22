@@ -1,3 +1,5 @@
 vector-shipper.yaml
 build/
 ca.crt
+Dockerfile
+logs/

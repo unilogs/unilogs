@@ -1,12 +1,11 @@
 import Mustache from 'mustache';
-import fs from 'fs';
+import * as templates from './templates.js';
 
 export enum TransformSourceOption {
   Apache = 'apache_template',
   CLF = 'clf_template',
   LinuxAuthorization = 'linux_authorization_template',
   Logfmt = 'logfmt_template',
-  PlainText = 'plaintext_template',
   Syslog = 'syslog_template',
 }
 
@@ -15,15 +14,11 @@ export enum TransformSourceOption {
 Mustache.tags = ['[[', ']]'];
 
 const sourceTemplates: Record<TransformSourceOption, string> = {
-  apache_template: fs.readFileSync('./apache-remap-template.vrl', 'utf8'),
-  clf_template: fs.readFileSync('./clf-remap-template.vrl', 'utf8'),
-  linux_authorization_template: fs.readFileSync(
-    './linux-authorization-remap-template.vrl',
-    'utf8'
-  ),
-  logfmt_template: fs.readFileSync('./logfmt-remap-template.vrl', 'utf8'),
-  plaintext_template: fs.readFileSync('./plaintext-remap-template.vrl', 'utf8'),
-  syslog_template: fs.readFileSync('./syslog-remap-template.vrl', 'utf8'),
+  apache_template: templates.apache_template,
+  clf_template: templates.clf_template,
+  linux_authorization_template: templates.linux_authorization_template,
+  logfmt_template: templates.logfmt_template,
+  syslog_template: templates.syslog_template,
 };
 
 export class TransformSource {
