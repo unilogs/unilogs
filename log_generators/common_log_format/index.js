@@ -34,7 +34,7 @@ function formatCLFDate(date) {
   ][date.getMonth()];
   const year = date.getFullYear();
   const hour = pad(date.getHours());
-  const min = pad(date.getMinutes());
+  const min = pad(date.getMinutes()); 
   const sec = pad(date.getSeconds());
 
   const offset = -date.getTimezoneOffset();

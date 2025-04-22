@@ -31,7 +31,7 @@ import generateDockerfile from './lib/generateDockerfile.js';
 // } from './lib/generateDockerCommands.js';
 import buildAndRunShipper from './lib/buildAndRunShipper.js';
 import safeAssertString from './lib/safeAssertString.js';
-import getContainerIdByName from './lib/getContainerIdByName.js';
+import imageExists from './lib/imageExists.js';
 import deleteContainerAndImage from './lib/deleteContainerAndImage.js';
 import rebuildImageAndContainer from './lib/rebuildImageAndContainer.js';
 
@@ -400,7 +400,7 @@ async function addSinkBuildAndRun(vectorConfiguration: VectorConfiguration) {
 async function main() {
   const vectorConfiguration = new VectorConfiguration();
   let notDone = true;
-  if ((await getContainerIdByName(CONTAINER_NAME)) !== '') {
+  if (await imageExists(CONTAINER_NAME)) {
     const rebuild = await getRestartPrompt();
     if (rebuild === 'rebuild') {
       console.log('--- Destroying the current container and image');
