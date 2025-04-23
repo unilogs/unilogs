@@ -8,7 +8,7 @@ async function imageExists(imageName: string) {
     imageInfo.RepoTags && imageInfo.RepoTags[0] === `${imageName}:latest`
   );
 
-  return filteredImages; 
+  return filteredImages.length === 1; 
 }
 
 export default imageExists;
