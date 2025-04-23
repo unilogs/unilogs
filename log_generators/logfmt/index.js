@@ -66,4 +66,6 @@ function logRandomEvents(message) {
   logger.log({ level, message: logLine });
 }
 
-logRandomEvents('Random event logged');
+setInterval(() => {
+  logRandomEvents('Random event logged');
+}, 1000);
