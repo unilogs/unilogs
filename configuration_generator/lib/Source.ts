@@ -1,4 +1,4 @@
-import { getBase, getInternalDir } from './pathUtils.js';
+import { getBase, getInternalDir } from './utils.js';
 
 export enum SourceType {
   File = 'file',

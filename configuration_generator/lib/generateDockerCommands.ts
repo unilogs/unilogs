@@ -1,4 +1,4 @@
-import { getInternalDir, getLocalDir } from './pathUtils.js';
+import { getInternalDir, getLocalDir, readDockerCommand, writeDockerCommand } from './utils.js';
 import { VectorConfiguration } from './VectorConfiguration.js';
 
 const IMAGE_NAME = 'unilogs-shipper';
@@ -21,5 +21,25 @@ export function generateRunImageCommand(
     )
   );
   runImageParts.push(`--name ${containerName} -d ${imageName}:latest`);
-  return runImageParts.join(' ');
+  
+  const command = runImageParts.join(' ');
+  writeDockerCommand(command);
+  return command;
+}
+
+export function generateDeleteImageCommand(imageName: string = IMAGE_NAME) {
+  return `docker rmi ${imageName}`;
+}
+
+
+export function generateDeleteContainerCommand(containerName: string = CONTAINER_NAME) {
+  return `docker rm -v ${containerName}`;
+}
+
+export function generateStopContainerCommand(containerName: string = CONTAINER_NAME) {
+  return `docker stop ${containerName}`;
+}
+
+export function generateRerunDockerImageCommand() {
+  return readDockerCommand();
 }
