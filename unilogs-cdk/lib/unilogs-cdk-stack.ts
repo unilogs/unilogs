@@ -622,6 +622,10 @@ export class UnilogsCdkStack extends cdk.Stack {
                 parsed = remove!(parsed, ["timestamp"])
                 del(.message)
                 . = merge!(., parsed)
+
+                if exists(.level) {
+                  .level = downcase!(.level)
+                }
               `.trim(),
             },
           },
@@ -645,13 +649,6 @@ export class UnilogsCdkStack extends cdk.Stack {
                 user: 'admin',
               },
             },
-            console: {
-              type:'console',
-              inputs: ['parsed_logs'],
-              encoding: {
-                codec:'json'
-              }
-            }
           },
         },
       },
