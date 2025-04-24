@@ -513,7 +513,7 @@ export class UnilogsCdkStack extends cdk.Stack {
       values: {
         adminUser: grafanaAdminUsername,
         adminPassword: grafanaAdminPassword,
-        persistence: { enabled: true, storageClassName: 'gp2', size: '10Gi' },
+        persistence: { enabled: true, storageClassName: 'gp2', size: '1Gi' },
         datasources: {
           'datasources.yaml': {
             apiVersion: 1,
