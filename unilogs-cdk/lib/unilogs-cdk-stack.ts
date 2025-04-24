@@ -638,6 +638,7 @@ export class UnilogsCdkStack extends cdk.Stack {
               labels: {
                 service_name: '{{`{{ unilogs_service_label }}`}}',
                 agent: 'vector',
+                level: '{{`{{ level }}`}}'
               },
               tenant_id: 'default',
               encoding: {
