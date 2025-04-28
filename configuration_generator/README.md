@@ -23,12 +23,11 @@
 ## Advanced Usage
 
 1. Custom transformations:
-
-- Follow the normal instructions dictated above.
-- Edit the generated `vector-shipper.yaml` to your preference.
-- Run `npx @unilogs/unilogs-shipper` again.
-- Choose the redeploy option.
-- Check docker if your container is running. If it is, everything is OK. If not, follow down from step 2.
+   - Follow the normal instructions dictated above.
+   - Edit the generated `vector-shipper.yaml` to your preference.
+   - Run `npx @unilogs/unilogs-shipper` again.
+   - Choose the redeploy option.
+   - Check docker if your container is running. If it is, everything is OK. If not, repeat from step 2.
 
 ## Details
 
