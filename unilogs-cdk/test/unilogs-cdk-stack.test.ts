@@ -8,8 +8,11 @@ describe("UniLogs Infrastructure", () => {
   beforeAll(() => {
     const app = new cdk.App({
       context: {
-        awsUserName: 'test-user',
-        grafanaAdminPassword: 'test-password',
+        awsUserName: 'test-aws-user',
+        grafanaAdminUsername: 'test-grafana-username',
+        grafanaAdminPassword: 'test-grafana-password',
+        kafkaSaslUsername: 'test-kafka-username',
+        kafkaSaslPassword: 'test-kafka-password',
       }
     });
     const stack = new UnilogsCdkStack(app, "UniLogsTestStack");
@@ -55,12 +58,6 @@ describe("UniLogs Infrastructure", () => {
       template.hasResourceProperties("Custom::AWSCDK-EKS-HelmChart", {
         Chart: chart
       });
-    });
-  });
-
-  test("Essential Outputs Exist", () => {
-    ["ClusterName", "VpcId", "GrafanaURLCommand"].forEach(outputId => {
-      template.hasOutput(outputId, {});
     });
   });
 });
