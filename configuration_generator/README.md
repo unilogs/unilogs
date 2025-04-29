@@ -11,23 +11,26 @@
 
 ## Instructions
 
-1. `npx @unilogs/unilogs-shipper`
+1. `npx @unilogs/unilogs-shipper@latest`
 2. Follow the steps in the application.
-   - The "service name" will be available as a label in Grafana.
+   - The `service_name` will be available as a label in Grafana.
    - Note that the "path to logs" supports globbing. Also, the working directory
      for relative paths will be wherever you are when you start creating the
      shipper. (Example valid path: `./logs/*.log`)
-   - Paste in the bootstrap brokers string and TLS certificate string exactly
-     as they are given in the output of deploying the Unilogs platform.
+   - Paste in the Kafka bootstrap servers string and Kafka TLS certificate
+     string exactly as they are given in the output of deploying the Unilogs
+     platform.
 
 ## Advanced Usage
 
-1. Custom transformations:
-   - Follow the normal instructions dictated above.
-   - Edit the generated `vector-shipper.yaml` to your preference.
-   - Run `npx @unilogs/unilogs-shipper` again.
-   - Choose the redeploy option.
-   - Check docker if your container is running. If it is, everything is OK. If not, repeat from step 2.
+Custom transformations:
+
+1. Follow the normal instructions dictated above.
+2. Edit the generated `vector-shipper.yaml` to your preference.
+3. Run `npx @unilogs/unilogs-shipper@latest` again.
+4. Choose the redeploy option.
+5. Check Docker to ensure your container is running. If it is, everything is OK.
+   If not, repeat from step 2.
 
 ## Details
 
