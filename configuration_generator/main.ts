@@ -207,7 +207,7 @@ async function simpleAddSourceAndTransform(
   const { serviceName } = await prompts<string>({
     type: 'text',
     name: 'serviceName',
-    message: 'What is the service that generates these logs?',
+    message: 'What is the name of the service that generates these logs? (service_name)',
     validate: (input: string) => /^[a-zA-Z0-9\-_]+$/.test(input),
   });
   safeAssertString(serviceName);
