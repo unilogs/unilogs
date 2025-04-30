@@ -1,6 +1,6 @@
 <img src="https://raw.githubusercontent.com/unilogs/unilogs/refs/heads/main/configuration_generator/logo.png" width="400" alt="Unilogs logo" />
 
-# Welcome to the Unilogs platform
+# Unilogs platform
 
 ## Preqrequisites
 
