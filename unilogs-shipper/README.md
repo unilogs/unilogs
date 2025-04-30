@@ -1,4 +1,4 @@
-<img src="https://raw.githubusercontent.com/unilogs/unilogs/refs/heads/main/configuration_generator/logo.png" width="400" alt="Unilogs logo" />
+<img src="https://raw.githubusercontent.com/unilogs/unilogs/refs/heads/main/unilogs-shipper/logo.png" width="400" alt="Unilogs logo" />
 
 # Unilogs shipper
 
