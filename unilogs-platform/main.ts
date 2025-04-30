@@ -104,7 +104,7 @@ async function main() {
   );
 
   void consoleLogLbUrls(awsCredentials);
-  console.log();
+  console.log(); 
   void consoleLogKafkaCert(
     'unilogs-cluster',
     awsCredentials,
