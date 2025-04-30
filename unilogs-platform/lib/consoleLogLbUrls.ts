@@ -63,13 +63,14 @@ async function consoleLogLbUrls(credentials: AwsCredentialIdentity) {
       .join(',')
   );
   console.log();
-  console.log('Kafka Bootstrap servers:');
+  console.log('Kafka bootstrap servers:');
   console.log(
     lbs
       .filter((lb) => kafkaArns.includes(lb.LoadBalancerArn ?? ''))
       .map((lb) => `${lb.DNSName}:9095`)
       .join(',')
   );
+  console.log();
 }
 
 export default consoleLogLbUrls;

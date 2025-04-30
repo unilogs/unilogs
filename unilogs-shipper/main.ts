@@ -122,7 +122,7 @@ async function addInclude(include: string[]) {
   const { includeToAdd } = await prompts<string>({
     type: 'text',
     name: 'includeToAdd',
-    message: 'Enter path to logs',
+    message: 'Enter path to logs (globbing enabled, e.g. ./logs/*.log):',
   });
   safeAssertString(includeToAdd);
   if (includeToAdd) include.push(includeToAdd);
@@ -143,7 +143,7 @@ async function createTransform(
   const { transformType } = await prompts<string>({
     type: 'select',
     name: 'transformType',
-    message: 'Select log format',
+    message: 'Select log format:',
     choices: [
       { title: 'Apache', value: 'apache' },
       { title: 'Common Log Format (CLF)', value: 'clf' },
@@ -287,25 +287,25 @@ async function createKafkaSink(): Promise<KafkaSink> {
   const { bootstrap_servers } = await prompts<string>({
     type: 'text',
     name: 'bootstrap_servers',
-    message: 'What are the bootstrap servers?',
+    message: 'Kafka bootstrap servers string:',
   });
   safeAssertString(bootstrap_servers);
   const { caCrt } = await prompts<string>({
     type: 'text',
     name: 'caCrt',
-    message: 'What is the ca crt string?',
+    message: 'Kafka bootstrap servers TLS certificate:',
   });
   safeAssertString(caCrt);
   const { username } = await prompts<string>({
     type: 'text',
     name: 'username',
-    message: 'SCRAM username',
+    message: 'Kafka username:',
   });
   safeAssertString(username);
   const { password } = await prompts<string>({
     type: 'password',
     name: 'password',
-    message: 'SCRAM password',
+    message: 'Kafka password:',
   });
   safeAssertString(password);
   return new KafkaSink({

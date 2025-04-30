@@ -37,7 +37,7 @@ async function consoleLogKafkaCert(
     agent: new https.Agent({ ca: caCert }),
   });
   const body = (await res.json()) as { data: { 'ca.crt': string } };
-  console.log('Kafka bootstrap servers certificate:');
+  console.log('Kafka bootstrap servers TLS certificate:');
   console.log(body.data['ca.crt']);
 }
 
