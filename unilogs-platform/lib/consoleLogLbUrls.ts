@@ -70,6 +70,7 @@ async function consoleLogLbUrls(credentials: AwsCredentialIdentity) {
       .map((lb) => `${lb.DNSName}:9095`)
       .join(',')
   );
+  console.log();
 }
 
 export default consoleLogLbUrls;
