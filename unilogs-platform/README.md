@@ -5,7 +5,7 @@
 ## Preqrequisites
 
 - A (non-root) IAM user with admin permissions to deploy the stack.
-- User's access key (non-root).
+- User's access key.
 - User's secret access key.
 
 ## Instructions
