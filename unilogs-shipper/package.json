@@ -1,6 +1,6 @@
 {
   "name": "@unilogs/unilogs-shipper",
-  "version": "0.1.5",
+  "version": "1.0.0",
   "bin": {
     "unilogs-shipper": "build/main.js"
   },
@@ -62,5 +62,5 @@
   "bugs": {
     "url": "https://github.com/unilogs/unilogs/issues"
   },
-  "homepage": "https://github.com/unilogs/unilogs#readme"
+  "homepage": "https://unilogs.github.io/"
 }
