@@ -1,30 +1,28 @@
-# How to test deployment
+# Welcome to the Unilogs platform
 
-## Jest testing
+## Preqrequisites
 
-A small test suite is available to ensure core components of the stack would still be there before spending time on a full deploy where a deployment error and rollback can take a long time.
+- A (non-root) IAM user with admin permissions to deploy the stack.
+- User's access key (non-root).
+- User's secret access key.
 
-Run `npm test` to check if stack is ready for deployment.
+## To deploy
 
-## Full/manual testing
+- Run: `npm run build:deploy`
+  - Follow the prompts
 
-Step 1: run `npm install`
+## To destroy
 
-Step 2: run `npm run dev` (or `npm run build:deploy` to test deployment using build output) and fill in your details (you can skip the session token if you're not using one)
+Either:
 
-# Original README Information
-
-## Welcome to your CDK TypeScript project
-
-This is a blank project for CDK development with TypeScript.
-
-The `cdk.json` file tells the CDK Toolkit how to execute your app.
-
-### Useful commands
-
-* `npm run build`   compile typescript to js
-* `npm run watch`   watch for changes and compile
-* `npm run test`    perform the jest unit tests
-* `npx cdk deploy`  deploy this stack to your default AWS account/region
-* `npx cdk diff`    compare deployed stack with current state
-* `npx cdk synth`   emits the synthesized CloudFormation template
+- Go to AWS console and delete the stack from `CloudFormation`
+- Or, if you have the `aws` cli installed:
+  - Authanticate through `aws configure`
+    - Run `cdk destroy`
+    - If something goes wrong while destroying the stack:
+      - Go to your AWS console, remove the associated resources from:
+        - CloudFormation
+        - VPC
+        - EKS
+        - EC2
+          - Note: (If a `network interface` is still in use you'll have to remove a `load balancer` first)
