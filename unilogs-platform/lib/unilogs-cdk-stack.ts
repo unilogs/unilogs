@@ -14,7 +14,6 @@ export class UnilogsCdkStack extends cdk.Stack {
 
     // Helper function for IAM conditions
     const createConditionJson = (id: string, serviceAccount: string) => {
-      // const issuerUrl = cluster.clusterOpenIdConnectIssuerUrl;
       const issuerUrl = cluster.openIdConnectProvider.openIdConnectProviderIssuer;
       if (!issuerUrl) {
         throw new Error('Cluster OIDC issuer URL is not available');
@@ -72,7 +71,7 @@ export class UnilogsCdkStack extends cdk.Stack {
 
     // ==================== CONTEXT & ENVIRONMENT VARIABLES ====================
     const awsUserName =
-      (this.node.tryGetContext('awsUserName') as string) ||
+      (this.node.tryGetContext('awsUserName') as string) || // For Testing Purposes
       process.env.AWS_USER_NAME;
     if (!awsUserName) {
       throw new Error(
@@ -81,7 +80,7 @@ export class UnilogsCdkStack extends cdk.Stack {
     }
 
     const grafanaAdminUsername =
-      (this.node.tryGetContext('grafanaAdminUsername') as string) ||
+      (this.node.tryGetContext('grafanaAdminUsername') as string) || // For Testing Purposes
       process.env.GRAFANA_ADMIN_USERNAME;
     if (!grafanaAdminUsername) {
       throw new Error(
@@ -90,7 +89,7 @@ export class UnilogsCdkStack extends cdk.Stack {
     }
 
     const grafanaAdminPassword =
-      (this.node.tryGetContext('grafanaAdminPassword') as string) ||
+      (this.node.tryGetContext('grafanaAdminPassword') as string) || // For Testing Purposes
       process.env.GRAFANA_ADMIN_PASSWORD;
     if (!grafanaAdminPassword) {
       throw new Error(
@@ -99,7 +98,7 @@ export class UnilogsCdkStack extends cdk.Stack {
     }
 
     const kafkaSaslUsername =
-      (this.node.tryGetContext('kafkaSaslUsername') as string) ||
+      (this.node.tryGetContext('kafkaSaslUsername') as string) || // For Testing Purposes
       process.env.KAFKA_SASL_USERNAME;
     if (!kafkaSaslUsername) {
       throw new Error(
@@ -108,7 +107,7 @@ export class UnilogsCdkStack extends cdk.Stack {
     }
 
     const kafkaSaslPassword =
-      (this.node.tryGetContext('kafkaSaslPassword') as string) ||
+      (this.node.tryGetContext('kafkaSaslPassword') as string) || // For Testing Purposes
       process.env.KAFKA_SASL_PASSWORD;
     if (!kafkaSaslPassword) {
       throw new Error(
@@ -123,7 +122,7 @@ export class UnilogsCdkStack extends cdk.Stack {
       awsUserName
     );
 
-    // enable all logging types for dev, comment out others beyond AUDIT for production (matching AWS sample code)
+    // For AWS Cloudwatch Monitoring
     const clusterLogging = [
       eks.ClusterLoggingTypes.API,
       eks.ClusterLoggingTypes.AUTHENTICATOR,
@@ -156,12 +155,12 @@ export class UnilogsCdkStack extends cdk.Stack {
     // Add managed node groups
     cluster.addNodegroupCapacity('AppNodeGroup', {
       instanceTypes: [
-        new ec2.InstanceType('t3.large'), // Smaller instance (originally m5.large) for dev
+        new ec2.InstanceType('t3.large'), // m5.large
       ],
       minSize: 2,
-      maxSize: 50, // large maximum to avoid any limitation due to insufficient resources
-      desiredSize: 2,
-      diskSize: 30, // reduced from 50 GB for dev
+      maxSize: 50, // Maybe reduce to 10?
+      desiredSize: 2, 
+      diskSize: 30, // 50GB
       amiType: eks.NodegroupAmiType.AL2_X86_64,
       subnets: { subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS },
       labels: {
@@ -179,13 +178,13 @@ export class UnilogsCdkStack extends cdk.Stack {
 
     // ==================== EKS ADD ONS ====================
 
-    // enable metrics, at least for dev
+    // Metrics for Cloudwatch
     new eks.CfnAddon(this, 'addonMetricsServer', {
       addonName: 'metrics-server',
       clusterName: cluster.clusterName,
     });
 
-    // // driver needed to provision PVCs - patching role into its service account
+    // driver needed to provision PVCs - patching role into its service account
     const ebsCsiServiceAccount = cluster.addServiceAccount(
       'EbsCsiServiceAccount',
       {
@@ -235,7 +234,7 @@ export class UnilogsCdkStack extends cdk.Stack {
             accessModes: ['ReadWriteOnce'],
           },
           readinessProbe: {
-            initialDelaySeconds: 60, // Give more time for KRaft init
+            initialDelaySeconds: 60,
             periodSeconds: 15,
             timeoutSeconds: 10,
           },
@@ -265,7 +264,6 @@ export class UnilogsCdkStack extends cdk.Stack {
             containerPort: 9094,
           },
           external: {
-            // Listener for external clients
             protocol: 'SASL_SSL',
             containerPort: 9095,
           },
@@ -274,14 +272,14 @@ export class UnilogsCdkStack extends cdk.Stack {
         sasl: {
           enabledMechanisms: 'PLAIN',
           client: {
-            users: [kafkaSaslUsername], // Use the variable from context
-            passwords: [kafkaSaslPassword], // Use the variable from context
+            users: [kafkaSaslUsername],
+            passwords: [kafkaSaslPassword],
           },
         },
 
         tls: {
           autoGenerated: {
-            enabled: true, // Enable auto-generation
+            enabled: true,
           },
           type: 'PEM',
         },
@@ -298,7 +296,6 @@ export class UnilogsCdkStack extends cdk.Stack {
           create: true,
         },
 
-        // External access remains the same
         externalAccess: {
           enabled: true,
           controller: {
@@ -318,7 +315,6 @@ export class UnilogsCdkStack extends cdk.Stack {
           },
         },
 
-        // Persistence remains the same
         persistence: {
           enabled: true,
           size: '10Gi',
@@ -326,7 +322,6 @@ export class UnilogsCdkStack extends cdk.Stack {
           accessModes: ['ReadWriteOnce'],
         },
 
-        // Resource limits remain the same
         resources: {
           requests: {
             memory: '2Gi',
@@ -358,7 +353,7 @@ export class UnilogsCdkStack extends cdk.Stack {
       encryption: s3.BucketEncryption.S3_MANAGED,
       enforceSSL: true,
       autoDeleteObjects: true,
-      removalPolicy: cdk.RemovalPolicy.DESTROY,
+      removalPolicy: cdk.RemovalPolicy.DESTROY, 
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
     });
 
@@ -369,7 +364,7 @@ export class UnilogsCdkStack extends cdk.Stack {
       encryption: s3.BucketEncryption.S3_MANAGED,
       enforceSSL: true,
       autoDeleteObjects: true,
-      removalPolicy: cdk.RemovalPolicy.DESTROY,
+      removalPolicy: cdk.RemovalPolicy.DESTROY, 
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
     });
 
@@ -458,14 +453,14 @@ export class UnilogsCdkStack extends cdk.Stack {
         },
         deploymentMode: 'SimpleScalable',
         backend: {
-          autoscaling: { enabled: true }, // 2-6 pods
+          autoscaling: { enabled: true },
           persistence: { enabled: true, storageClass: 'gp2', size: '1Gi' }, // reduced from 10GB for dev
         },
         read: {
-          autoscaling: { enabled: true }, // 2-6 pods
+          autoscaling: { enabled: true },
         },
         write: {
-          autoscaling: { enabled: true }, // 2-6 pods
+          autoscaling: { enabled: true },
           persistence: { enabled: true, storageClass: 'gp2', size: '1Gi' }, // reduced from 10GB for dev
         },
         minio: {
@@ -475,6 +470,8 @@ export class UnilogsCdkStack extends cdk.Stack {
           service: {
             type: 'ClusterIP',
           },
+          
+          // Only used internally to connect Loki with Vector
           basicAuth: {
             enabled: true,
             username: 'admin',
@@ -531,7 +528,7 @@ export class UnilogsCdkStack extends cdk.Stack {
                 },
                 secureJsonData: {
                   httpHeaderValue1: 'default',
-                  httpHeaderValue2: 'Basic YWRtaW46c2VjcmV0', // `echo -n "admin:secret" | base64`
+                  httpHeaderValue2: 'Basic YWRtaW46c2VjcmV0', // This string is "admin:secret" base64 encoded in order to connect Grafana with Loki
                 },
               },
             ],
@@ -550,7 +547,7 @@ export class UnilogsCdkStack extends cdk.Stack {
             'eks.amazonaws.com/role-arn': grafanaRole.roleArn,
           },
         },
-        autoscaling: { enabled: true }, // 1-5 pods
+        autoscaling: { enabled: true },
       },
     });
 
@@ -575,7 +572,7 @@ export class UnilogsCdkStack extends cdk.Stack {
       createNamespace: true,
       values: {
         role: 'Aggregator',
-        autoscaling: { enabled: true }, // 1-10 pods
+        autoscaling: { enabled: true },
         resources: {
           requests: {
             cpu: '200m',
@@ -587,7 +584,6 @@ export class UnilogsCdkStack extends cdk.Stack {
           },
         },
         service: {
-          // Add this section
           enabled: true,
           ports: [
             {
@@ -645,6 +641,7 @@ export class UnilogsCdkStack extends cdk.Stack {
                 user: 'admin',
               },
             },
+            // For Debugging Purposes to see logs within Vector Pods
             console: {
               type:'console',
               inputs: ['parsed_logs'],
