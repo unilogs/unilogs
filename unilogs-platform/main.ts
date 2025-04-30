@@ -6,8 +6,18 @@ import Credentials from './lib/Credentials';
 import consoleLogLbUrls from './lib/consoleLogLbUrls';
 import consoleLogKafkaCert from './lib/consoleLogKafkaCert';
 import safeAssertString from './lib/safeAssertString';
+import logo from './lib/logo';
 
 async function main() {
+    console.clear();
+    console.log(logo);
+  console.log(
+    "First we need a little information for the AWS account that you're using to deploy Unilogs."
+  );
+  console.log(
+    'You must use a user account that has sufficient permissions to create all the necessary resources.'
+  );
+  console.log('Also the account cannot be root.');
   const { AWS_ACCESS_KEY_ID } = await prompts<string>({
     type: 'text',
     name: 'AWS_ACCESS_KEY_ID',
@@ -25,7 +35,7 @@ async function main() {
   const { AWS_SESSION_TOKEN } = await prompts<string>({
     type: 'text',
     name: 'AWS_SESSION_TOKEN',
-    message: 'AWS session token (optional)',
+    message: 'AWS session token (if applicable)',
     validate: (input: string) => /^[\S]*$/.test(input),
   });
   const { AWS_DEFAULT_ACCOUNT } = await prompts<string>({
@@ -43,27 +53,35 @@ async function main() {
   const { AWS_USER_NAME } = await prompts<string>({
     type: 'text',
     name: 'AWS_USER_NAME',
-    message: 'Deploying Username',
+    message: 'AWS username (for deploying account)',
   });
+  console.log(
+    '\nNext you need to choose a username and password to use for authenticating shippers so they can send logs securely.'
+  );
+  console.log('(Make a note of these as you will need them to set up the shippers.)');
   const { KAFKA_SASL_USERNAME } = await prompts<string>({
     type: 'text',
     name: 'KAFKA_SASL_USERNAME',
-    message: 'Kafka Sasl Username',
+    message: 'New Kafka username',
   });
   const { KAFKA_SASL_PASSWORD } = await prompts<string>({
     type: 'text',
     name: 'KAFKA_SASL_PASSWORD',
-    message: 'Kafka Sasl Password',
+    message: 'New Kafka password',
   });
+  console.log(
+    '\nFinally, you need to choose a username and password to use for administering Grafana (the interface to query your logs).'
+  );
+  console.log('(Make a note of these as you will need them to connect to Grafana to create visualizations, etc.)');
   const { GRAFANA_ADMIN_USERNAME } = await prompts<string>({
     type: 'text',
     name: 'GRAFANA_ADMIN_USERNAME',
-    message: 'Grafana Admin Username',
+    message: 'New Grafana admin username',
   });
   const { GRAFANA_ADMIN_PASSWORD } = await prompts<string>({
     type: 'text',
     name: 'GRAFANA_ADMIN_PASSWORD',
-    message: 'Grafana Admin Password',
+    message: 'New Grafana admin password',
   });
   safeAssertString(AWS_ACCESS_KEY_ID);
   safeAssertString(AWS_SECRET_ACCESS_KEY);
@@ -103,8 +121,11 @@ async function main() {
     AWS_DEFAULT_ACCOUNT
   );
 
+  console.log(
+    "Please note down the following information as you'll need it to access Grafana and configure the shipper to send logs.\n"
+  );
   void consoleLogLbUrls(awsCredentials);
-  console.log(); 
+  console.log();
   void consoleLogKafkaCert(
     'unilogs-cluster',
     awsCredentials,
