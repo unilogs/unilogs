@@ -1,6 +1,6 @@
 {
   "name": "@unilogs/unilogs-shipper",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "bin": {
     "unilogs-shipper": "build/main.js"
   },
