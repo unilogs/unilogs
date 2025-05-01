@@ -1,4 +1,4 @@
-<img src="https://raw.githubusercontent.com/unilogs/unilogs/refs/heads/main/configuration_generator/logo.png" width="400" alt="Unilogs logo" />
+<img src="https://raw.githubusercontent.com/unilogs/unilogs/refs/heads/main/unilogs-shipper/logo.png" width="400" alt="Unilogs logo" />
 
 # Unilogs shipper
 
@@ -34,4 +34,4 @@ Custom transformations:
 
 ## Details
 
-<img src="https://raw.githubusercontent.com/unilogs/unilogs/refs/heads/main/configuration_generator/shipper-process.drawio.svg" alt="Diagram of Unilogs shipper process" />
+<img src="https://raw.githubusercontent.com/unilogs/unilogs/refs/heads/main/unilogs-shipper/shipper-process.drawio.svg" alt="Diagram of Unilogs shipper process" />
