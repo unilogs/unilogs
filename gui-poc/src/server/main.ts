@@ -26,7 +26,7 @@ app.get('/api/example', (_req, res) => {
 app.get('/api/stop', (_req, res) => {
   console.log('Stopping server...');
   res.json({ message: 'Server is stopping...' });
-  server.close(() => process.exit(0));
+  server.close(() => console.log('Server stopped successfully'));
 });
 
 // Serve static files in production
